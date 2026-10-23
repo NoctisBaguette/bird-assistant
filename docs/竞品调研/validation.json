@@ -1,0 +1,15 @@
+{
+  "version": "0.2",
+  "products": 8,
+  "dimensions": 9,
+  "paired_product_ids": true,
+  "paired_field_coverage": true,
+  "source_codes_valid": true,
+  "design_recommendations": 6,
+  "follow_up_tasks": 6,
+  "installed_competitor_tests": false,
+  "rendered_pages": 14,
+  "visual_review": "passed",
+  "blank_pages": 0,
+  "github_writes": false
+}
