@@ -89,7 +89,7 @@
           "en": "The developer describes recognition, species reference and list imports from eBird and China Bird Report. Training-data composition is not established here. [D1]"
         },
         "strength": {
-          "zh": "我们的判断：它是更直接的国内对照，已有识别、中文资料与私人积累，不能只比较国外产品。",
+          "zh": "我们的判断：它是更直接的国内对照，已有识别、中文资料与私人积累，调研应同时纳入国内产品。",
           "en": "Our assessment: a direct domestic comparator already combines identification, Chinese reference and personal accumulation."
         },
         "limits": {
@@ -239,7 +239,7 @@
           "en": "Separate raw evidence, model candidates, user choice and community input; explain record visibility separately from location visibility."
         },
         "opportunity": {
-          "zh": "测试私人收藏、地图贡献和论坛贴的独立控制是否易理解。私人保存与相似种对照都不能直接宣称为首创。",
+          "zh": "测试私人收藏、地图贡献和论坛帖子的独立控制是否易理解。私人保存与相似种对照都不能直接宣称为首创。",
           "en": "Test understandable independent controls for collections, map contributions and forum posts. Private saving and match comparison are not novel by themselves."
         }
       }
@@ -405,7 +405,7 @@
       "G02 / G03 / G07",
       "验证私人保存与公开用途的独立控制。",
       "Validate private saving and independent public uses.",
-      "私人观察、收藏、地图贡献和论坛贴各自显示状态。公开前预览包含哪些字段；隐藏位置和隐藏整条记录分别解释。",
+      "私人观察、收藏、地图贡献和论坛帖子各自显示状态。公开前预览包含哪些字段；隐藏位置和隐藏整条记录分别解释。",
       "Expose distinct states for private observations, collections, map contributions and forum posts. Preview published fields; distinguish location privacy from whole-record visibility."
     ],
     [
@@ -459,7 +459,7 @@
       "U4",
       "私人保存与发布",
       "Private saving and publishing",
-      "先保存私人记录，再仅发布到一个用途，询问谁能看到哪些字段；撤回后再次检查。",
+      "先保存私人记录，再仅选择一个渠道发布，询问谁能看到哪些字段；撤回后再次检查。",
       "Save privately, publish to one destination, ask who can see which fields, then withdraw and check again."
     ],
     [
@@ -473,7 +473,7 @@
       "U6",
       "国内直接对照",
       "Check direct domestic comparators",
-      "由团队在微信实走懂鸟与记录中心同一任务，记录版本、日期、步骤、权限和失败恢复，补足文档调研。",
+      "由团队在微信中实际走查懂鸟与记录中心的同一任务，记录版本、日期、步骤、权限和失败恢复，补足文档调研。",
       "Have the team run the same task in Dongniao and China Bird Report in WeChat; record version, date, steps, permissions and recovery."
     ]
   ],
@@ -596,7 +596,7 @@
   ],
   "intro": {
     "zh": [
-      "已有产品分别覆盖识别、私人清单、地图鸟讯、社区鉴定和拍后选片。我们建议先验证一条完整的小程序流程：探索地点，保留本人观察素材，复核候选，再分别选择收藏与公开用途。单个常见功能及中文、微信入口，都不足以证明产品独特。",
+      "已有产品分别覆盖识别、私人清单、地图鸟讯、社区鉴定和拍后选片。我们建议先验证一条完整的小程序流程：探索地点，保留本人观察素材，复核候选，再分别选择收藏与公开用途。单个常见功能及中文、微信入口，都不足以说明产品具有独特优势。",
       "本调研对应 Issue 4 的九个维度，保留国内对照并增加成长参考，共比较8个产品，覆盖题目建议的5类对象。目标是帮助收敛需求与原型，不在本阶段承诺批量选片或游戏首发。",
       "资料核验日期为2026年10月23日。功能以官网、官方帮助和开发者商店说明为依据；“我们的判断”、可借鉴点与差异机会属于设计分析。流程数字表示归纳后的任务阶段，首次配置另算；本次未安装并实测竞品，不能用阶段数做点击数、速度或易用性排名。"
     ],
