@@ -30,7 +30,7 @@ Preserve evidence, model suggestions and the user-selected label separately. Use
 
 ### G05 Counting
 
-Count observation records, user-selected species from personal observations and bookmarks separately. Model candidates and saved content from other users do not increase personal observed-species totals.
+Count observation records, user-selected species from personal observations and bookmarks separately. Unresolved observations, unselected model candidates and saved content from other users do not increase personal observed-species totals.
 
 ### G06 Location and time
 

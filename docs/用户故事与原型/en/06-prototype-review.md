@@ -6,4 +6,4 @@ Browser checks covered independent private save/collection/map/forum flows, sepa
 
 This is an interaction demonstration, not a WeChat application or an AI/service benchmark. Device integration, real recognition, account/backend persistence, real messaging and native phone/touch validation remain outside the demonstrated functionality. Candidate video, continuous camera, conversations and badges have explanatory entries only.
 
-Chinese submission content is under docs/zh-CN. This English copy preserves matching story IDs and acceptance criteria for personal review. The overall course submission still needs the group's research, architecture, technology decisions and iteration plan. No changes have been pushed to the team's GitHub repository.
+The [Chinese review entry](../README.md) is in the parent folder. This English copy preserves matching story IDs and acceptance criteria for personal review. The overall course submission still needs the group's research, architecture, technology decisions and iteration plan. These materials are prepared for task-branch review; acceptance and merging remain team decisions.

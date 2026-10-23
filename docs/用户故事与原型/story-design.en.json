@@ -369,7 +369,7 @@
       "conditions": [
         "A non-anonymous attribution can lead to the author's public profile; an anonymous label does not reveal that identity through a profile link.",
         "Demonstrate request, pending, accept or decline, and remove-connection states under the proposed mutual-friend model.",
-        "Requesting or removing a connection does not modify another user's private collection visibility. Prototype requests are simulated and send no real notifications."
+        "Friendship does not change collection visibility settings. Access still depends on the current relationship and visibility; removing a friend revokes access to friends-only content. Prototype requests are simulated and send no real notifications."
       ],
       "origin": "User brainstorm with proposed acceptance details"
     },
@@ -702,7 +702,7 @@
     [
       "G05",
       "Counting",
-      "Count observation records, user-selected species from personal observations and bookmarks separately. Model candidates and saved content from other users do not increase personal observed-species totals."
+      "Count observation records, user-selected species from personal observations and bookmarks separately. Unresolved observations, unselected model candidates and saved content from other users do not increase personal observed-species totals."
     ],
     [
       "G06",

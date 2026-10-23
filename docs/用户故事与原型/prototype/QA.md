@@ -5,10 +5,10 @@
 已检查：
 
 - 地点搜索、缩放后聚合、地点多条观察、日期和区域视图。
-- 他人书签不增加自己的亲历物种；来源撤回后显示不可用。
+- 他人书签不增加本人观察的鸟种；来源撤回后显示不可用。
 - 照片候选选择，返回后更换候选会更新保存表单。
 - 无可靠候选、分析失败、保存失败和发布失败分支，素材与输入保留。
-- 合成声音的开始、停止与回听操作；分析失败后可保存待鉴定，个人已选择物种计数不增加。
+- 合成声音的开始、停止与回听操作；分析失败后可保存待鉴定，个人已标注鸟种计数不增加。
 - 私人保存与加入收藏不改变公开地图及论坛计数。
 - 地图发布只改变地图，发帖只改变论坛；分别撤回保留私人原件。
 - 更正私人鸟名不静默改写旧地图副本；公开副本有单独更新预览。
@@ -20,7 +20,7 @@
 - 中英文切换保留输入；保留的帖子草稿可重新打开。
 - 360 px 框下，已检查页面的内容宽度等于可用宽度，没有横向溢出。
 
-边界：这是具体演示路径检查，并未穷尽所有故事接受条件。原生手机浏览器、触摸双指手势、微信真机、真实相机/录音/定位、模型及账号后端未验证。真实本地文件选择器没有在本轮自动化操作中走完；示例相册路径已检查。连续相机、视频、消息和徽章只有候选说明。
+边界：这是具体演示路径检查，并未穷尽所有故事验收条件。原生手机浏览器、触摸双指手势、微信真机、真实相机/录音/定位、模型及账号后端未验证。真实本地文件选择器没有在本轮自动化操作中走完；示例相册路径已检查。连续相机、视频、消息和徽章只有候选说明。
 
 ## English counterpart
 
@@ -33,7 +33,7 @@ Browser checks covered the concrete paths listed above with simulated data and s
 - 五个主标签 × 中文/英文 × 414/360 外框，共 20 种布局组合未见横向溢出，检查到的 UI 图标均等宽等高。
 - 地图画布保持 5:8，选点根据实际画布计算。连续地图边缘仍是已知限制。
 - 紧凑英文选点控件不再被底部面板遮挡；搜索、确认后返回保留的发布草稿。
-- 地图独立发布/撤回计数为 2→3→2；私人记录 2、帖子 1、已选择鸟种 1 均不变。地图副本新地点不改写私人原件。
+- 地图独立发布/撤回计数为 2→3→2；私人记录 2、帖子 1、已标注鸟种 1 均不变。地图副本新地点不改写私人原件。
 - “公开”收藏只列公开收藏；中英文成长候选说明对应，返回操作可用。
 - v0.4 单文件 HTML 已在浏览器打开，没有捕获来源为原型页面的控制台错误；未声称完成断网真机测试。
 - 仍未验证原生手机/微信、真实双指手势、实际模型、地图服务和持久存储。成长仅为候选概念。
@@ -63,10 +63,10 @@ The central control previously shrank from 55×55 to 55×44 through flex layout.
 | 无可靠候选 | 保存待鉴定后分析记录明确无可靠候选，没有伪造分数。 |
 | 声音分析 → 比较 → 保存待鉴定 | 明确合成声音不是候选鸟种参考录音；保留 demo-audio-v1 与 0.67/0.53 示例分数。紧凑英文页面无横向溢出。 |
 | 未分析直接保存 + 保存失败重试 | 失败时私人计数保持 2；切回正常重试后为 3，无虚构分析面板。 |
-| 私人待鉴定保存的独立性 | 私人观察 2→3，公开地图 2、帖子 1、已选择物种 1 不变。 |
+| 私人待鉴定保存的独立性 | 私人观察 2→3，公开地图 2、帖子 1、已标注鸟种 1 不变。 |
 | 控制台 | 未捕获来源为原型页面的错误。 |
 
-以上是具体演示路径，不代表穷尽全部接受条件。未验证真实模型、在线参考检索、社区素材复用、概率校准、微信真机、原生手机浏览器和完整本地文件选择器。
+以上是具体演示路径，不代表穷尽全部验收条件。未验证真实模型、在线参考检索、社区素材复用、概率校准、微信真机、原生手机浏览器和完整本地文件选择器。
 
 v0.4 视觉修订、中央 56×56 圆形与 13 px 地图说明间距为前次检查结果，本轮保留相关样式，没有把历史检查重新标为新测试。网页源代码与离线 HTML 的检查记录随原型维护。
 
@@ -91,3 +91,9 @@ Environment: desktop Chrome, 414/360 px outer frames. Checks used UI actions wit
 These are concrete demo paths, not exhaustive acceptance coverage. Real inference, online reference retrieval, community-media reuse, probability calibration, native WeChat/mobile browsers and the complete local file-picker path remain unverified.
 
 The v0.4 visual and central-circle checks are historical results; related styles remain without relabelling those checks as new tests. Source/offline checks are maintained with the prototype.
+
+## 2026-10-23 提交前文字复核 / Pre-submission text review
+
+统一中文验收用语、鸟种统计说明与成长文案；补齐中文 G01–G10 规则编号，明确好友关系与可见范围的区别，修正英文稿中过时的目录引用。19 个故事、28 个页面或状态及 8 个竞品的 9 维结构均通过静态校验，故事卡正文与中英文 JSON 条件逐项对应。JavaScript 语法、文档相对链接、差异空白检查和离线打包一致性检查通过。CSS 与 HTML 页面结构保持原样；本次记录不新增浏览器、真机或模型测试结论。
+
+This pass polished Chinese wording, exposed the shared rule IDs, clarified friend-only access and corrected the English folder reference. The existing structural validators, paired story-text checks, JavaScript syntax, relative links, whitespace and offline-bundle consistency checks passed. CSS and the HTML shell are unchanged. This entry adds no new browser, phone or model test claims.

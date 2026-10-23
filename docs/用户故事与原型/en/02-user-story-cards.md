@@ -180,7 +180,7 @@ Acceptance conditions
 
 1. Add or remove a collection entry explicitly, either from a saved record or while saving. Removal does not delete the source observation.
 2. Start with a species grid and an unresolved group, with a way to open individual observations and their evidence; this default is proposed for review.
-3. A private observation can belong to a collection without publication. Unresolved observations and bookmarks of others do not increase my user-selected species from personal observations total.
+3. A private observation can belong to a collection without publication. Unresolved observations and bookmarks of others do not increase my total of user-selected species from personal observations.
 
 ## COL-02 Browse shared collections
 
@@ -278,7 +278,7 @@ Acceptance conditions
 
 1. A non-anonymous attribution can lead to the author's public profile; an anonymous label does not reveal that identity through a profile link.
 2. Demonstrate request, pending, accept or decline, and remove-connection states under the proposed mutual-friend model.
-3. Requesting or removing a connection does not modify another user's private collection visibility. Prototype requests are simulated and send no real notifications.
+3. Friendship does not change collection visibility settings. Access still depends on the current relationship and visibility; removing a friend revokes access to friends-only content. Prototype requests are simulated and send no real notifications.
 
 ## USR-01 Review and edit my profile
 
