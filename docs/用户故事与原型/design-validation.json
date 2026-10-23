@@ -1,0 +1,21 @@
+{
+  "version": "0.5",
+  "story_count": 19,
+  "screen_count": 28,
+  "criteria_and_screen_parity": true,
+  "scope": "design and simulated prototype; integration unverified",
+  "browser_layouts_checked": 8,
+  "languages": [
+    "zh",
+    "en"
+  ],
+  "frame_widths": [
+    414,
+    360
+  ],
+  "source_conflict_checked": true,
+  "reference_unavailable_checked": true,
+  "private_assessment_retention_checked": true,
+  "skip_analysis_no_fabricated_candidates_checked": true,
+  "app_origin_errors_captured": false
+}

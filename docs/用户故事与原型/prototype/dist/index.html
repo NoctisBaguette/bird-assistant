@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="羽迹观鸟助手中英文交互原型。示意地图、示例识别结果与本次会话内的演示记录。">
+  <title>羽迹 · 观鸟助手交互原型</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="workspace">
+    <aside id="review" class="review" aria-label="原型评阅"></aside>
+    <section class="phone" aria-label="观鸟助手手机原型">
+      <div class="status"><b>09:41</b><span>▰ ▰ ▰</span></div>
+      <header id="app-header" class="app-header"></header>
+      <div id="app" class="app" tabindex="-1"></div>
+      <nav id="nav" class="nav" aria-label="主导航"></nav>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </section>
+  </main>
+  <input id="photo-input" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+  <script src="app.js"></script>
+</body>
+</html>

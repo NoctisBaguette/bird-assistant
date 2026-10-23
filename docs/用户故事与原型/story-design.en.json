@@ -1,0 +1,900 @@
+{
+  "version": "0.5",
+  "date": "2026-10-23",
+  "status": "Proposed design; bilingual simulated prototype with candidate/source comparison",
+  "stories": [
+    {
+      "id": "MAP-01",
+      "title": "Explore an area on the map",
+      "role": "birdwatcher",
+      "goal": "browse nearby sightings or choose another area",
+      "value": "decide where to explore",
+      "priority": "High",
+      "difficulty": "Medium",
+      "reason": "Map provider, public data, location permission and marker rendering depend on issue 5.",
+      "pages": [
+        "P01",
+        "P28"
+      ],
+      "conditions": [
+        "With permission and an available position, open around the user. Otherwise offer place search and manual browsing without blocking the page.",
+        "Allow dragging and zooming; preserve the viewport when returning from a detail or another main tab.",
+        "Distinguish public observations from my private markers. Opening a public observation shows when it was observed; an old record does not imply a bird is there now."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    },
+    {
+      "id": "MAP-02",
+      "title": "Inspect observations at a place",
+      "role": "map browser",
+      "goal": "open the observations represented by a marker or place",
+      "value": "compare evidence from different people and dates",
+      "priority": "High",
+      "difficulty": "Medium",
+      "reason": "Display clustering and lasting place membership need separate rules; the latter is unresolved.",
+      "pages": [
+        "P01",
+        "P02",
+        "P03"
+      ],
+      "conditions": [
+        "A grouped marker opens its records or zooms to their area; selecting a named place opens that place's observation history.",
+        "Each row shows a thumbnail or media type, observation time, species or unresolved status, and public attribution.",
+        "Selecting one row opens that observation. Grouping preserves every original record, and its count means records rather than individual birds."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    },
+    {
+      "id": "MAP-03",
+      "title": "Confirm an observation location",
+      "role": "record owner",
+      "goal": "use my current location or adjust a point on a map",
+      "value": "associate the record with where the encounter happened",
+      "priority": "High",
+      "difficulty": "Medium",
+      "reason": "Location picker and accuracy handling depend on the selected map service.",
+      "pages": [
+        "P16",
+        "P28"
+      ],
+      "conditions": [
+        "Offer current location and manual selection. A visible marker and an explicit confirm action determine the saved point.",
+        "An imported photo does not silently inherit the current location; the user can retain, correct or omit available location metadata.",
+        "Private saving can proceed without location. Map publishing requests a confirmed location and explains why it is required."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    },
+    {
+      "id": "MAP-04",
+      "title": "Publish and withdraw a map contribution",
+      "role": "record owner",
+      "goal": "share a selected observation on the map",
+      "value": "contribute a sighting without composing a forum post",
+      "priority": "High",
+      "difficulty": "Medium",
+      "reason": "Ownership, public fields, location disclosure and publication state must be implemented together.",
+      "pages": [
+        "P15",
+        "P16",
+        "P26"
+      ],
+      "conditions": [
+        "Before publishing, show a preview of the public evidence, observation date, location and attribution; allow an unresolved species.",
+        "An explicit publish action creates the map contribution. It neither creates a forum post nor requires adding the record to a collection.",
+        "Anonymous attribution hides the public name while retaining ownership. The owner can edit or withdraw the map contribution without deleting the private original or an independent forum post.",
+        "Sensitive-location handling remains a team decision. The prototype exposes the disclosure choice without promising an unvalidated protection algorithm."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    },
+    {
+      "id": "MAP-05",
+      "title": "Add context to an observation",
+      "role": "record owner",
+      "goal": "add notes and available weather information",
+      "value": "explain the conditions of the encounter",
+      "priority": "Medium",
+      "difficulty": "Medium",
+      "reason": "Manual entry is sufficient for the design; historical weather service access is a separate candidate.",
+      "pages": [
+        "P13",
+        "P15",
+        "P26"
+      ],
+      "conditions": [
+        "Notes and weather can be omitted. Missing information remains unknown rather than receiving invented defaults.",
+        "Manual weather is labelled as user supplied. A future service value must carry its source and the observation location and time it describes.",
+        "An old gallery image never receives today's forecast as its observation weather; lack of weather does not block saving or publishing."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    },
+    {
+      "id": "ID-01",
+      "title": "Provide a bird photograph",
+      "role": "birdwatcher",
+      "goal": "take a photo or select one from my gallery",
+      "value": "request identification assistance and keep the evidence",
+      "priority": "High",
+      "difficulty": "High",
+      "reason": "The photo interface is straightforward; usable species classification and the WeChat upload path remain unverified in issue 6.",
+      "pages": [
+        "P06",
+        "P07",
+        "P08",
+        "P11",
+        "P12",
+        "P28"
+      ],
+      "conditions": [
+        "Offer separate camera and gallery actions, followed by preview, replacement and cancellation.",
+        "Denied permission or an unsupported image leaves a route to another input method; input is retained if analysis fails.",
+        "Show processing, candidate results, no reliable candidates and service failure as distinct states. Simulated candidates in the prototype are identified as examples."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    },
+    {
+      "id": "ID-02",
+      "title": "Record a bird call",
+      "role": "birdwatcher",
+      "goal": "record and review a sound clip",
+      "value": "keep a useful clue when a clear photo is unavailable",
+      "priority": "High",
+      "difficulty": "High",
+      "reason": "Phone recording, audio conversion, upload, BirdNET suitability and end-to-end behaviour require issue 6 follow-up.",
+      "pages": [
+        "P06",
+        "P09",
+        "P11",
+        "P12",
+        "P28"
+      ],
+      "conditions": [
+        "Provide start, stop, replay, retake and submit controls, with visible recording state. Permission refusal keeps alternative inputs available.",
+        "Results can contain multiple candidates or no reliable identification. Allow saving the recording unresolved.",
+        "Do not promise that any one-second recording succeeds or that laptop inference time equals user waiting time. Recording guidance and limits remain subject to phone tests."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    },
+    {
+      "id": "ID-04",
+      "title": "Review a proposed identification",
+      "role": "record owner",
+      "goal": "compare ranked candidates, similar species and source evidence, then select a label or keep it unresolved",
+      "value": "retain my judgement and the original evidence",
+      "priority": "High",
+      "difficulty": "Medium",
+      "reason": "A stable candidate/taxonomy contract plus source attribution, score semantics and permitted reference data are required. Live source connectors remain candidates.",
+      "pages": [
+        "P12",
+        "P32",
+        "P13",
+        "P26"
+      ],
+      "conditions": [
+        "Present ranked candidates when available. Label each numeric value as a source-specific model score, reference similarity or validated probability, with source identity/version and missing values; do not relabel raw scores as accuracy or average unrelated source scores.",
+        "Offer a comparison of similar species using sourced reference features and permitted reference media when available. Distinguish reference descriptions from features actually detected in the submitted evidence, including relevant sex/age differences.",
+        "Show source availability and disagreements. An unavailable reference service does not erase model results or block private saving; no reliable candidates remains distinct from conflicting candidates. Do not imply disconnected sources were searched.",
+        "Allow selection, manual correction or unresolved saving. Preserve the evidence, original candidates, scores and source context independently of the user label and subsequent edits. A user-selected name is not expert verification.",
+        "A detection box does not establish a species and tracking IDs do not count individual birds. Community suggestions, reviewed reference examples and expert-reviewed labels have distinct status; reference reuse and training follow separate eligibility and permission rules."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    },
+    {
+      "id": "REC-01",
+      "title": "Save and revisit a private observation",
+      "role": "record owner",
+      "goal": "save the evidence and available details",
+      "value": "return later to organise or share the encounter",
+      "priority": "High",
+      "difficulty": "Medium",
+      "reason": "Media storage, durable saves and ownership need agreement with the backend team.",
+      "pages": [
+        "P13",
+        "P14",
+        "P03"
+      ],
+      "conditions": [
+        "The save form accepts unresolved species and missing location. Missing observation time is shown as unknown; it is not replaced by upload time.",
+        "A successful save appears in history with its evidence and current status. Cancellation does not create a saved record.",
+        "Private saving does not publish to the map or forum. An optional add-to-collection choice may be included on this same form.",
+        "A save error preserves the entered content and offers retry. The prototype distinguishes a session-only simulated save from a real durable save."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    },
+    {
+      "id": "REC-02",
+      "title": "Keep evidence when identification fails",
+      "role": "birdwatcher",
+      "goal": "continue recording after an unsuccessful analysis",
+      "value": "avoid losing the encounter because recognition is unavailable",
+      "priority": "High",
+      "difficulty": "Medium",
+      "reason": "Draft retention and retry state are required; persistent offline synchronisation is not established by this story.",
+      "pages": [
+        "P11",
+        "P12",
+        "P13",
+        "P14"
+      ],
+      "conditions": [
+        "Distinguish no reliable candidates, service failure, input validation failure and user cancellation.",
+        "After a failed analysis, retain the selected evidence and notes and offer retry or save unresolved.",
+        "A repeated retry or double tap does not silently create duplicate saved observations. Saving still reports its own success or failure.",
+        "If the device is offline, only promise retention capabilities that have actually been implemented; the design labels any session-only demonstration."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    },
+    {
+      "id": "COL-01",
+      "title": "Organise my personal collection",
+      "role": "birdwatcher",
+      "goal": "add my observations to a collection and browse them",
+      "value": "review the birds and encounters I have chosen to keep together",
+      "priority": "High",
+      "difficulty": "Medium",
+      "reason": "Species grouping and the relationship between a collection entry and its source record need a shared data model.",
+      "pages": [
+        "P04",
+        "P05",
+        "P13",
+        "P14"
+      ],
+      "conditions": [
+        "Add or remove a collection entry explicitly, either from a saved record or while saving. Removal does not delete the source observation.",
+        "Start with a species grid and an unresolved group, with a way to open individual observations and their evidence; this default is proposed for review.",
+        "A private observation can belong to a collection without publication. Unresolved observations and bookmarks of others do not increase my total of user-selected species from personal observations."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    },
+    {
+      "id": "COL-02",
+      "title": "Browse shared collections",
+      "role": "collection browser",
+      "goal": "view collections shared by friends and other users",
+      "value": "learn from their observations and explore their public work",
+      "priority": "Medium",
+      "difficulty": "Medium",
+      "reason": "Needs collection visibility, public profiles and a defined friend relationship.",
+      "pages": [
+        "P04",
+        "P05",
+        "P21"
+      ],
+      "conditions": [
+        "Provide Friends and Public collection views with visible owner and sharing scope.",
+        "Only display collections and media the viewer is authorised to see. Becoming friends does not by itself expose every private record.",
+        "Opening or saving another user's content never turns it into my own observed-species record; unavailable content has a clear state."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    },
+    {
+      "id": "COL-03",
+      "title": "Explore a regional collection",
+      "role": "collection browser",
+      "goal": "browse public records within a named area and time range",
+      "value": "understand what has been recorded in that area",
+      "priority": "Medium",
+      "difficulty": "High",
+      "reason": "Region boundaries, public data coverage, taxonomy and deduplication depend on issue 5 and team decisions.",
+      "pages": [
+        "P04",
+        "P05",
+        "P01"
+      ],
+      "conditions": [
+        "Show the selected region, time range and data source alongside the regional view. The prototype may use named example regions.",
+        "Include only records eligible for public regional display; private records are excluded.",
+        "Label observation count and species count separately. Do not infer a count of individual birds or claim complete regional coverage.",
+        "The exact boundary rule is unresolved; the interface displays the chosen area instead of silently treating a map cluster as a biological region."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    },
+    {
+      "id": "COL-04",
+      "title": "Bookmark other people's content",
+      "role": "browser",
+      "goal": "save an observation or post for later",
+      "value": "find useful content again without copying it into my personal sightings",
+      "priority": "Medium",
+      "difficulty": "Low",
+      "reason": "Bookmarks reference source visibility; deleted or restricted sources need an unavailable state.",
+      "pages": [
+        "P03",
+        "P18",
+        "P27"
+      ],
+      "conditions": [
+        "A bookmark action toggles on and off and the saved item can be found in a Saved view.",
+        "The bookmark retains the original author and links to the source. It does not increase personal encounter or observed-species counts.",
+        "If source content is withdrawn or becomes inaccessible, show an unavailable reference without exposing protected media."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    },
+    {
+      "id": "COM-01",
+      "title": "Publish and manage a forum post",
+      "role": "community member",
+      "goal": "write a post and optionally attach an observation",
+      "value": "share an experience or ask for help",
+      "priority": "High",
+      "difficulty": "Medium",
+      "reason": "Needs post ownership, media visibility, drafts and a clear relationship with an attached observation.",
+      "pages": [
+        "P17",
+        "P18",
+        "P19",
+        "P26"
+      ],
+      "conditions": [
+        "Start a post from Discussion or a saved observation; enter discussion content and choose optional evidence or location.",
+        "If the source observation is private, preview exactly which selected fields and media will become public in this post.",
+        "Publishing a post does not create a map contribution. Leaving unsaved edits offers a clear keep-or-discard choice.",
+        "The owner can edit or withdraw the post. Withdrawal leaves the private observation and any independent map contribution intact."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    },
+    {
+      "id": "COM-02",
+      "title": "Read and respond to a discussion",
+      "role": "community member",
+      "goal": "read posts, reply and react",
+      "value": "exchange useful information with other birdwatchers",
+      "priority": "High",
+      "difficulty": "Medium",
+      "reason": "Requires ownership and access rules for replies and reactions; real moderation remains a group design task.",
+      "pages": [
+        "P17",
+        "P18",
+        "P27"
+      ],
+      "conditions": [
+        "Open a post with its author, content, selected attachments and replies; inaccessible attachments are handled explicitly.",
+        "A valid reply becomes visible after success. Show pending and failed states without losing the draft or duplicating a retry.",
+        "Like and bookmark actions have visible reversible states. A suggested species in a reply does not automatically overwrite the owner's identification."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    },
+    {
+      "id": "SOC-01",
+      "title": "Connect with another user",
+      "role": "community member",
+      "goal": "open a public profile and request a friend connection",
+      "value": "return to people whose observations interest me",
+      "priority": "Medium",
+      "difficulty": "Medium",
+      "reason": "Mutual request and acceptance is the proposed rule; the team has not chosen it over following.",
+      "pages": [
+        "P21",
+        "P29"
+      ],
+      "conditions": [
+        "A non-anonymous attribution can lead to the author's public profile; an anonymous label does not reveal that identity through a profile link.",
+        "Demonstrate request, pending, accept or decline, and remove-connection states under the proposed mutual-friend model.",
+        "Requesting or removing a connection does not modify another user's private collection visibility. Prototype requests are simulated and send no real notifications."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    },
+    {
+      "id": "USR-01",
+      "title": "Review and edit my profile",
+      "role": "account owner",
+      "goal": "view my activity and change my public profile details",
+      "value": "manage how I appear and find my own records",
+      "priority": "Medium",
+      "difficulty": "Medium",
+      "reason": "Account identity is a backend dependency; the prototype uses an explicitly simulated identity.",
+      "pages": [
+        "P20",
+        "P30",
+        "P14",
+        "P04"
+      ],
+      "conditions": [
+        "Provide entries to observation history, my collection, saved content, friends and settings.",
+        "Allow editing a display name and avatar with save, cancel and validation-error states; an abandoned edit does not change the profile.",
+        "Explain any displayed counts. User-selected species from personal observations exclude unresolved candidates and bookmarks of others; badge rules remain a candidate feature."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    },
+    {
+      "id": "USR-02",
+      "title": "Manage preferences and cached data",
+      "role": "account owner",
+      "goal": "review my preferences and clear disposable cached files",
+      "value": "control the experience without losing original records",
+      "priority": "Medium",
+      "difficulty": "Medium",
+      "reason": "A storage inventory must distinguish recoverable cache, originals and unsynchronised files before implementation.",
+      "pages": [
+        "P25",
+        "P31"
+      ],
+      "conditions": [
+        "Show publication preferences and permission status; a change to a default clearly states whether it applies only to future actions.",
+        "Keep existing publications unchanged unless the user explicitly edits or withdraws them; a preference change is not presented as automatic retroactive privacy.",
+        "Before cache clearing, show the intended effect and confirmation. Exclude unique originals and unsynchronised records from disposable cache.",
+        "The prototype simulates confirmation and completion without deleting real device files."
+      ],
+      "origin": "User brainstorm with proposed acceptance details"
+    }
+  ],
+  "screens": [
+    {
+      "id": "P01",
+      "title": "Home map",
+      "design": "Map with place search, date/species filters, public/private marker legend, pan, zoom, locate and selected-marker state.",
+      "stories": [
+        "MAP-01",
+        "MAP-02",
+        "COL-03"
+      ]
+    },
+    {
+      "id": "P02",
+      "title": "Place observation sheet",
+      "design": "Part-height sheet with place or cluster context, record count, date order and selectable observations.",
+      "stories": [
+        "MAP-02"
+      ]
+    },
+    {
+      "id": "P03",
+      "title": "Observation detail",
+      "design": "Evidence, observation time, source, attribution and identification status; bookmark for others, owner actions for mine.",
+      "stories": [
+        "MAP-02",
+        "REC-01",
+        "COL-04"
+      ]
+    },
+    {
+      "id": "P04",
+      "title": "Collection home",
+      "design": "Mine, Friends, Public and Regional views; Mine starts with species tiles plus unresolved; Saved has a distinct entry.",
+      "stories": [
+        "COL-01",
+        "COL-02",
+        "COL-03",
+        "USR-01"
+      ]
+    },
+    {
+      "id": "P05",
+      "title": "Collection detail",
+      "design": "Owner or region, sharing scope or time range, species/record counts and links to individual evidence.",
+      "stories": [
+        "COL-01",
+        "COL-02",
+        "COL-03"
+      ]
+    },
+    {
+      "id": "P06",
+      "title": "Identify entry",
+      "design": "Large central navigation entry; Photo and Sound as designed inputs; live/video remain labelled candidate options.",
+      "stories": [
+        "ID-01",
+        "ID-02"
+      ]
+    },
+    {
+      "id": "P07",
+      "title": "Photo input",
+      "design": "Camera and gallery choices; permission denial or invalid-file branch returns to an available input.",
+      "stories": [
+        "ID-01"
+      ]
+    },
+    {
+      "id": "P08",
+      "title": "Photo preview",
+      "design": "Selected image, optional subject selection, replace, cancel and analyse; preserve the image on error.",
+      "stories": [
+        "ID-01"
+      ]
+    },
+    {
+      "id": "P09",
+      "title": "Sound input and preview",
+      "design": "Ready, recording, stopped and replay states; retake, cancel and submit; recording limits are not yet fixed.",
+      "stories": [
+        "ID-02"
+      ]
+    },
+    {
+      "id": "P11",
+      "title": "Analysis status",
+      "design": "Working state; separate invalid input, no reliable candidates, service failure and cancellation routes.",
+      "stories": [
+        "ID-01",
+        "ID-02",
+        "REC-02"
+      ]
+    },
+    {
+      "id": "P12",
+      "title": "Candidate review",
+      "design": "Ranked sample candidates and source-specific score labels; comparison entry, manual correction and unresolved saving. Model suggestions remain distinct from the user label.",
+      "stories": [
+        "ID-01",
+        "ID-02",
+        "ID-04",
+        "REC-02"
+      ]
+    },
+    {
+      "id": "P13",
+      "title": "Private save form",
+      "design": "Observation time, optional location, notes/weather and optional add-to-collection; private save plus retry on save error.",
+      "stories": [
+        "MAP-05",
+        "ID-04",
+        "REC-01",
+        "REC-02",
+        "COL-01"
+      ]
+    },
+    {
+      "id": "P14",
+      "title": "My observation history",
+      "design": "Saved records by observation date, unresolved status and owner actions; distinguish observation and upload times.",
+      "stories": [
+        "REC-01",
+        "REC-02",
+        "COL-01",
+        "USR-01"
+      ]
+    },
+    {
+      "id": "P15",
+      "title": "Map publish preview",
+      "design": "Public fields, date, confirmed location and public/anonymous attribution; explicit publish and publication status.",
+      "stories": [
+        "MAP-04",
+        "MAP-05"
+      ]
+    },
+    {
+      "id": "P16",
+      "title": "Location confirmation",
+      "design": "Current location or dragged marker with confirmation; location source/uncertainty when available.",
+      "stories": [
+        "MAP-03",
+        "MAP-04"
+      ]
+    },
+    {
+      "id": "P17",
+      "title": "Discussion feed",
+      "design": "Post list with media, authors and reply entry; compose directly or attach an existing observation.",
+      "stories": [
+        "COM-01",
+        "COM-02"
+      ]
+    },
+    {
+      "id": "P18",
+      "title": "Post and replies",
+      "design": "Public content and permitted evidence, reply draft, pending/error states, reversible like and bookmark.",
+      "stories": [
+        "COM-01",
+        "COM-02",
+        "COL-04"
+      ]
+    },
+    {
+      "id": "P19",
+      "title": "Post editor",
+      "design": "Body and optional observation/media/location; selected public fields preview; save draft/discard/publish routes.",
+      "stories": [
+        "COM-01"
+      ]
+    },
+    {
+      "id": "P20",
+      "title": "My dashboard",
+      "design": "Profile details, well-defined activity counts and links to history, collection, saved content, friends and settings.",
+      "stories": [
+        "USR-01"
+      ]
+    },
+    {
+      "id": "P21",
+      "title": "Public profile and friends",
+      "design": "Visible profile, permitted collections, connection state and friend-list entry; no identity link for anonymous posts.",
+      "stories": [
+        "COL-02",
+        "SOC-01"
+      ]
+    },
+    {
+      "id": "P25",
+      "title": "Preferences",
+      "design": "Permission status, future publication defaults, visibility explanation and cache manager entry.",
+      "stories": [
+        "USR-02"
+      ]
+    },
+    {
+      "id": "P26",
+      "title": "Owner record and publication management",
+      "design": "Private source and published destinations listed separately; edit preview states what changes; separate withdraw actions.",
+      "stories": [
+        "MAP-04",
+        "MAP-05",
+        "ID-04",
+        "COM-01"
+      ]
+    },
+    {
+      "id": "P27",
+      "title": "Saved content",
+      "design": "Bookmarks retain authors and original links; an unavailable state covers deleted or restricted sources.",
+      "stories": [
+        "COL-04",
+        "COM-02"
+      ]
+    },
+    {
+      "id": "P28",
+      "title": "Permission and missing location states",
+      "design": "Explain the blocked capability and offer manual browsing, another input, retry or cancellation as appropriate.",
+      "stories": [
+        "MAP-01",
+        "MAP-03",
+        "ID-01",
+        "ID-02"
+      ]
+    },
+    {
+      "id": "P29",
+      "title": "Friend request states",
+      "design": "Simulated request, pending, incoming accept/decline and remove-connection views.",
+      "stories": [
+        "SOC-01"
+      ]
+    },
+    {
+      "id": "P30",
+      "title": "Edit my profile",
+      "design": "Display name and avatar draft with validation feedback, save success and cancel.",
+      "stories": [
+        "USR-01"
+      ]
+    },
+    {
+      "id": "P31",
+      "title": "Cache confirmation",
+      "design": "Recoverable files and protected originals explained; simulate confirm, completion and failure without real deletion.",
+      "stories": [
+        "USR-02"
+      ]
+    },
+    {
+      "id": "P32",
+      "title": "Candidate evidence comparison",
+      "design": "Compare submitted evidence with sourced species features; show score meanings, available/unavailable/disagreeing source states, reviewed-reference eligibility, return to selection, replace evidence or save unresolved.",
+      "stories": [
+        "ID-04"
+      ]
+    }
+  ],
+  "rules": [
+    [
+      "G01",
+      "Navigation",
+      "Main tabs remain Home, Collection, Identify, Discussion and Profile, with a larger central Identify button. Focused capture and editors may use Back and a task footer; returning restores the prior main-tab state."
+    ],
+    [
+      "G02",
+      "Private ownership",
+      "A saved observation is private by default. Joining a collection, publishing a map contribution and publishing a forum post are independently controlled uses of that evidence."
+    ],
+    [
+      "G03",
+      "Publication copies",
+      "Proposed rule: a publication contains only the fields/media selected in its preview. Editing a private source does not silently expose new fields; the owner reviews updates to public copies. Final data representation is a backend decision."
+    ],
+    [
+      "G04",
+      "Identification state",
+      "Preserve evidence, model suggestions and the user-selected label separately. User selected, unresolved, community suggested and expert reviewed are not interchangeable labels."
+    ],
+    [
+      "G05",
+      "Counting",
+      "Count observation records, user-selected species from personal observations and bookmarks separately. Model candidates and saved content from other users do not increase personal observed-species totals."
+    ],
+    [
+      "G06",
+      "Location and time",
+      "Observation time differs from upload time. Missing values remain unknown. Display clustering differs from a lasting place and from the regional boundary used for a collection."
+    ],
+    [
+      "G07",
+      "Access and anonymity",
+      "Public anonymity hides attribution and identity links while retaining internal ownership. Private collection access is not granted merely by being friends. Location disclosure requires a separate choice."
+    ],
+    [
+      "G08",
+      "Drafts and errors",
+      "Keep selected evidence and entered content through recoverable errors. Distinguish cancellation, missing permission, invalid input, no reliable result, analysis failure and save/publish failure."
+    ],
+    [
+      "G09",
+      "Prototype evidence",
+      "Prototype results, map data, identity and social actions are simulated. A screen outline establishes planned design coverage only; it establishes neither implemented behaviour nor phone performance."
+    ],
+    [
+      "G10",
+      "Reference reuse",
+      "Public sharing, reference-library reuse and model training are separate purposes. Only eligible, permitted evidence enters the reference index. A user-selected or model-suggested label does not automatically become a reviewed example. Preserve provenance and deduplicate mirrored evidence."
+    ]
+  ],
+  "backlog": [
+    [
+      "ID-03",
+      "Short video identification",
+      "Input preview, chosen frames and audio evidence, conflicting candidates and result review.",
+      "Clip limits, frame selection, audio association and phone upload remain unverified."
+    ],
+    [
+      "LIVE-01",
+      "Continuous camera assistance",
+      "Detection overlay, stable hint, capture and fallback to a still image.",
+      "Phone camera and inference chain; detection and species classification are separate capabilities."
+    ],
+    [
+      "SOC-02",
+      "Private and group conversations",
+      "Conversation lists, thread, participants and composing states.",
+      "Messaging infrastructure, group permissions, notifications and history need separate scope."
+    ],
+    [
+      "BADGE-01",
+      "Badges and progress",
+      "Badge explanation and earned states; proposed bird garden with recording/learning, feather leaves and decoration.",
+      "Choose meaningful, verifiable rules; personal statistics must keep a defined basis."
+    ],
+    [
+      "WEATHER-01",
+      "Automatic observation weather",
+      "Request service data, show source/time, review and override.",
+      "Historical weather availability, cost and location/time matching are unknown."
+    ],
+    [
+      "PHOTO-01",
+      "Batch photo organisation",
+      "Import, proposed groups, representative selection and manual corrections.",
+      "Desktop-oriented competitor ideas require feasibility testing for mini-program files and storage."
+    ],
+    [
+      "PLAN-01",
+      "Outing planning and preparation",
+      "Place comparison, available time, route and saved preparation materials.",
+      "Candidate from the team vision; demand, data and route capabilities still need validation."
+    ],
+    [
+      "OFFLINE-01",
+      "Persistent offline recording and sync",
+      "Local pending queue, later upload, retry and conflict states.",
+      "Requires durable local storage and a synchronisation contract; session retention does not establish this."
+    ],
+    [
+      "LEARN-01",
+      "Learning and community species review",
+      "Reference comparisons, suggested corrections and an owner review step.",
+      "Learning value, trustworthy reference data and reviewer authority need definition."
+    ],
+    [
+      "REF-01",
+      "Multiple reference sources",
+      "Retrieve species facts, permitted media and related observations; label source/version, duplicate origins, availability and disagreement.",
+      "Investigate provider access, taxonomy alignment and source-specific scores with issues 5/6; do not count mirrored records as independent support."
+    ],
+    [
+      "DATA-01",
+      "Reviewed community reference library",
+      "Separate user-selected labels, community review and eligible reference examples; record reuse consent, source lineage and corrections.",
+      "Define reviewers, quality checks, consent and correction/removal from the reference index. Retrieval is separate from any later training dataset or model update."
+    ]
+  ],
+  "decisions": [
+    [
+      "Collection default",
+      "Propose a species grid, an unresolved group and linked encounter records.",
+      "Decide whether albums need equal prominence."
+    ],
+    [
+      "Map initial view",
+      "Propose one park or neighbourhood in view; retain search and manual movement.",
+      "Tune scale on the phone prototype rather than fixing an arbitrary zoom now."
+    ],
+    [
+      "Place and region",
+      "Keep visual clustering, stable places and regional boundaries separate.",
+      "Issue 5 should establish provider, data sources and useful named areas."
+    ],
+    [
+      "Friend relationship",
+      "Propose mutual requests for the story design.",
+      "Choose mutual friendship or following before treating this as a release requirement."
+    ],
+    [
+      "Public copies",
+      "Propose a previewed subset per destination and explicit updates.",
+      "Agree edit, deletion and attachment-access rules with the backend owner."
+    ],
+    [
+      "Sensitive location",
+      "Expose a disclosure decision before publication.",
+      "Team policy and implementation are unresolved; do not promise precise protection yet."
+    ],
+    [
+      "Identity and storage",
+      "Use a simulated account and session data for the upcoming prototype.",
+      "Real authentication, media storage and durable saves remain technical decisions."
+    ]
+  ],
+  "sources": [
+    [
+      "Course submission screenshot",
+      "\u9700\u6c42\u6587\u6863\uff0b\u539f\u578b\u8bbe\u8ba1, due 2026-10-25 23:59 Asia/Shanghai. Requires story map/cards, priorities, implementation difficulty and prototype design for each story, plus group architecture and iteration planning."
+    ],
+    [
+      "Issue 3",
+      "https://github.com/bird-assistant/bird-assistant/issues/3"
+    ],
+    [
+      "Issue 4",
+      "https://github.com/bird-assistant/bird-assistant/issues/4"
+    ],
+    [
+      "Team workflow",
+      "https://github.com/bird-assistant/bird-assistant/blob/main/README.md"
+    ],
+    [
+      "First meeting",
+      "https://github.com/bird-assistant/bird-assistant/blob/main/docs/\u7b2c\u4e00\u6b21\u4f1a\u8bae\u7eaa\u8981.md"
+    ],
+    [
+      "Team vision",
+      "https://github.com/bird-assistant/bird-assistant/blob/main/docs/\u89c2\u9e1f\u52a9\u624b_\u9879\u76ee\u613f\u666f\u4e0e\u529f\u80fd\u84dd\u56fe.md"
+    ],
+    [
+      "Recognition issue",
+      "https://github.com/bird-assistant/bird-assistant/issues/6"
+    ],
+    [
+      "Recognition PR",
+      "https://github.com/bird-assistant/bird-assistant/pull/7; inspected head 1b47109752fe91a31fa184c0dca04f706c504d31, open and unmerged when checked on 2026-10-22."
+    ],
+    [
+      "User design discussion",
+      "Five-tab portrait layout and map, collection, recognition, forum and profile brainstorm supplied on 2026-10-22. Acceptance details and priorities below are proposals, not survey findings."
+    ],
+    [
+      "Score calibration paper",
+      "https://proceedings.mlr.press/v70/guo17a.html"
+    ],
+    [
+      "GBIF API reference",
+      "https://techdocs.gbif.org/en/openapi/"
+    ],
+    [
+      "iNaturalist data quality",
+      "https://help.inaturalist.org/en/support/solutions/articles/151000169936-what-is-the-data-quality-assessment-dqa-and-how-do-observations-qualify-to-become-research-grade-"
+    ],
+    [
+      "iNaturalist content licences",
+      "https://help.inaturalist.org/en/support/solutions/articles/151000173511-how-do-licenses-work-on-inaturalist-should-i-change-my-licenses-"
+    ],
+    [
+      "Tree sparrow reference",
+      "https://www.allaboutbirds.org/guide/Eurasian_Tree_Sparrow/id"
+    ],
+    [
+      "House sparrow reference",
+      "https://www.allaboutbirds.org/guide/House_Sparrow/id"
+    ]
+  ]
+}
