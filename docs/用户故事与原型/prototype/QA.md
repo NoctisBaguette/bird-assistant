@@ -97,3 +97,29 @@ The v0.4 visual and central-circle checks are historical results; related styles
 统一中文验收用语、鸟种统计说明与成长文案；补齐中文 G01–G10 规则编号，明确好友关系与可见范围的区别，修正英文稿中过时的目录引用。19 个故事、28 个页面或状态及 8 个竞品的 9 维结构均通过静态校验，故事卡正文与中英文 JSON 条件逐项对应。JavaScript 语法、文档相对链接、差异空白检查和离线打包一致性检查通过。CSS 与 HTML 页面结构保持原样；本次记录不新增浏览器、真机或模型测试结论。
 
 This pass polished Chinese wording, exposed the shared rule IDs, clarified friend-only access and corrected the English folder reference. The existing structural validators, paired story-text checks, JavaScript syntax, relative links, whitespace and offline-bundle consistency checks passed. CSS and the HTML shell are unchanged. This entry adds no new browser, phone or model test claims.
+
+
+## v0.6 手帐原型验收（2026-10-29）
+
+本轮在桌面Chrome云浏览器检查，不作为微信真机或生产集成验收。
+
+| 检查 | 结果 |
+|---|---|
+| 五个主标签 × 中英文 × 414/360外框，共20种布局 | 未见横向溢出；中央识别圆形均为56×56。 |
+| 手帐编辑器 × 中英文 × 两种外框，共4种布局 | 未见横向溢出；语言切换保留手帐内容。 |
+| 四张示例插画 → 自定义标题 → 初稿 → 选择照片 → 裁剪 → 保存 | 已走通，支持调整独立照片对象，私人观察和地图未变化。 |
+| 全页刷新 → 手帐首页 → 重新打开 | 已保存草稿恢复，包含手帐标题、元素和裁剪。 |
+| 生成PNG → 点击下载链接 | 已下载并打开实际PNG，900×1200；照片、标题和待鉴定说明可见。导出改用Blob链接后下载完成。 |
+| 成品图 → 帖子草稿 → 填文 → 演示发布 | 帖子计数1→2；私人观察2、地图贡献2、已标注鸟种1均不变。发帖为会话内模拟。 |
+| 我的 → 我的收藏 | 原收藏可访问，并保持私人说明。 |
+| 中央识别 → 相机示例 → 分析 → 候选比较 | 原有照片示例与来源比较路径可用。 |
+| 8项Node行为检查 | 日期未知、选择顺序、裁剪取消/确认、重排预览/撤销、本机恢复、存储失败、重复素材ID与标签、SVG转义均通过。 |
+| 双语设计校验、JavaScript语法、相对链接及离线打包一致性 | 通过；原有19/28与新增6/8设计分开校验。 |
+
+限制：完整本地文件选择器检查曾停滞并停止，未完成相册导入端到端验证；触摸拖拽/双指手势、原生手机与微信、真实AI、云端同步、周期任务、实际微信分享均未验收。本轮并未重跑原有全部异常和社交验收项。示例插画不代表真实照片识别。浏览器内8项单元状态检查不等同于真实服务或真机测试。
+
+### English counterpart
+
+Desktop Chrome checks covered 20 main-tab/language/frame combinations and 4 journal-editor layouts without horizontal overflow. The central Identify control stayed 56×56. Sample material, custom title, crop, explicit local save and full reload/reopening worked. A real 900×1200 PNG was downloaded through a Blob link and opened for visual inspection. Journal-to-post demonstration changed posts 1→2 while private records 2, map contributions 2 and selected species 1 stayed unchanged. Profile collection and the existing sample recognition/comparison path remained accessible.
+
+Eight behaviour checks, paired design validators, JS syntax, relative links and standalone packaging consistency passed. The complete local-file chooser test stalled and was stopped, so end-to-end import remains unverified. No claim is made about touch gestures, native WeChat/phones, real AI, cloud sync, scheduling or real WeChat sharing. Historical QA results above are not relabelled as newly executed.

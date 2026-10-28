@@ -1,6 +1,6 @@
 {
-  "version": "0.5",
-  "date": "2026-10-23",
+  "version": "0.6",
+  "date": "2026-10-29",
   "status": "Proposed design; bilingual simulated prototype with candidate/source comparison",
   "stories": [
     {
@@ -682,7 +682,7 @@
     [
       "G01",
       "Navigation",
-      "Main tabs remain Home, Collection, Identify, Discussion and Profile, with a larger central Identify button. Focused capture and editors may use Back and a task footer; returning restores the prior main-tab state."
+      "Main tabs are Home, Journal, Identify, Discussion and Profile with the larger central Identify control. Collection remains under Profile. Focused tasks use Back and explicit actions; returning restores the main-tab state."
     ],
     [
       "G02",

@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="羽迹观鸟助手中英文交互原型。示意地图、示例识别结果与本次会话内的演示记录。">
+  <meta name="description" content="羽迹观鸟助手中英文交互原型。含出行手帐编辑、示例识别和地图；手帐可在当前浏览器保存。">
   <title>羽迹 · 观鸟助手交互原型</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="scrapbook.css">
 </head>
 <body>
   <main class="workspace">
@@ -19,6 +20,8 @@
     </section>
   </main>
   <input id="photo-input" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+  <input id="journal-photo-input" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+  <script src="scrapbook.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

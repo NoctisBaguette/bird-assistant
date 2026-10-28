@@ -1,0 +1,205 @@
+{
+  "version": "0.6",
+  "date": "2026-10-29",
+  "status": "Design and browser demonstration, not a frozen team scope",
+  "stories": [
+    {
+      "id": "JRN-01",
+      "title": "Choose material",
+      "role": "journal creator",
+      "goal": "Choose material",
+      "value": "organise and express personal observations and continue editing later",
+      "priority": "High",
+      "difficulty": "Medium",
+      "pages": [
+        "J02"
+      ],
+      "conditions": [
+        "Select from the device library, personal observations and personal collected photos; reorder selections.",
+        "Filter by observation date and explicitly include unknown dates; never replace capture dates with import dates.",
+        "Filtering does not silently deselect material; the selected list remains visible.",
+        "Failed reads and cancellation retain material; audio and others’ bookmarks are not used directly as images."
+      ],
+      "prototype_status": "Browser interaction demo; real integration unaccepted"
+    },
+    {
+      "id": "JRN-02",
+      "title": "Create an editable draft",
+      "role": "journal creator",
+      "goal": "Create an editable draft",
+      "value": "organise and express personal observations and continue editing later",
+      "priority": "High",
+      "difficulty": "High",
+      "pages": [
+        "J03",
+        "J04",
+        "J06"
+      ],
+      "conditions": [
+        "Offer nature, magazine and minimal styles in 3:4, 1:1 and 4:3 as proposed design choices.",
+        "Keep photos, text and decorations as separate objects; exports never replace the editable original.",
+        "Use existing information without inventing weather, locations or species; retain unresolved labels.",
+        "Preview reflow before applying, support cancellation and undo, and explain that positions, background and decorations reset."
+      ],
+      "prototype_status": "Browser interaction demo; real integration unaccepted"
+    },
+    {
+      "id": "JRN-03",
+      "title": "Edit objects and background",
+      "role": "journal creator",
+      "goal": "Edit objects and background",
+      "value": "organise and express personal observations and continue editing later",
+      "priority": "High",
+      "difficulty": "High",
+      "pages": [
+        "J04",
+        "J05",
+        "J06"
+      ],
+      "conditions": [
+        "Move, resize, rotate, replace and change photo frames; cropping does not rewrite the source image.",
+        "Cancelling a crop retains the old window; edit wording, font, size, colour and alignment.",
+        "Add/remove elements, reorder layers, choose background colour/texture/image, and support undo/redo.",
+        "Validate touch gestures and Chinese fonts on WeChat devices; browser demos are not device acceptance."
+      ],
+      "prototype_status": "Browser interaction demo; real integration unaccepted"
+    },
+    {
+      "id": "JRN-04",
+      "title": "Save and restore private drafts",
+      "role": "journal creator",
+      "goal": "Save and restore private drafts",
+      "value": "organise and express personal observations and continue editing later",
+      "priority": "High",
+      "difficulty": "High",
+      "pages": [
+        "J01",
+        "J04",
+        "J08"
+      ],
+      "conditions": [
+        "Explicit saving survives reload with photos, text, crop and background; distinguish local and cloud states.",
+        "Failed saves retain edits without a success claim; provide explicit actions when leaving unsaved work.",
+        "Resolve unsaved work before creating/opening another journal; clearing local drafts needs separate confirmation.",
+        "Saving does not automatically collect, publish to maps or post; backend checks future cloud ownership."
+      ],
+      "prototype_status": "Browser interaction demo; real integration unaccepted"
+    },
+    {
+      "id": "JRN-05",
+      "title": "Export and share the image",
+      "role": "journal creator",
+      "goal": "Export and share the image",
+      "value": "organise and express personal observations and continue editing later",
+      "priority": "High",
+      "difficulty": "High",
+      "pages": [
+        "J07",
+        "J08"
+      ],
+      "conditions": [
+        "Preview the page and generate a PNG in the selected ratio with consistent photos and text.",
+        "Posts use a rendered copy; opening a draft is not publishing and leaves private originals and maps unchanged.",
+        "Baked-in text and locations cannot be removed by hiding attachment fields; review visible content before sharing.",
+        "Sharing depends on platform support and retains edits on cancellation/failure; WeChat needs device acceptance."
+      ],
+      "prototype_status": "Browser interaction demo; real integration unaccepted"
+    },
+    {
+      "id": "JRN-06",
+      "title": "Period suggestions preserve edited versions",
+      "role": "journal creator",
+      "goal": "Period suggestions preserve edited versions",
+      "value": "organise and express personal observations and continue editing later",
+      "priority": "Later",
+      "difficulty": "High",
+      "pages": [
+        "J01",
+        "J02",
+        "J03",
+        "J08"
+      ],
+      "conditions": [
+        "Use imported/saved material the user may reuse; do not scan the device library automatically.",
+        "Deduplicate suggestions by period and source revision; never assign unknown-date material to a particular day.",
+        "New material creates a new suggestion, without overwriting edited versions or publishing automatically.",
+        "This iteration only demonstrates a suggestion card and period labels, without scheduling, AI or multi-page annual albums."
+      ],
+      "prototype_status": "Concept/settings only"
+    }
+  ],
+  "screens": [
+    {
+      "id": "J01",
+      "title": "Journal home",
+      "stories": [
+        "JRN-04",
+        "JRN-06"
+      ],
+      "route": "journal"
+    },
+    {
+      "id": "J02",
+      "title": "Material selection and dates",
+      "stories": [
+        "JRN-01",
+        "JRN-06"
+      ],
+      "route": "journalPicker"
+    },
+    {
+      "id": "J03",
+      "title": "Style, format and setup",
+      "stories": [
+        "JRN-02",
+        "JRN-06"
+      ],
+      "route": "journalSetup"
+    },
+    {
+      "id": "J04",
+      "title": "Object editor",
+      "stories": [
+        "JRN-02",
+        "JRN-03",
+        "JRN-04"
+      ],
+      "route": "journalEditor"
+    },
+    {
+      "id": "J05",
+      "title": "Non-destructive crop",
+      "stories": [
+        "JRN-03"
+      ],
+      "route": "journalCrop"
+    },
+    {
+      "id": "J06",
+      "title": "Reflow preview and application",
+      "stories": [
+        "JRN-02",
+        "JRN-03"
+      ],
+      "route": "journalLayout"
+    },
+    {
+      "id": "J07",
+      "title": "Preview, export and post draft",
+      "stories": [
+        "JRN-05"
+      ],
+      "route": "journalPreview"
+    },
+    {
+      "id": "J08",
+      "title": "Leaving, storage errors and clear confirmation",
+      "stories": [
+        "JRN-04",
+        "JRN-05",
+        "JRN-06"
+      ],
+      "route": "journalLeave / journalClear / inline errors"
+    }
+  ]
+}

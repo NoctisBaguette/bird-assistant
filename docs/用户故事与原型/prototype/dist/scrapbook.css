@@ -1,0 +1,67 @@
+.journal-home .page-title{font-family:Georgia,"Songti SC",serif;font-size:27px;line-height:1.4;margin-top:12px}
+.journal-hero{display:grid;grid-template-columns:108px 1fr;gap:18px;align-items:center;background:#e9eddf;border:1px solid #dce3ce;border-radius:16px;padding:18px 15px;margin:23px 0 18px}
+.journal-hero h2{font-family:Georgia,"Songti SC",serif;font-size:21px;font-weight:500;margin:12px 0 7px}
+.journal-hero p{font-size:12px;color:#65745f;line-height:1.8;margin:0 0 12px}
+.journal-mini{background:#f6efdf;transform:rotate(-5deg);padding:10px 9px 17px;box-shadow:0 5px 13px #53664b22}
+.journal-mini img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;margin-bottom:9px}
+.journal-mini span{font-family:Georgia,"Songti SC",serif;font-size:12px;line-height:1.8;color:#536c52}
+.journal-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.journal-card{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fffdf8;min-width:0}
+.journal-cover{display:block;width:100%;border:0;padding:0;background:#e3e6db;aspect-ratio:4/5;overflow:hidden}
+.journal-cover svg{width:100%;height:100%;object-fit:contain}
+.journal-card-body{padding:12px;font-size:13px}
+.journal-card-body strong{display:block;overflow-wrap:anywhere;line-height:1.6}
+.journal-source{flex-wrap:wrap}
+.journal-source button{flex:1;min-width:65px}
+.journal-date-fields,.journal-inline{display:grid;grid-template-columns:1fr 1fr;gap:12px;min-width:0}
+.journal-date-fields input{min-width:0;width:100%;font-size:12px}
+.journal-assets{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin:17px 0}
+.journal-asset{position:relative;background:#fffdf7;border:2px solid transparent;border-radius:12px;padding:7px;text-align:left;overflow:hidden;min-width:0}
+.journal-asset.selected{border-color:var(--forest);background:#eaf0e3}
+.journal-asset img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px}
+.journal-asset strong,.journal-asset small{display:block;font-size:12px;margin:8px 3px 3px;overflow-wrap:anywhere}
+.journal-asset small{font-size:10px;color:var(--sub);margin-top:4px}
+.journal-tick{position:absolute;right:12px;top:12px;background:#fffdf2;color:var(--forest);border-radius:50%;width:23px;height:23px;display:grid;place-items:center}
+.journal-asset.selected .journal-tick{background:var(--forest);color:white}
+.journal-selection{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding:16px 0;font-size:13px}
+.journal-film{display:flex;gap:8px;margin:20px 0;overflow:auto}
+.journal-film img{width:75px;height:85px;object-fit:cover;border:5px solid #fffdf4;transform:rotate(-2deg)}
+.journal-film img:nth-child(even){transform:rotate(3deg)}
+.journal-choice{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0}
+.journal-choice>button{border:1px solid #d2ddcc;border-radius:8px;padding:10px;font-size:12px;background:#f8f9f2;flex:1;min-width:70px}
+.journal-choice>button.on{background:var(--forest);color:white;border-color:var(--forest)}
+.journal-editor{padding-bottom:12px;background:#ebeee6}
+.journal-toolbar{display:flex;align-items:center;gap:4px;padding:10px;background:#fbfcf5;position:sticky;top:0;z-index:3;border-bottom:1px solid var(--line)}
+.journal-toolbar button{border:0;border-radius:7px;background:#e7eddf;padding:9px;font-size:11px;white-space:nowrap}
+.journal-toolbar button:last-child{background:var(--forest);color:white;margin-left:auto}
+.journal-toolbar>span{font-size:10px;color:var(--sub);padding:0 3px;min-width:0}
+.journal-canvas-wrap{margin:18px auto;max-width:100%;padding:0 20px;display:flex;justify-content:center;align-items:center}
+.journal-canvas{display:block;width:100%;height:auto;max-height:460px;object-fit:contain;box-shadow:0 6px 20px #40503b1c}
+.journal-editor .journal-canvas{max-height:420px;touch-action:none;user-select:none}
+.journal-canvas [data-jelement]{cursor:move}
+.journal-canvas [data-jhandle]{cursor:nwse-resize}
+.journal-outline{pointer-events:none}
+.journal-addbar{display:flex;gap:4px;padding:10px 9px;background:#fafbf5;border-top:1px solid var(--line);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.journal-addbar button{flex:1;border:0;background:none;color:var(--forest);font-size:11px;min-height:38px;white-space:nowrap;padding:6px}
+.journal-properties{background:#fafbf5;padding:16px 18px}
+.journal-properties .field{font-size:12px;margin:13px 0}
+.journal-properties textarea{min-height:75px}
+.journal-properties>p{margin:0;line-height:1.8}
+.journal-range{display:block;font-size:12px;color:#53664e;margin:14px 0}
+.journal-range>span{display:flex;justify-content:space-between;gap:10px;line-height:1.8}
+.journal-range input{width:100%;accent-color:var(--forest);min-height:28px}
+.journal-color{display:flex;align-items:center;justify-content:space-between;font-size:12px;margin:14px 0}
+.journal-color input{width:70px;height:34px;border:1px solid var(--line);border-radius:5px;background:white;padding:3px}
+.journal-editor-footer{padding:15px 18px;background:#fafbf5}
+.journal-editor-footer .tiny{line-height:1.8;text-align:center}
+.journal-crop-preview{background:#e7ebdf;padding:12px}
+.journal-crop-preview svg{max-height:280px}
+@media(max-width:430px){.journal-home .page-title{font-size:25px}.journal-hero{grid-template-columns:95px 1fr;gap:14px;padding:16px 12px}.journal-toolbar>span{font-size:9px}.journal-toolbar button{font-size:10px;padding:9px 7px}}
+.journal-picked{margin-bottom:18px;display:grid;gap:5px}
+.journal-picked>div{display:flex;align-items:center;gap:7px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:11px}
+.journal-picked span{flex:1;min-width:0;overflow-wrap:anywhere}
+.journal-picked button{background:#e7eddf;border:0;border-radius:6px;padding:5px 10px;min-height:32px}
+.journal-rendered{display:block;width:100%;height:auto;max-width:330px;box-shadow:0 6px 20px #40503b1c}
+.journal-download{display:block;text-decoration:none;text-align:center}
+.journal-post-image{margin:14px 0;background:#e9ede2;border-radius:10px;overflow:hidden}
+.journal-post-image img{display:block;width:100%;height:auto;max-height:none}

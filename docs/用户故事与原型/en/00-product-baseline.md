@@ -1,4 +1,4 @@
-# Bird Assistant product design baseline v0.5
+# Bird Assistant product design baseline v0.6
 
 2026-10-22. Prepared for issue 3 by Zhou Houlin and the project team. This package is proposed design for review. It does not freeze the team's MVP and does not report user-research findings.
 
@@ -14,7 +14,7 @@ Priority expresses proposed user value. Difficulty expresses implementation unce
 
 ### G01 Navigation
 
-Main tabs remain Home, Collection, Identify, Discussion and Profile, with a larger central Identify button. Focused capture and editors may use Back and a task footer; returning restores the prior main-tab state.
+Main tabs remain Home, Journal, Identify, Discussion and Profile, with a larger central Identify button. Focused capture and editors may use Back and a task footer; returning restores the prior main-tab state.
 
 ### G02 Private ownership
 
@@ -57,3 +57,7 @@ Public sharing, reference-library reuse and model training are separate purposes
 ## Technical evidence
 
 Issue 6 and PR 7 establish a useful desktop experiment, not a complete mini-program recognition service. Visual species coverage, phone execution and end-to-end latency remain unresolved. Five successful clean audio clips are a limited feasibility result. The 22 October 2026 review of the supplied CSV/evaluator snapshot found that its evaluator excludes zero-detection frames: counting all reference-positive frames changes 188/291 to 188/368, or 64.6% to 51.1%. This is agreement with another detector, not manually labelled accuracy. The design therefore retains unresolved and failure outcomes and sets no fixed recognition speed or success guarantee.
+
+## v0.6 journal supplement
+
+Collection stays under Profile. The [supplement](09-scrapbook-design.md) adds six stories and eight screens/states to the original 19/28 set: 25 stories and 36 design screens/states, not implemented-feature counts. Journals can be saved in this browser; other observation/social state remains session-only. AI, cloud journals, automatic summaries and WeChat sharing are not connected.

@@ -1,0 +1,29 @@
+{
+  "version": "0.6",
+  "date": "2026-10-29",
+  "base_commit": "a84e47946493d282e25b76f4bb6bf48d88c961ad",
+  "original_stories": 19,
+  "original_screens": 28,
+  "journal_stories": 6,
+  "journal_screens_or_states": 8,
+  "journal_periodic_story_implemented": false,
+  "unit_checks": 8,
+  "main_tab_layouts_checked": 20,
+  "journal_editor_layouts_checked": 4,
+  "horizontal_overflow_observed": false,
+  "central_circle_px": [
+    56,
+    56
+  ],
+  "local_save_reload_checked": true,
+  "downloaded_png_dimensions": [
+    900,
+    1200
+  ],
+  "forum_demo_independence_checked": true,
+  "complete_file_import_checked": false,
+  "native_wechat_checked": false,
+  "real_ai_connected": false,
+  "cloud_journal_storage_connected": false,
+  "automatic_summary_jobs_created": false
+}
