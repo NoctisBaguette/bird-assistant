@@ -123,3 +123,16 @@ This pass polished Chinese wording, exposed the shared rule IDs, clarified frien
 Desktop Chrome checks covered 20 main-tab/language/frame combinations and 4 journal-editor layouts without horizontal overflow. The central Identify control stayed 56×56. Sample material, custom title, crop, explicit local save and full reload/reopening worked. A real 900×1200 PNG was downloaded through a Blob link and opened for visual inspection. Journal-to-post demonstration changed posts 1→2 while private records 2, map contributions 2 and selected species 1 stayed unchanged. Profile collection and the existing sample recognition/comparison path remained accessible.
 
 Eight behaviour checks, paired design validators, JS syntax, relative links and standalone packaging consistency passed. The complete local-file chooser test stalled and was stopped, so end-to-end import remains unverified. No claim is made about touch gestures, native WeChat/phones, real AI, cloud sync, scheduling or real WeChat sharing. Historical QA results above are not relabelled as newly executed.
+
+
+## v0.6 本地文件选择器重试（2026-10-29）
+
+恢复本地预览后，通过实际文件选择器导入一张 PNG 测试图片（journal-import-test.png）。素材出现且自动选中，日期保持未知。随后完成自定义标题、4:3 横版初稿、照片裁剪确认、本机保存、整页刷新、重新打开、生成 PNG 与实际下载。下载文件为 1200×900 PNG，544887 字节，已打开核对内容。
+
+此项补齐前次因预览访问中断而未完成的正常 PNG 导入路径；不将此结果扩大为 JPG/WebP、批量导入、无效文件、所有浏览器或微信真机的验收。测试图片是已有示例插画的栅格文件，不是真实观鸟识别结果。
+
+### English
+
+After reopening the local preview, the actual file chooser imported one PNG test image. It appeared selected with its capture date still unknown. A custom title, 4:3 draft, crop confirmation, local save, full reload/reopening, PNG rendering and download all succeeded. The downloaded file was opened and verified as a 1200×900 PNG of 544887 bytes.
+
+This completes the previously interrupted normal PNG import path. It does not establish acceptance for JPG/WebP, batch import, invalid files, all browsers or native WeChat. The test image is a raster version of the sample illustrations, not a real recognition result.

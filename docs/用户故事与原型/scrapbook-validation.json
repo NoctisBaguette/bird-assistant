@@ -21,9 +21,27 @@
     1200
   ],
   "forum_demo_independence_checked": true,
-  "complete_file_import_checked": false,
+  "complete_file_import_checked": true,
   "native_wechat_checked": false,
   "real_ai_connected": false,
   "cloud_journal_storage_connected": false,
-  "automatic_summary_jobs_created": false
+  "automatic_summary_jobs_created": false,
+  "file_import_formats_checked": [
+    "image/png"
+  ],
+  "file_import_normal_path_checked": [
+    "file chooser",
+    "decode and selection",
+    "crop",
+    "local save",
+    "full reload and reopen",
+    "PNG render",
+    "download"
+  ],
+  "imported_image_export_dimensions": [
+    1200,
+    900
+  ],
+  "imported_image_export_bytes": 544887,
+  "file_import_limits": "One normal PNG path; JPG/WebP, batch, invalid files and native WeChat remain unverified."
 }
