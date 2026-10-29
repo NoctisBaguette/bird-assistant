@@ -152,3 +152,29 @@ This completes the previously interrupted normal PNG import path. It does not es
 边界：不使用OpenAI，尚未连接任何真实AI生成；假适配器单测不等于模型验收。浏览器SpeechRecognition入口具有键盘回退，本轮没有使用实际麦克风；手机、微信、原生双指、字体包、实际地图SDK/半径、云存储、自动周期与微信分享仍未验收。此记录只增加本轮具体检查结果。
 
 English: Actual browser checks confirmed wheel-only clustering/splitting, fixed-font width wrapping, title/body editing, resize undo/redo through deselection, decoration delete recovery, a required photo-linked writing brief, full retention of 3,280 overflowing characters, compact bilingual layouts and a downloaded/opened 900×1200 PNG. A viewport flow bug caught during QA was fixed and its affected actions repeated successfully. Eighteen Node behaviour regressions passed. Real AI, microphone, native touch/WeChat and map-SDK policy remain unverified; historical checks are not relabelled as new runs.
+
+
+## v0.8 文字/语音同位输入与视觉统一（2026-10-29）
+
+用户纠正：语音不是大文本框下面另一个按钮，而是同一输入区域的两种模式；旁边的麦克风/键盘按钮切换。文字初始单行、随内容增长（演示最高144px后内部滚动）；语音模式为波形与“按住说话”。按住后松开转写并确认输入，左滑达到取消区后松开丢弃，移回原位可继续；取消、切换、离开和转写失败保留原有文字，不自动生成文案。
+
+- 手帐矩形按钮/选择器/输入边界统一12px圆角。画布照片框与中央识别圆钮不属于这套矩形控件。
+- AI写作入口、照片/文本框AI按钮、整理要求、生成和确认应用采用青绿—紫色渐变边框/主色。边框缓慢流动；禁用与减少动态效果时停止动画。
+- 当前ASR适配器未连接。正常模式只可预览按住、波形和左滑，不申请麦克风、不生成虚构转写。评阅情景中有明确标注的固定中英混合转写及失败示例，均不录音、不调用ASR。
+- 已实现浏览器MediaRecorder捕获与音频分析波形适配层，只有真实ASR适配器配置后才使用麦克风。转写请求带音频、格式、时长、自动语言、zh/en混说要求及当前文本/手帐标题/关联照片标签上下文；不按界面语言强制锁定中文或英文。微信端录音应替换捕获适配器。
+- 本项目继续排除OpenAI。实际供应商须验收中英混说、句中切换语言、上下文同音词消歧、鸟名/数字和口语标点；本轮没有选择供应商，也没有验证任何模型的真实准确率。
+
+取消、短按、麦克风未就绪就松开、权限失败、转写失败、切换模式/离开及过期返回均不得加入文字。转写结果进入同一可编辑输入，再由用户确认写作要求；转写/输入模式不计入画布撤销历史。
+
+验证：原18项与新增12项语音状态回归共30项通过。真实浏览器验证切换、按住松开示例、左滑取消、失败保留及回到文字编辑；正常未连接预览明确不录音。紧凑中英文均无横向溢出，检查到的按钮/选择器圆角均12px；980字符输入高度上限144px、全文保留。未使用真实麦克风或ASR，微信触摸及真实混说/同音词识别尚未验收。
+
+
+## v0.8 unified text/voice input and visual consistency (29 October 2026)
+
+Text and voice are two modes of one composer, switched by an adjacent microphone/keyboard control. Typing starts on one line and grows to a 144px demo maximum before internal scrolling. Voice displays a waveform and Hold to speak. Release confirms transcription; swipe left and release cancels; moving back restores confirmation. Cancellation, failures and mode changes retain previous input. Transcription never generates journal copy automatically.
+
+Journal rectangular controls share 12px corners. AI actions use a restrained teal/violet gradient with a slowly moving border; disabled controls and reduced-motion preferences use a static treatment. Canvas frames and the circular Identify control retain their existing shapes.
+
+The real ASR adapter is unconfigured. Normal mode offers a labelled interaction preview without accessing the microphone or fabricating text. Review presets provide explicitly labelled mixed-language transcript/failure samples without recording or calling ASR. The browser capture adapter uses MediaRecorder and an audio analyser when a real ASR adapter is configured; native WeChat must replace that capture layer. Requests carry audio, format/duration, automatic zh/en code-switching requirements and text/title/photo-label context, independent of interface language. OpenAI remains excluded. Real provider selection and accuracy testing for code switching, context-sensitive homophones, bird names, numbers and punctuation remain pending.
+
+Thirty behaviour regressions passed, including twelve new voice checks. Browser checks cover mode switching, sample hold/release, left-swipe cancellation, failure retention and editable return to text; compact Chinese/English have no horizontal overflow. Inspected button/selector corners are 12px. A 980-character input remains intact at the 144px height cap. Real microphones, ASR accuracy and native WeChat touch are unverified.

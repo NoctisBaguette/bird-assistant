@@ -1,7 +1,7 @@
 羽迹 Bird Assistant — 开发过程、反馈与决策记录
-文件版本：1.1
+文件版本：1.2
 记录日期：2026-10-29（Asia/Shanghai）
-当前检查点：v0.7 浏览器原型；用户确认需求并授权实施，已修订地图/编辑交互与AI写作入口，真实AI服务未接入。
+当前检查点：v0.8 浏览器原型；文字/语音同位切换、按住确认与左滑取消、圆角与AI视觉已修订，真实AI/ASR服务未接入。
 用途：保留本会话中的需求演化、困难、修复、验证与未决问题，供以后纳入 GitHub。
 语言：中文为团队阅读正文，末尾附英文摘要。
 日期规则：只使用会话或提交记录中可确定的日期；更早讨论无准确日期时明确注明。以下不是聊天逐字转录。
@@ -262,6 +262,36 @@ I06 — 验证、文件与边界
 #12范围冲突仍单列，未因手帐工作默默改变识别需求或负责人。
 
 English update: The user approved the revision and explicitly ruled out OpenAI. v0.7 implements live demo clustering, title/body text boxes with width-driven wrapping and lossless ellipsis, a pinned boundary-clamped canvas, stable positional photo names, six decorations, visible deletion, better spacing and complete history transactions. QA caught and fixed a control-shift bug during viewport shrinking. The writing UI prepares instructions, required/selected images and a layout budget through a provider-neutral adapter; no real model or microphone was verified. Eighteen behaviour regressions and the concrete browser/PNG checks above passed. Layouts remain extensible starting points, not a final fixed template set.
+
+
+八、2026-10-29：v0.8输入交互与视觉反馈
+
+H15 / R18 — 输入方式重新理解
+用户指出：文字和语音应是同一输入区二选一，通过旁边切换按钮改变模式；文字是一行起步，语音显示波形与按住说话，直接松开确认，左滑后松开取消，再切回文字。
+结果：[已实现/浏览器示例已验证] 麦克风/键盘同位切换，文字初始44px且可增高至144px后内部滚动；语音区有静态波形，按住进入状态波形，支持左滑取消及移回继续。只有松开确认并完成转写后才追加至原输入，已有文字不因切换或取消而丢失，不自动生成文案。
+
+H16 / R19 — 中英混说与上下文ASR
+用户要求：可自然混用中英文，在句中插入另一种语言；中文同音词应结合文本上下文消歧。
+决策：[已实现契约，真实服务待接] ASR请求自动语言、zh/en混说与现有文字/手帐标题/关联照片标签上下文，不按界面语言锁定单一语言。移除旧版固定zh-CN/en-US的SpeechRecognition入口，使用可替换的捕获与ASR适配器。继续禁止OpenAI。
+边界：目前没有真实ASR供应商。浏览器MediaRecorder与实际音频分析波形只在真实适配器就绪时使用；正常模式不请求麦克风，只展示标明不录音的交互预览。评阅情景有固定中英样本文字及失败演示，均清楚标注，不冒充真实识别。
+验收待办：真实录音的混说、同音词上下文、鸟名/数字、标点、噪声、时延、成本与微信录音格式。不能用固定样本或请求中的auto字段证明实际识别质量。
+
+H17 / R20 — 圆角与AI视觉
+用户指出矩形控件圆角不一致，并希望AI按钮使用不同颜色、渐变或光效。
+结果：[已实现/浏览器检查] 手帐矩形控件统一12px圆角；AI入口、照片/文本框写作、整理要求、生成及应用采用青绿—紫渐变边框或主色，9秒缓慢流动。禁用及减少动态效果时无动画。保留照片框和中央识别圆形的语义形状。
+
+I07 — 生命周期与取消保护
+实现：短按、左滑释放、指针中断/Escape、切回文字、关闭/离开、页面隐藏均终止当前录音或待处理请求；麦克风还没准备好就松开，不会在晚到的权限结果后偷偷开始录音。异步转写返回须属于同一手帐、目标和有效会话，否则丢弃。输入与模式不写入画布撤销历史。转写失败保留已有输入，允许重新按住。
+测试困难：异步测试不能只等待一个微任务就假定ASR已开始；改为等待假适配器实际请求信号后测试取消与晚到结果。此项为测试时序修正，不是模型验收。
+
+I08 — 本轮验证与交付
+[已验证] 30项Node回归（原18项+新增12项语音状态检查）。
+[已验证] 真实浏览器点击切换、按住600ms松开加入明确样本、左滑108px松开取消、失败示例保留输入、切回文字可编辑；正常未接服务预览明确没有录音或转写。
+[已验证] 紧凑中文与英文内容宽度/滚动宽度均336，无横向溢出；检查到的按钮/选择器圆角均12px。980字符输入完整保留，显示高度上限144px。AI渐变与禁用无动画样式已检查。
+[未验证] 实际麦克风、真实音频波形、ASR识别准确率、中英混说/同音词质量、微信真机与原生触摸；这些仍是外部依赖。
+本轮源码新增journal-voice.js，离线包更新至v0.8；继续更新同一个私人在线预览，不更换已有URL或扩大受众。源码交付分支为docs/scrapbook-prototype-v08，保留v0.7历史，不修改团队main。
+
+English update: v0.8 replaces the separate voice button with one compact text/voice composer. Adjacent microphone/keyboard toggles preserve input. Hold/release confirms, left-swipe/release cancels, and late or failed results cannot overwrite existing text. Rectangular journal controls share 12px corners; AI actions use an animated teal/violet accent with reduced-motion support. Thirty behaviour checks and the explicitly labelled browser interaction samples passed. Real ASR is unconfigured; automatic mixed-language context is a contract and acceptance requirement, not a verified accuracy claim. OpenAI remains excluded.
 
 English summary
 

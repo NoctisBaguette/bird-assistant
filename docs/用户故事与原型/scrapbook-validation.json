@@ -1,5 +1,5 @@
 {
-  "version": "0.7",
+  "version": "0.8",
   "date": "2026-10-29",
   "base_commit": "a84e47946493d282e25b76f4bb6bf48d88c961ad",
   "original_stories": 19,
@@ -61,5 +61,20 @@
     "real_ai_verified": false,
     "microphone_verified": false,
     "legacy_migration_tested": true
+  },
+  "v08": {
+    "date": "2026-10-29",
+    "unit_checks": 30,
+    "new_voice_checks": 12,
+    "browser_sample_hold_confirm_cancel_checked": true,
+    "browser_sample_failure_preserves_input": true,
+    "compact_zh_en_no_horizontal_overflow": true,
+    "inspected_control_radius_px": 12,
+    "long_input_characters": 980,
+    "input_height_cap_px": 144,
+    "real_microphone_verified": false,
+    "real_asr_verified": false,
+    "real_mixed_language_accuracy_verified": false,
+    "native_wechat_verified": false
   }
 }

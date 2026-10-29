@@ -3,7 +3,7 @@ from pathlib import Path
 root=Path(__file__).resolve().parent
 a=json.loads((root/'scrapbook-design.en.json').read_text())
 b=json.loads((root/'scrapbook-design.zh-CN.json').read_text())
-assert a['version']==b['version']=='0.7'
+assert a['version']==b['version']=='0.8'
 for key,count in [('stories',6),('screens',8)]:
  assert len(a[key])==len(b[key])==count
  assert [x['id'] for x in a[key]]==[x['id'] for x in b[key]]

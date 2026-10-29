@@ -1,6 +1,6 @@
-# 中英文手机竖屏交互原型 v0.7
+# 中英文手机竖屏交互原型 v0.8
 
-下载并打开[v0.7单文件原型](dist/bird-assistant-prototype-offline-v0.7.html)，或预览dist/index.html。历史v0.5/v0.6 HTML保留为提交快照。
+下载并打开[v0.8单文件原型](dist/bird-assistant-prototype-offline-v0.8.html)，或预览dist/index.html。历史v0.5/v0.6/v0.7 HTML保留为提交快照。
 
 导航：首页｜手帐｜识别｜讨论｜我的；收藏在我的页面。中央56×56圆形识别按钮沿用原样。
 
@@ -24,7 +24,7 @@
 
 原有dist/app.js、dist/style.css与dist/index.html保留。手帐源码在dist/scrapbook.js和dist/scrapbook.css。
 
-- node scripts/build-offline.mjs：重建v0.7离线HTML。
+- node scripts/build-offline.mjs：重建v0.8离线HTML。
 - node --check dist/app.js 与 node --check dist/scrapbook.js：语法。
 - node --test tests/*.test.cjs：关键状态与异常保留。
 - 上级目录python validate.py与python validate-scrapbook.py：中英文结构和链接。
@@ -79,3 +79,12 @@ The request contract carries instruction, intent, language, existing title/body,
 Legacy schemaVersion 1 drafts migrate to 2 without removing elements, sources or complete text. The local storage key is unchanged; no date invention or automatic upload occurs.
 
 Verification: 18 Node behaviour regressions; actual browser wheel clustering/splitting, combined title/body, right-edge width drag, complete undo/redo, selection preserving redo, decoration delete recovery, photo-linked writing briefs, preservation of 3,280 overflowing characters, compact Chinese/English layouts without horizontal overflow and an actual downloaded/opened 900×1200 PNG. Real AI, microphone, native pinch and WeChat remain unverified. See QA.md and development-log.txt.
+
+
+## v0.8 输入体验
+
+在手帐AI写作的输入框右侧，点击麦克风切换语音，点击键盘返回文字。按住说话，左滑后松开取消，直接松开确认；已有文字保留。正常模式ASR未连接，仅预览交互且不录音。外侧评阅情景可选择“手帐语音转写示例（不录音）”或失败示例，查看明确标注的固定样本文字及异常保留。
+
+语音交互/捕获/供应商无关ASR契约位于dist/journal-voice.js。真实服务尚未接入，不使用OpenAI。自动中英混说、上下文同音词和微信录音仍需实际验收。30项行为检查通过，具体浏览器范围见QA.md。
+
+Text and voice share one composer in v0.8. Toggle, hold/release and swipe-to-cancel are implemented; explicit review presets demonstrate success/failure without audio capture. Real ASR remains unconnected. All 30 behaviour checks pass; native/accuracy limits remain as documented.

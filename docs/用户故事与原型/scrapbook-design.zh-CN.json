@@ -1,5 +1,5 @@
 {
-  "version": "0.7",
+  "version": "0.8",
   "date": "2026-10-29",
   "status": "设计与浏览器演示，不是团队冻结范围",
   "stories": [
@@ -204,5 +204,15 @@
   ],
   "ai_provider_policy": "No OpenAI; team-selected alternative provider pending",
   "writing_service_connected": false,
-  "revision": "2026-10-29 review feedback: dynamic clusters, text layout, pinned viewport, complete history and provider-neutral writing controls"
+  "revision": "2026-10-29 review feedback: dynamic clusters, text layout, pinned viewport, complete history and provider-neutral writing controls",
+  "speech_service_connected": false,
+  "speech_requirements": {
+    "language_mode": "auto",
+    "languages": [
+      "zh",
+      "en"
+    ],
+    "code_switching": true,
+    "contextual_homophones": "requires real-provider validation"
+  }
 }

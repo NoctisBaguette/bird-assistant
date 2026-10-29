@@ -1,4 +1,4 @@
-# Outing journals: design, stories and implementation boundaries v0.7
+# Outing journals: design, stories and implementation boundaries v0.8
 
 Date: 2026-10-29. Based on this discussion, second meeting notes and main a84e479. Six stories and eight screens/states supplement the original 19/28 set. JRN-06 is future design, not implemented automatic generation.
 
@@ -156,3 +156,14 @@ The request contract carries instruction, intent, language, existing title/body,
 Legacy schemaVersion 1 drafts migrate to 2 without removing elements, sources or complete text. The local storage key is unchanged; no date invention or automatic upload occurs.
 
 Verification: 18 Node behaviour regressions; actual browser wheel clustering/splitting, combined title/body, right-edge width drag, complete undo/redo, selection preserving redo, decoration delete recovery, photo-linked writing briefs, preservation of 3,280 overflowing characters, compact Chinese/English layouts without horizontal overflow and an actual downloaded/opened 900×1200 PNG. Real AI, microphone, native pinch and WeChat remain unverified. See QA.md and development-log.txt.
+
+
+## v0.8 unified text/voice input and visual consistency (29 October 2026)
+
+Text and voice are two modes of one composer, switched by an adjacent microphone/keyboard control. Typing starts on one line and grows to a 144px demo maximum before internal scrolling. Voice displays a waveform and Hold to speak. Release confirms transcription; swipe left and release cancels; moving back restores confirmation. Cancellation, failures and mode changes retain previous input. Transcription never generates journal copy automatically.
+
+Journal rectangular controls share 12px corners. AI actions use a restrained teal/violet gradient with a slowly moving border; disabled controls and reduced-motion preferences use a static treatment. Canvas frames and the circular Identify control retain their existing shapes.
+
+The real ASR adapter is unconfigured. Normal mode offers a labelled interaction preview without accessing the microphone or fabricating text. Review presets provide explicitly labelled mixed-language transcript/failure samples without recording or calling ASR. The browser capture adapter uses MediaRecorder and an audio analyser when a real ASR adapter is configured; native WeChat must replace that capture layer. Requests carry audio, format/duration, automatic zh/en code-switching requirements and text/title/photo-label context, independent of interface language. OpenAI remains excluded. Real provider selection and accuracy testing for code switching, context-sensitive homophones, bird names, numbers and punctuation remain pending.
+
+Thirty behaviour regressions passed, including twelve new voice checks. Browser checks cover mode switching, sample hold/release, left-swipe cancellation, failure retention and editable return to text; compact Chinese/English have no horizontal overflow. Inspected button/selector corners are 12px. A 980-character input remains intact at the 144px height cap. Real microphones, ASR accuracy and native WeChat touch are unverified.
