@@ -1,4 +1,4 @@
-# Bird Assistant product design baseline v0.6
+# Bird Assistant product design baseline v0.7
 
 2026-10-22. Prepared for issue 3 by Zhou Houlin and the project team. This package is proposed design for review. It does not freeze the team's MVP and does not report user-research findings.
 
@@ -61,3 +61,8 @@ Issue 6 and PR 7 establish a useful desktop experiment, not a complete mini-prog
 ## v0.6 journal supplement
 
 Collection stays under Profile. The [supplement](09-scrapbook-design.md) adds six stories and eight screens/states to the original 19/28 set: 25 stories and 36 design screens/states, not implemented-feature counts. Journals can be saved in this browser; other observation/social state remains session-only. AI, cloud journals, automatic summaries and WeChat sharing are not connected.
+
+
+## v0.7 review revision / 评阅修订
+
+Map clusters refresh during zoom; journal text, viewport, history and writing controls were revised. OpenAI is excluded; no real writing provider is connected. The three styles remain extensible starting points. See the journal design, QA and cumulative development log for verified scope.

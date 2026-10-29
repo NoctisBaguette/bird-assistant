@@ -136,3 +136,19 @@ Eight behaviour checks, paired design validators, JS syntax, relative links and 
 After reopening the local preview, the actual file chooser imported one PNG test image. It appeared selected with its capture date still unknown. A custom title, 4:3 draft, crop confirmation, local save, full reload/reopening, PNG rendering and download all succeeded. The downloaded file was opened and verified as a 1200×900 PNG of 544887 bytes.
 
 This completes the previously interrupted normal PNG import path. It does not establish acceptance for JPG/WebP, batch import, invalid files, all browsers or native WeChat. The test image is a raster version of the sample illustrations, not a real recognition result.
+
+
+## v0.7 评阅反馈回归（2026-10-29）
+
+- 实际滚轮只缩放不拖动：z=1→0.9→0.8，两个公开地点合并；逆向滚轮恢复分离。标记层在手势中更新，按钮路径共用更新函数；两指事件由Node模拟检查，未声称真机双指已验收。
+- 标题/正文在同一对象编辑；右边缘拖动使宽度756→484.57，正文23号不变，高度随换行增加。撤销恢复756，取消选择不清空重做，重做恢复484.57。
+- 小花添加→删除→撤销恢复；六类装饰可见。照片2写作入口锁定必要照片，只包含1张关联照片；要求/字数预览可用，生成按钮因无服务保持不可用。
+- 输入3280个字符后，可见末行有省略号；正文仍保留3280字符。撤销恢复原说明“待鉴定”。
+- 初次浏览器检查发现：视口缩小时正常文档高度也变，自动滚动后按钮会在点击中移位，可能触发错误动作。改为固定布局占位、仅改变可见视口后，重复装饰添加/删除恢复与照片写作入口均正确。
+- 414外框中文编辑已检查；360外框中文和英文可用内容宽度均336、滚动宽度336，无横向溢出。缩小后的画布高286，保持可见，边界附近选中元素受画布边缘约束。未重跑历史20种主标签组合。
+- v0.6已保存草稿可由新版本读取；v0.7显式保存并整页刷新重开已走通。实际PNG导出900×1200，下载完成并打开核对，含标题、正文、照片及新增装饰。
+- 18项Node行为检查通过：包括完整编辑历史、无变化与选择保留redo、文本溢出无数据丢失、照片九宫格标签/稳定编号、写作图文请求与预算、假适配器预览/确认/失败、重排文字与照片身份保留、v1迁移与过期响应隔离。
+
+边界：不使用OpenAI，尚未连接任何真实AI生成；假适配器单测不等于模型验收。浏览器SpeechRecognition入口具有键盘回退，本轮没有使用实际麦克风；手机、微信、原生双指、字体包、实际地图SDK/半径、云存储、自动周期与微信分享仍未验收。此记录只增加本轮具体检查结果。
+
+English: Actual browser checks confirmed wheel-only clustering/splitting, fixed-font width wrapping, title/body editing, resize undo/redo through deselection, decoration delete recovery, a required photo-linked writing brief, full retention of 3,280 overflowing characters, compact bilingual layouts and a downloaded/opened 900×1200 PNG. A viewport flow bug caught during QA was fixed and its affected actions repeated successfully. Eighteen Node behaviour regressions passed. Real AI, microphone, native touch/WeChat and map-SDK policy remain unverified; historical checks are not relabelled as new runs.

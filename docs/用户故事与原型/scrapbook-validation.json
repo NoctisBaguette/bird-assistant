@@ -1,5 +1,5 @@
 {
-  "version": "0.6",
+  "version": "0.7",
   "date": "2026-10-29",
   "base_commit": "a84e47946493d282e25b76f4bb6bf48d88c961ad",
   "original_stories": 19,
@@ -43,5 +43,23 @@
     900
   ],
   "imported_image_export_bytes": 544887,
-  "file_import_limits": "One normal PNG path; JPG/WebP, batch, invalid files and native WeChat remain unverified."
+  "file_import_limits": "One normal PNG path; JPG/WebP, batch, invalid files and native WeChat remain unverified.",
+  "v07": {
+    "date": "2026-10-29",
+    "unit_checks": 18,
+    "wheel_zoom_without_drag_verified": true,
+    "pinch_event_regression": true,
+    "native_pinch_verified": false,
+    "text_width_keeps_font_size": true,
+    "overflow_characters_retained": 3280,
+    "compact_editor_zh_en_no_horizontal_overflow": true,
+    "png_dimensions": [
+      900,
+      1200
+    ],
+    "ai_provider": "pending non-OpenAI selection",
+    "real_ai_verified": false,
+    "microphone_verified": false,
+    "legacy_migration_tested": true
+  }
 }

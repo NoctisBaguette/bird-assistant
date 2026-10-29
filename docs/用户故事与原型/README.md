@@ -18,7 +18,7 @@
 
 ## 体验原型
 
-下载 [单文件离线原型](prototype/dist/bird-assistant-prototype-offline-v0.6.html)，在浏览器打开。GitHub 文件页面不会直接运行 HTML，需要先下载原文件。无需安装依赖，默认中文，外侧可切换英文。
+下载 [单文件离线原型](prototype/dist/bird-assistant-prototype-offline-v0.7.html)，在浏览器打开。GitHub 文件页面不会直接运行 HTML，需要先下载原文件。无需安装依赖，默认中文，外侧可切换英文。
 
 推荐路线：识别 → 相机 → 使用示例插画 → 分析这张照片 → 比较相似鸟种与参考来源。也可按外侧19个故事入口逐项体验。
 
@@ -29,3 +29,11 @@
 在本目录执行 `python validate.py`，校验故事和页面编号、引用、验收条件数量及中英文对应关系。浏览器检查记录与静态校验含义不同，具体结果见相应评阅文件。
 
 手帐路线：手帐 → 打开示例素材 → 下一步 → 生成初稿 → 编辑并保存草稿 → 预览与导出。执行 python validate-scrapbook.py 检查增补设计；执行 node --test prototype/tests/scrapbook.test.cjs 检查关键状态保留。
+
+## v0.7 评阅修订（2026-10-29）
+
+私人在线预览：https://bird-assistant-journal-v07.zhou-colin.chatgpt.site/（需以所有者ChatGPT账号登录）。源码仍为浏览器交互原型，不代表微信或真实AI接入。
+
+新增地图即时聚合、标题/正文合并的自适应文本框、固定画布、完整事务撤销、九宫格照片名与扩展装饰。AI写作控件保留团队选定替代服务的接口，不使用OpenAI；真实生成待接入。三种起始风格可预览构图变体，不视为最终模板集。
+
+[累计开发记录](development-log.txt)包含此前讨论、困难、修复、验证与外部依赖。[本轮细节](08-scrapbook-design.md)和[检查记录](prototype/QA.md)分开列出实现与实际验证。

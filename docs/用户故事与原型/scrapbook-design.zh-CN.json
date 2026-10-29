@@ -1,5 +1,5 @@
 {
-  "version": "0.6",
+  "version": "0.7",
   "date": "2026-10-29",
   "status": "设计与浏览器演示，不是团队冻结范围",
   "stories": [
@@ -201,5 +201,8 @@
       ],
       "route": "journalLeave / journalClear / inline errors"
     }
-  ]
+  ],
+  "ai_provider_policy": "No OpenAI; team-selected alternative provider pending",
+  "writing_service_connected": false,
+  "revision": "2026-10-29 review feedback: dynamic clusters, text layout, pinned viewport, complete history and provider-neutral writing controls"
 }

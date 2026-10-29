@@ -64,3 +64,83 @@ test('unsafe caption markup is escaped in SVG and editable model remains separat
  const {J}=boot();const d=J.make(J.chosen(),'1:1','minimal');d.elements.find(e=>e.type==='text').text='<script>alert(1)</script>';
  const svg=J.svg(d,false);assert.ok(!svg.includes('<script>'));assert.ok(svg.includes('&lt;script&gt;'));
 });
+
+test('text width rewraps title and body without scaling fonts; canvas overflow is visibly ellipsized without data loss',()=>{
+ const {J}=boot();J.s.current=J.make(J.chosen(),'3:4','nature');J.s.selectedElement='title';const e=J.selected();
+ e.contentTitle='标题保留在同一个元素';e.text='长正文用于验证换行和画布溢出。'.repeat(20);J.fitText(e);
+ const size=e.fontSize,titleSize=e.titleSize,wide=e.h;
+ J.update({name:'jWidth',type:'range',value:200});J.commitEdit();
+ assert.equal(e.fontSize,size);assert.equal(e.titleSize,titleSize);assert.ok(e.h>wide);
+ const complete=e.text;e.y=J.s.current.height-140;J.fitText(e);const layout=J.textLayout(e,J.s.current);
+ assert.equal(layout.overflow,true);assert.ok(layout.visible.at(-1).text.endsWith('…'));assert.equal(e.text,complete);
+ assert.ok(J.svg(J.s.current,false).includes('…'));assert.ok(e.h<=140);
+});
+test('one edit transaction covers a typing session and no-op edits or selection preserve redo',()=>{
+ const {J}=boot();J.s.current=J.make(J.chosen(),'3:4','nature');J.s.selectedElement='title';const initial=snapshot(J.s.current);
+ for(const text of ['一','一段','一段完整文字'])J.update({name:'jText',type:'textarea',value:text});
+ assert.equal(J.s.past.length,0);J.commitEdit();assert.equal(J.s.past.length,1);
+ const final=snapshot(J.s.current);J.click('j-undo');assert.equal(snapshot(J.s.current),initial);
+ J.click('j-deselect');assert.equal(J.s.future.length,1);
+ J.update({name:'jElement',type:'select-one',value:'title'});
+ J.update({name:'jText',type:'textarea',value:J.selected().text});J.commitEdit();assert.equal(J.s.future.length,1);
+ J.click('j-redo');assert.equal(snapshot(J.s.current),final);
+});
+test('mixed add, title/body, background, crop, layering and delete undo/redo restore every element and attribute',()=>{
+ const {J}=boot();J.s.current=J.make(J.chosen(),'3:4','nature');const states=[snapshot(J.s.current)];
+ const step=fn=>{fn();J.commitEdit();states.push(snapshot(J.s.current));};
+ step(()=>J.click('j-add-text'));const id=J.s.selectedElement;
+ step(()=>J.update({name:'jTextTitle',type:'text',value:'旅行感想'}));
+ step(()=>J.update({name:'jText',type:'textarea',value:'等了很久，终于看到了它。'}));
+ step(()=>J.update({name:'jBackground',type:'color',value:'#ddeeff'}));
+ step(()=>J.click('j-add-decoration','flower'));
+ step(()=>J.click('j-forward')); // At the top: this is intentionally a no-op.
+ states.pop();
+ J.s.selectedElement=J.s.current.elements.find(x=>x.type==='photo').id;
+ step(()=>{J.click('j-crop');J.s.crop.zoom=1.8;J.s.crop.x=.7;J.click('j-crop-confirm');});
+ J.s.selectedElement=id;step(()=>J.click('j-backward'));step(()=>J.click('j-delete-element'));
+ for(let i=states.length-2;i>=0;i--){J.click('j-undo');assert.equal(snapshot(J.s.current),states[i]);}
+ for(let i=1;i<states.length;i++){J.click('j-redo');assert.equal(snapshot(J.s.current),states[i]);}
+});
+test('photo numbers survive moves and deletion; labels follow the nine canvas regions',()=>{
+ const {J}=boot();const d=J.make(J.chosen(),'3:4','minimal');J.s.current=d;const photos=d.elements.filter(x=>x.type==='photo');
+ const p=photos[0],number=p.photoNumber;p.x=0;p.y=0;p.w=100;p.h=100;assert.match(J.elementLabel(p),/左上/);
+ p.x=d.width-100;p.y=d.height-100;assert.match(J.elementLabel(p),/右下/);assert.equal(p.photoNumber,number);
+ J.s.selectedElement=photos[1].id;J.click('j-delete-element');assert.equal(p.photoNumber,number);assert.equal(d.nextPhotoNumber,5);
+});
+test('writing requests bundle only chosen and required linked photos plus layout budget and user instructions',()=>{
+ const {J}=boot();const d=J.make(J.chosen(),'3:4','nature');J.s.current=d;const photos=d.elements.filter(x=>x.type==='photo');
+ Object.assign(J.s.ai,{target:'new',photoId:photos[2].id,photos:[photos[0].id],purpose:'reflection',prompt:'鸟 #3 很胆小，等了两个小时。'});
+ const request=J.writingRequest();assert.equal(request.images.length,2);assert.equal(request.instruction,J.s.ai.prompt);
+ assert.ok(request.images.every(x=>x.src.startsWith('data:')));assert.equal(request.images[1].unresolved,true);
+ assert.ok(request.target.suggestedCharacters>0);assert.ok(request.target.availableHeight>0);
+ assert.equal(request.constraints.inventPersonalExperience,false);assert.ok(!request.images.some(x=>x.elementId===photos[1].id));
+});
+test('generated writing requires preview and explicit application, one undo restores old title/body; failures retain work',async()=>{
+ const {J}=boot();J.s.current=J.make(J.chosen(),'3:4','nature');const initial=snapshot(J.s.current);
+ Object.assign(J.s.ai,{target:'title',prompt:'根据我的经历写一段感想。'});
+ J.writingAdapter=async()=>({title:'树影里的等待',body:'等了两个小时，终于看见了那只胆小的鸟。'});
+ await J.generateWriting();assert.equal(snapshot(J.s.current),initial);assert.equal(J.s.ai.result.title,'树影里的等待');
+ J.click('j-ai-apply');assert.equal(J.s.current.elements.find(x=>x.id==='title').contentTitle,'树影里的等待');
+ J.click('j-undo');assert.equal(snapshot(J.s.current),initial);
+ J.writingAdapter=async()=>{throw Error('offline');};await J.generateWriting();assert.ok(J.s.ai.error);assert.equal(J.s.ai.prompt,'根据我的经历写一段感想。');assert.equal(snapshot(J.s.current),initial);
+});
+test('reflow keeps standalone and linked title/body content and stable photo identity while varying the composition',()=>{
+ const {J}=boot();J.s.current=J.make(J.chosen(),'3:4','nature');const before=J.s.current;
+ before.elements.find(e=>e.id==='title').text='My whole-journal reflection';
+ J.click('j-add-text');const extra=J.selected();extra.contentTitle='独立标题';extra.text='一段单独的感想';
+ const oldPhotos=before.elements.filter(e=>e.type==='photo').map(e=>[e.id,e.photoNumber]);
+ J.click('j-layout');J.click('j-layout-preview');const first=J.copy(J.s.pending);J.click('j-layout-preview');const second=J.s.pending;
+ assert.equal(second.elements.find(e=>e.id==='title').text,'My whole-journal reflection');assert.equal(second.elements.find(e=>e.id===extra.id).contentTitle,'独立标题');
+ assert.equal(snapshot(second.elements.filter(e=>e.type==='photo').map(e=>[e.id,e.photoNumber])),snapshot(oldPhotos));
+ assert.notEqual(first.layoutVariant,second.layoutVariant);assert.notEqual(snapshot(first.elements.filter(e=>e.type==='photo')),snapshot(second.elements.filter(e=>e.type==='photo')));
+});
+test('legacy v1 saved drafts migrate to content-sized text without deleting any source or full text',()=>{
+ const {J,store}=boot();const d=J.make(J.chosen(),'3:4','minimal');d.schemaVersion=1;const e=d.elements.find(e=>e.type==='text');delete e.contentTitle;e.text='Legacy notes';e.h=900;
+ store.set(J.key,JSON.stringify([d]));const restored=J.state().drafts[0];assert.equal(restored.schemaVersion,2);assert.equal(restored.elements.find(x=>x.id===e.id).text,'Legacy notes');assert.ok(restored.elements.find(x=>x.id===e.id).h<100);assert.equal(restored.elements.length,d.elements.length);
+});
+test('late writing responses cannot attach to another journal or replace its content',async()=>{
+ const {J}=boot();J.s.current=J.make(J.chosen(),'3:4','nature');J.s.ai.prompt='Write from my notes';J.s.ai.target='title';let respond;
+ J.writingAdapter=()=>new Promise(resolve=>respond=resolve);const running=J.generateWriting();
+ J.open(J.make(J.chosen(),'1:1','minimal'));const other=snapshot(J.s.current);respond({title:'Old response',body:'From the previous journal'});await running;
+ assert.equal(snapshot(J.s.current),other);assert.equal(J.s.ai.result,null);assert.equal(J.s.ai.busy,false);
+});

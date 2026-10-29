@@ -1,0 +1,284 @@
+羽迹 Bird Assistant — 开发过程、反馈与决策记录
+文件版本：1.1
+记录日期：2026-10-29（Asia/Shanghai）
+当前检查点：v0.7 浏览器原型；用户确认需求并授权实施，已修订地图/编辑交互与AI写作入口，真实AI服务未接入。
+用途：保留本会话中的需求演化、困难、修复、验证与未决问题，供以后纳入 GitHub。
+语言：中文为团队阅读正文，末尾附英文摘要。
+日期规则：只使用会话或提交记录中可确定的日期；更早讨论无准确日期时明确注明。以下不是聊天逐字转录。
+
+状态说明
+[已实现]：当前源码已有该行为，仍可能存在缺陷。
+[已验证]：有具体测试或人工检查证据；只适用于注明的范围。
+[待实施]：用户反馈已记录，当前版本尚未修复或接入。
+[讨论中]：意图已理解，细节或取舍仍供用户/团队确认。
+[外部依赖]：需真实平台、接口、权限或其他负责人配合。
+代码检查的推断与运行复现分开记录；不会把建议写成已完成结果。
+
+一、较早设计与提交（确切的逐项讨论日期不完整；2026-10-23 有提交记录）
+
+H01 — 从功能列表整理为故事与交互流程
+背景：Issue #3 要求用户故事卡与产品原型，Issue #4 要求九维竞品调研。
+成果：19 张故事卡、28 个页面/状态的原有设计；可点击的中英文羽迹原型；8 个产品的九维比较。
+主要决策：观察默认私人保存；收藏、地图发布、论坛发布分别控制。识别不确定仍可保留素材为待鉴定。模型原始建议、分数与用户鸟名选择分别保留。
+困难：界面设计容易被误解为真实模型、地图、账号或微信能力已经接入。
+处理：在演示中标明模拟边界，不将模型分数当作正确率，不将用户选择当作专家确认。
+状态：[已实现/已提交] 设计与原型；真实端到端服务另行验收。
+
+H02 — 中文与英文内容复核
+背景：用户提交前要求再次检查中文流畅度、内容、规则引用和原型说明。
+处理：统一“验收条件”，调整不自然措辞和统计说明；对齐规则编号；明确好友关系不自动开放私人内容，移除好友会影响好友可见内容的访问；修正英文旧目录引用。
+验证：原有结构、文档链接、JS 语法与离线打包检查通过。
+状态：[已验证] 文稿与所列静态检查；不等于微信真机验收。
+
+H03 — 中央识别按钮与布局问题
+问题：中央按钮曾因 flex 收缩显示为椭圆，部分图标、地图标记和说明间距也出现视觉问题。
+处理：中央容器固定为不可收缩的 56×56 圆形，并为地图说明和面板留空间。
+状态：[已实现/已验证] 具体历史浏览器检查见原型 QA；后续修订仍应回归，不能只看 SVG 图标本身。
+
+H04 — GitHub 403 与最终上传方法（2026-10-23）
+问题：读团队仓库成功不等于能写入；Windows HTTPS 凭据配置与上游账户写权限分别造成阻碍。团队仓库拒绝 NoctisBaguette 推送。
+处理：保留已完成的本地提交；通过 Git Credential Manager 选择正确账户；用户创建 NoctisBaguette/bird-assistant fork；将任务分支推送到 fork，再向 bird-assistant/bird-assistant 的 main 发起 PR。
+后续：连接对个人 fork 有写权限，最终文字修订可以直接更新 fork 任务分支，并保留真实父提交、预期分支头检查。
+提交记录：PR #9 用户故事/原型；PR #10 竞品调研。会话后续检查确认已合并。
+复用规则：不把临时补丁验证仓库的根历史当作团队历史，不盲目强推或覆盖他人更新。
+完整操作说明另存 bird-assistant-github-workflow.txt。
+状态：[已完成] 历史交付。
+
+H05 — 组会汇报准备（在上述提交之后）
+整理了中文与英文说明：做了什么、为何区分私人记录与公开副本、哪些是模拟、首版范围与接口/负责人尚需团队决定什么。
+保留原则：故事或页面数量不是已完成功能数量；技术预研不等于微信真机集成完成。
+
+二、2026-10-29：手帐方向与新任务
+
+H06 — 导航变化与出行手帐
+用户意图：用“手帐”替换识别左侧的“收藏”主标签；收藏继续保留在“我的”。
+目标导航：首页｜手帐｜识别｜讨论｜我的；保留中央圆形识别入口。
+手帐目标：以照片、文字、背景与装饰形成适合保存、论坛和朋友圈分享的作品；照片与文字穿插，不是左右两列机械分离。
+素材：手机相册、自己的观察与收藏；支持自选照片或时间范围。
+编辑：照片的裁剪、尺寸、旋转；文字字体、大小和颜色；背景与装饰；生成后继续人工修改。
+状态：导航及基础创作流程在 v0.6 浏览器中已有；真实微信与 AI 接入仍是外部依赖。
+
+H07 — 保留可编辑原稿
+决策：照片、文字和装饰作为独立对象保存；PNG/JPEG 是导出副本，不替代原稿。
+原因：单张生成图片无法充分支持用户后续修改文字、照片和排版。
+裁剪：保留原图或原媒体的引用，只调整显示窗口。当前演示保留的是导入时生成的预览副本，不修改设备原文件。
+未来 AI：可返回布局描述和文字建议，由编辑器校验并组装对象；具体服务尚未选择或接入。
+
+H08 — 周期总结
+用户意图：有素材时形成每日建议，也可按周、月、年或自选范围整理；人工编辑后仍可继续修改。
+设计建议：自动建议与人工版本分别保留，新素材不覆盖人工编辑；日期未知不随意归入某天；手机相册需先由用户选择/导入。
+v0.6 状态：固定示例建议卡、周期类型标签；没有后台任务、自动扫描、真实 AI 或多页年鉴。
+状态：[讨论中/外部依赖] 真实自动总结。
+
+H09 — Issue #12 的范围冲突
+任务包括照片/录音采集、分析、候选复核和观察草稿交接。
+冲突：开头排除连续相机实时识别，后附视觉接入说明却要求 live 会话、抽帧与 WebSocket；SRS V1.1 亦包含实时识别。
+处理方向：保留冲突记录，由团队确认本期验收范围；不静默删去任一要求。
+共享边界：识别交接观察草稿；手帐未来通过统一媒体/观察接口选材，不读取识别页内部状态。单张图片适配、音频格式/时长、业务网关和基础工程需对齐。
+状态：[讨论中/外部依赖]；手帐不并入 #12 验收。
+
+三、2026-10-29：v0.6 实现与验证
+
+H10 — 基础手帐浏览器流程
+已实现：手帐首页 → 选材 → 风格/比例 → 本地模板初稿 → 对象编辑 → 本机草稿 → 重开 → PNG 导出。
+编辑：照片/文字/装饰可独立调整，照片可裁剪、替换、移动、缩放和旋转；文字有基本样式；背景可修改；整体重排先预览，可取消或撤销。
+新增设计：6 个手帐故事、8 个页面/状态；原有 19/28 单独保留，合计设计 25 个故事和 36 个页面/状态。
+边界：不是 AI 生成；示例是代码绘制的插画；草稿使用当前浏览器 localStorage；论坛为会话演示；微信能力和云端手帐未接入。
+
+H11 — 已执行的检查与下载修复
+浏览器：20 种主标签/语言/屏宽组合与 4 种编辑器组合未见横向溢出，中央识别圆钮维持 56×56。
+流程：本机保存后刷新重开，原收藏入口与照片候选比较流程可用；论坛成品图演示不增加私人观察或地图贡献。
+行为检查：8 项，覆盖日期未知、选择顺序、裁剪取消/确认、重排与撤销、保存恢复、存储失败、重复素材 ID/标签和 SVG 转义。
+下载困难：最初数据 URL 的下载未得到完成确认；改为可见的 Blob 下载链接后，实际下载并打开 900×1200 PNG。
+注意：这些结果没有穷尽撤销/重做、长文本、手势或所有布局状态；本轮用户反馈揭示原检查未充分覆盖的真实可用性问题。
+
+H12 — 本地预览授权重试与真实文件选择器
+第一次检查因预览访问/授权中断未完成，初始记录保留“未验证”。
+用户随后要求重试，并说明已批准 localhost 访问。
+重试结果：实际文件选择器导入一张 PNG；出现并自动选中，日期仍未知。完成自定义标题、4:3 初稿、裁剪、本机保存、全页刷新重开、PNG 渲染与实际下载。
+产物：1200×900 PNG，544887 字节，已打开核对。
+验证范围：正常 PNG 导入路径；JPG/WebP、批量、无效文件及微信真机没有因此被自动标记为通过。
+证据：fork 分支 docs/scrapbook-prototype-v06 的 QA 与 scrapbook-validation.json。
+提交：6e9ecbbf73a379579008cd681c4438257142ac05 为 v0.6；4a2aceb7f2ba9a3216c4f977431694b600d54daa 补充 PNG 重试记录。
+
+四、2026-10-29：用户本轮评阅反馈（下一版待实施）
+
+R01 — 地图聚合随缩放及时变化
+反馈：缩小后应及时合并，放大后应及时展开；不能等拖动地图才变化。
+代码检查：wheel 缩放只更新地图 transform，未重算聚合；双指过程也主要更新 transform，完整渲染在最后一指结束后才进行。按钮缩放当前已经调用完整渲染，路径不一致。
+处理要求：按钮、滚轮、双指都从同一视口状态重算聚合并更新点；必要时逐动画帧合并更新，不等下一次拖动。
+范围：具体聚合半径与缩放阈值由后续地图平台决定，本轮不冻结数值。聚合计数仍表示观察记录数。
+状态：[待实施]；代码检查不等于已用各种输入设备复现。
+
+R02 — AI 文字要表达内容，不止是鸟名
+反馈：用户可输入或口述感想、拍摄经历与想法，例如第2张照片对应的鸟难找、胆小、拍摄等待很久，当天天气不错。
+目标：生成感想、叙事、鸟类介绍或组合文字；支持整份手帐、指定图片和单个文字框三个层次。
+语音：采集/转写为可编辑的文字，再与用户选定的图片和请求一起交给生成服务。语音转写与文字生成可以是不同能力，不预设供应商。
+用户叙事与事实区分：用户提供“找了很久/天气好”可用于写作；不能仅凭照片编造这些经历。鸟类介绍要基于所选鸟种和可核查信息，待鉴定状态仍保留。
+状态：[讨论中/待实施]；本轮不接真实 API。
+
+R03 — 图片、意图与可用版面共同参与生成
+请求上下文：稳定图片 ID、选定图片/预览、对应用户输入、已知鸟名与不确定状态、目标文字框及其可用宽高、字体/行距和输出长度目标。
+仅将用户选定用于本次生成的素材传入，不无差别打包全部私人记录。
+流程：生成候选文字 → 实际排版测量 → 预览 → 用户应用。缩短、重排或重新生成后仍可撤销。
+状态：[讨论中/待实施]。
+
+R04 — 文本长度按版面预算控制
+反馈：AI 输出量取决于手帐可用空白及对应文字区域。
+设计解释：预算以分配给该文字块的区域、宽度、字体和行距为依据，不只计算总空白面积；不同语言的字符宽度不同。
+生成端的字数限制只是第一道约束；客户端按实际字体换行测量。超出时给出更短版本或排版调整，不静默溢出或无限缩小字号。
+人工输入仍保留原文，超出版面时提示调整，不自动删文。
+状态：[讨论中/待实施]。
+
+R05 — 单一文字元素包含标题和正文
+反馈：标题与正文在同一个文字框内部编辑，避免元素列表膨胀。
+目标：一个元素 ID、一套位置/宽度/旋转与图层关系，内部有可选标题和正文；可分别设置两部分文字样式，但整体移动、删除与撤销。
+既可关联某张图片用于 AI 上下文，也可作为独立的整页导语、感想或结语。
+图片关联默认是内容关系；是否建立共同移动的组合对象仍不作为隐含要求。
+状态：[讨论中/待实施]。
+
+R06 — 文本宽度可拖，文字框高度自动适应
+反馈：用户拖动右侧边缘改变宽度；高度由标题、正文和换行结果自动计算。
+关键区别：改变文字框宽度是重新换行，不是同步缩放字体。选择边界应贴合真实文字内容，避免大片空框。
+编辑面板内的输入区域也宜按内容增高到合理上限，避免单行内容占据过大区域。
+状态：[待实施]。
+
+R07 — 画布固定可见，并跟随选中元素
+反馈：调整下方控件时不应来回滚到画布；保留合适的画布显示空间，约半屏只是意图，不是固定最终数值。
+设计建议：进入时较大概览；向下滚动时平滑收缩到合适最小高度并固定。属性面板可继续滚动，画布持续可见。
+焦点：选中元素尽量居中显示；接近画布边缘时，将视口限制在画布边界内。展示视口的平移/缩放不改动对象位置，也不改变导出图。
+补充：大元素、键盘展开、横竖比例与窄屏需单独考虑；可以提供全页概览入口。
+状态：[讨论中/待实施]。
+
+R08 — 以3×3位置给照片命名
+反馈：元素列表中的“照片”过于笼统；用左上/上中/右上、左中/中间/右中、左下/下中/右下帮助定位。
+建议：用图片中心所在单元格近似定位，显示“照片2（右上）”；第2张的稳定 ID 与序号不因移动而改变，位置名称随移动更新。
+原因：布局中的位置提示会变化，但“给第2张鸟写感想”的 AI 引用不能串图。相同区域的多张照片也需可区分。
+状态：[讨论中/待实施]。
+
+R09 — 装饰是可扩展素材库
+反馈：未来需要更多装饰，不限于一片叶子。
+目标：装饰选择器支持类别和变体；叶片、纸胶带、边框、印章等可作为候选示例，具体首批清单后续确定。
+单个装饰编辑中可更换样式、颜色、尺寸、旋转与图层；不为每个样式制造无必要的独立操作入口。
+状态：[讨论中/待实施]；未承诺首轮实现全部候选素材。
+
+R10 — 删除入口应就近可见
+现状：当前已有“删除元素”，但位于较长属性列表底部。
+反馈解释：功能存在不等于容易找到。
+目标：每个可编辑元素都具备清晰删除入口，放在选中元素操作区，且整次删除可撤销。
+状态：[待实施] 交互优化。
+
+R11 — 按钮间距与选择框
+反馈：排版预览等页面按钮紧贴；选择高亮框过大或盖住别的内容。
+目标：统一按钮、组间与页面边距；选择框依据真实对象/文字边界，保持轻量轮廓和清晰拖拽点。选择提示不加入遮挡内容的实心覆盖层。
+对象本身允许用户主动叠放；不把所有重叠都判定为错误，也不让选择提示抢走其他不必要的点击。
+证据：本轮4张截图显示按钮接触、文本框多余高度、画布滚出视区和底部删除入口。
+状态：[待实施]。
+
+R12 — 撤销/重做按完整用户动作记录
+反馈：已有撤销与重做，但有时不能干净恢复，一些元素或变化没有完整包含。
+代码检查：每次 input 更新都会入历史；在元素 pointerdown 时就创建历史，即使最后只是选择。可能产生过细步骤、无变化历史或提前清空 redo；这只能解释部分现象，未宣称已定位所有缺陷。
+目标：一次拖动、一次滑杆调整、一次文字编辑提交、一次裁剪确认或一次应用 AI 建议，分别是完整事务；对象增加/删除/替换、标题正文、背景、图层与重排涉及的数据都一起恢复。
+取消预览不计入历史；单纯选择、查看、属性面板滚动与画布视口移动不占用文档撤销步骤。只有真正的新编辑才清空 redo。
+状态：[待实施]；需要新增用户可感知动作的回归检查。
+
+R13 — 撤销/重做图标
+反馈解释：为已有按钮加入逆时针和顺时针弯箭头，如“↶ 撤销 / ↷ 重做”，增强识别。
+这项首先按按钮图标理解；对象自身已有旋转设置，不隐含新增另一套旋转功能。
+状态：[讨论中/待实施]。
+
+R14 — 在线预览与交付形式
+现状：最近交付为可下载离线 HTML；localhost 是检查用预览，不是持久发布的在线站点。
+用户询问是否还会有在线站点。
+讨论方向：下一次已评阅修订可同时提供私人在线预览与离线文件；具体发布在后续构建时处理，本轮未创建/发布新站点。
+状态：[讨论中]。
+
+R15 — 开发记录本身
+用户明确要求：保存本轮及之前的讨论、困难、修复和验证，尽可能注明日期，未来加入 GitHub。
+本文件：首次建立的可维护记录，区分已有能力、具体证据、已记录反馈和待实施要求；本轮只做讨论和记录。
+后续每轮追加：日期、用户反馈、决策/原因、涉及文件、状态、验证方法与结果、剩余限制。不要只写“完成”或把所有讨论逐字堆积。
+状态：[已创建] 此文本文件；尚未纳入 GitHub。
+
+五、讨论时建议的实施顺序（随后已获用户确认；不是团队排期承诺）
+
+1. 先修地图动态聚合与撤销/重做事务，恢复交互基础可靠性。
+2. 重做画布/属性区域布局、文字框模型和动态高度，并改善按钮间距、选择边界、删除入口与元素命名。
+3. 设计整页/图片/文字框的 AI 请求面板、语音转写与长度预算；通过明确的示例状态检查交互。
+4. 在真实小程序环境验证候选编辑引擎、文字测量、字体、手势、导出和媒体存储，再接真实 AI 服务。
+5. 后续周期生成、更多装饰与多页汇总独立收敛，#12 另行按团队确认范围推进。
+
+六、资料与证据索引
+
+团队仓库：https://github.com/bird-assistant/bird-assistant
+个人 fork：https://github.com/NoctisBaguette/bird-assistant
+当前原型分支：https://github.com/NoctisBaguette/bird-assistant/tree/docs/scrapbook-prototype-v06
+Issue #12：https://github.com/bird-assistant/bird-assistant/issues/12
+原有提交：PR #9、#10；本轮不重新核对其历史审批细节。
+相关文件：bird-assistant-github-workflow.txt；docs/用户故事与原型/prototype/QA.md；scrapbook-validation.json；08-scrapbook-design.md；en/09-scrapbook-design.md。
+本轮检查的应用源码 blob：app.js e9122fbaf9741cb1fe0d6fa2f1d47163e71eb4ff；scrapbook.js 879a6fb5af35465222098aafc9756acd958838aa。
+本轮输入截图：image(20261029-022004).png、image(20261029-022717).png、image(20261029-022802).png、image(20261029-022847).png。
+
+
+七、2026-10-29：需求确认与v0.7实施记录
+
+H13 / R16 — 溢出与动态设计补充
+用户确认上一轮理解正确，授权实际修订；补充文字过多时加“…”提示，三种起始风格仅为原型，不是最终固定设计。后续接入更丰富的布局、图文放置及裁剪能力，每份手帐可以不同。
+结果：[已实现] 元素列表长名称与画布文本末行省略；完整原文保留。[已实现] 本地构图变体预览；[外部依赖] 智能排版/裁剪服务与原生引擎。
+
+H14 / R17 — 明确禁止OpenAI
+助手曾错误地将供应商未选定解读成采用OpenAI，并为密钥选择停下。用户再次明确早已说过不使用OpenAI，小程序开发不方便，希望接入更便宜的其他AI。
+决策：不创建OpenAI密钥、不引入OpenAI SDK、不调用OpenAI服务；本轮继续已授权的界面/交互，写作采用供应商无关契约，待团队选择替代服务后接后端。后续不得重复默认推荐OpenAI。
+状态：[已执行] 项目约束；真实供应商、价格和网关尚未选择或验证。
+
+I01 — R01地图实时聚合
+修复：抽离mapData/mapMarkers/updateMapView，按钮共用更新函数，滚轮与双指移动在下一动画帧刷新标记层，保留正在进行的指针手势DOM。
+验证：[已验证] 实际滚轮无需拖动即可合并和分离；Node两指事件在释放前也重算。临时0.9演示阈值未当作最终SDK半径。真实地图平台与真机仍待接入。
+
+I02 — R05/R06文本与R16省略号
+修复：可选标题和正文同属一个对象，分别提供编辑字段；实际字体测量换行，右侧宽度拖动只改宽度，高度随内容变化。画布剩余高度不足时最后一行加省略号，原文不裁掉。
+验证：[已验证] 浏览器宽度756→484.57，字号23不变；3280字符仍保留；撤销恢复旧正文。v1草稿迁移到v2保留元素、来源与原文。
+
+I03 — R07/R11画布与间距
+修复：画布固定在撤销工具栏下，随滚动缩小，选择元素尽可能居中，平移受画布边界约束；可切整页与聚焦。位置变化仅作用于查看视口。选框收紧、删除前置，属性/预览/导出按钮增加间距。
+发现与修复：最初视口缩小还减少文档流高度，自动滚动后按钮会在点击中移位，浏览器测试曾触发错误按钮。改为保留固定文档流占位、只缩小可见视口。重复装饰和照片写作操作后通过。
+验证：[已验证] 紧凑中英文内容宽度和滚动宽度均336；缩小后画布286高仍可见。原生软键盘和手机布局仍待验证。
+
+I04 — R08/R09/R10/R12/R13对象与历史
+修复：照片编号稳定，位置按中心点映射九宫格；扩展六类装饰；选中元素上方可删除。撤销/重做增加弯箭头，以完整文档事务包含文字、图片、裁剪、背景、图层和增删；选择、无变化、视图变化不清空redo。重排保留所有文字与照片身份、裁剪，允许预览多种构图。
+验证：[已验证] 混合操作逐步撤销/重做完整恢复、选择后重做保留、装饰删除恢复、构图变化保持自定义文字与照片ID。历史最多50步，媒体内存优化属于后续生产工作。
+
+I05 — R02/R03/R04写作交互
+实现：[已实现] 整页/照片/文本框入口，感想经历/鸟类介绍/分享类型，输入要求、照片勾选、必要关联图片随请求附上；整体新文字可选择照片上方或下方留白。语音入口使用浏览器能力，转写可编辑，不可用回退输入法。
+契约：instruction、intent、language、existingText、target位置/尺寸/字体/行高/长度预算、选定images及已知标签/备注/待鉴定信息；不从图片编造耗时、天气或经历。近似留白由相邻元素与字体测量得到；过长输出预览提示，完整保存，不覆盖未确认的用户内容。
+状态：[外部依赖] 尚未连接真实AI；按钮明确显示待接入，不用固定文案冒充AI。适配器的请求、预览确认、失败保留和过期结果隔离通过假服务单测。没有实际使用麦克风，未将浏览器转写当作微信ASR验收。
+
+I06 — 验证、文件与边界
+[已验证] 18项Node行为检查；真实浏览器的轮缩、宽度拖动、事务历史、装饰恢复、写作要求、完整溢出文字、紧凑中英文、保存/刷新重开与900×1200 PNG下载/打开。
+[已实现] v0.7离线HTML；开发记录同一文本持续追加，提供于源码文档目录。
+[已发布] 仅所有者的私人在线预览：https://bird-assistant-journal-v07.zhou-colin.chatgpt.site/；站点发布返回成功。云浏览器打开后为正常ChatGPT登录门页，未进行登录；交互验收在相同源码的本地预览完成。
+源码交付分支：docs/scrapbook-prototype-v07（保留v0.6提交历史；不修改团队main，也未创建或合并PR）。
+[未重跑] 历史20种主标签组合与全部识别/社交异常，保持历史证据原日期。
+[未接入] 微信原生工程、真实AI/地图SDK、云端同步、周期任务、多页年鉴、真实微信分享。
+#12范围冲突仍单列，未因手帐工作默默改变识别需求或负责人。
+
+English update: The user approved the revision and explicitly ruled out OpenAI. v0.7 implements live demo clustering, title/body text boxes with width-driven wrapping and lossless ellipsis, a pinned boundary-clamped canvas, stable positional photo names, six decorations, visible deletion, better spacing and complete history transactions. QA caught and fixed a control-shift bug during viewport shrinking. The writing UI prepares instructions, required/selected images and a layout budget through a provider-neutral adapter; no real model or microphone was verified. Eighteen behaviour regressions and the concrete browser/PNG checks above passed. Layouts remain extensible starting points, not a final fixed template set.
+
+English summary
+
+This log records the known 23 October submission history and the 29 October journal discussions, implementation, verification and new review feedback. Exact dates of earlier individual discussions are unavailable and are not invented.
+
+The successful GitHub route was the user's own fork followed by PRs into the team repository. The design separates private observations, collections, map publications and forum posts, and retains model suggestions separately from user labels.
+
+v0.6 is an editable browser prototype with local template generation and browser-local drafts. It has no real AI, automatic summary scheduler, cloud journal sync or native WeChat acceptance. Earlier checks covered 20 main-tab layouts, four editor layouts and eight behaviour checks. The retried normal PNG import path passed import, crop, save, full reload/reopen, rendering and download; other import formats and error paths remain separately scoped.
+
+The next revision requirements are:
+- Recompute clustering as zoom changes, consistently for buttons, wheel and pinch. The final radius belongs to later map-platform decisions.
+- Add AI writing for the whole journal, selected photos and individual text blocks, from typed or transcribed instructions. Include the selected images, stable IDs, known context and layout budgets.
+- Support reflective stories and factual bird information; do not fabricate personal experiences from photographs.
+- Use one text object containing optional title and body. User-controlled width rewraps content; height is derived from actual typography. Width changes do not scale the font.
+- Keep the canvas visible while properties scroll; focus the selected object with a viewport clamped to canvas boundaries. View changes do not move document objects.
+- Label photos by approximate 3×3 position while keeping their AI identity stable, for example Photo 2 (top right).
+- Make decorations extensible, deletion discoverable, spacing consistent and selection bounds tight.
+- Treat undo/redo as complete user actions. Selection/no-op/view actions must not consume document history or clear redo. Add curved-arrow icons to the existing buttons.
+
+Source inspection supports the delayed wheel-clustering diagnosis and identifies overly granular history recording as a likely contributor to undo behaviour. It does not claim exhaustive runtime reproduction. The initial feedback-only pass recorded the revision before implementation. The following v0.7 pass was separately authorized.

@@ -1,4 +1,4 @@
-# Outing journals: design, stories and implementation boundaries v0.6
+# Outing journals: design, stories and implementation boundaries v0.7
 
 Date: 2026-10-29. Based on this discussion, second meeting notes and main a84e479. Six stories and eight screens/states supplement the original 19/28 set. JRN-06 is future design, not implemented automatic generation.
 
@@ -137,3 +137,22 @@ This document does not edit #12, assign teammates or merge journal acceptance in
 - [Issue #12](https://github.com/bird-assistant/bird-assistant/issues/12)
 - [Prototype instructions](../prototype/README.md)
 - [Chinese counterpart](../08-scrapbook-design.md)
+
+## v0.7 review revision (29 October 2026)
+
+The user authorized implementation and reaffirmed that this project must not use OpenAI. A cheaper provider suited to the mini-program will be selected later. This revision creates no API key and calls no real generation service.
+
+- Wheel, pinch updates and zoom buttons refresh the marker layer without a follow-up drag. The existing demo threshold is temporary; the selected map SDK will determine the final radius.
+- One text object contains an optional title and body. Its right-edge handle and width slider rewrap at the same font size; measured typography determines height. Canvas overflow and long selector labels end with an ellipsis while complete text remains editable.
+- The canvas stays pinned beneath the toolbar and shrinks as properties scroll. Focus follows the selected element with boundary clamping; whole-page viewing remains available. A fixed flow placeholder prevents controls moving during clicks.
+- Complete document transactions cover typing sessions, gestures, crop confirmations and reflow. Selection, cancelled previews and no-op changes preserve redo. Up to 50 steps are retained; production memory handling remains future work.
+- Selection headers expose Delete. Stable photo numbers gain approximate 3×3 location labels. Six extensible decorations are available. Preview/apply/export controls have spacing.
+- The three styles are starting points, with alternative local compositions. Reflow retains photo identity, crops and all text; custom decorations, positions and background may be rebuilt. Richer layout/cropping services remain future integration.
+- Writing controls cover standalone journal text, a photo caption and individual text boxes. Reflections, bird information and social posts accept typed instructions, checked photos and a layout budget. New overall text can use a gap above or below photos. Dictation uses browser capability with editable text and a keyboard fallback; real microphone and WeChat speech remain unverified.
+- No canned output is presented as AI. The provider-neutral writing adapter is unconfigured. Tests inject a fake adapter only.
+
+The request contract carries instruction, intent, language, existing title/body, target geometry and typography, suggested length, selected images with stable identity/context and uncertainty-preserving constraints. Semantically linked images are required; other images are opt-in. Personal experience must come from the user. The client approximates available space through measured text and nearby elements, previews returned title/body, warns about excess length, retains full text and applies only after confirmation. Failed requests preserve work; stale responses cannot attach to another journal.
+
+Legacy schemaVersion 1 drafts migrate to 2 without removing elements, sources or complete text. The local storage key is unchanged; no date invention or automatic upload occurs.
+
+Verification: 18 Node behaviour regressions; actual browser wheel clustering/splitting, combined title/body, right-edge width drag, complete undo/redo, selection preserving redo, decoration delete recovery, photo-linked writing briefs, preservation of 3,280 overflowing characters, compact Chinese/English layouts without horizontal overflow and an actual downloaded/opened 900×1200 PNG. Real AI, microphone, native pinch and WeChat remain unverified. See QA.md and development-log.txt.
