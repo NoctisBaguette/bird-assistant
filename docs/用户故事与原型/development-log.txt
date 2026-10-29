@@ -1,7 +1,7 @@
 羽迹 Bird Assistant — 开发过程、反馈与决策记录
-文件版本：1.2
-记录日期：2026-10-29（Asia/Shanghai）
-当前检查点：v0.8 浏览器原型；文字/语音同位切换、按住确认与左滑取消、圆角与AI视觉已修订，真实AI/ASR服务未接入。
+文件版本：1.6
+记录日期：2026-10-30（Asia/Shanghai）
+当前检查点：v0.9 识别前端设计与中英文交接已完成、私有预览已发布；真实微信相机/音频/模型仍待开发与验收。
 用途：保留本会话中的需求演化、困难、修复、验证与未决问题，供以后纳入 GitHub。
 语言：中文为团队阅读正文，末尾附英文摘要。
 日期规则：只使用会话或提交记录中可确定的日期；更早讨论无准确日期时明确注明。以下不是聊天逐字转录。
@@ -312,3 +312,275 @@ The next revision requirements are:
 - Treat undo/redo as complete user actions. Selection/no-op/view actions must not consume document history or clear redo. Add curved-arrow icons to the existing buttons.
 
 Source inspection supports the delayed wheel-clustering diagnosis and identifies overly granular history recording as a likely contributor to undo behaviour. It does not claim exhaustive runtime reproduction. The initial feedback-only pass recorded the revision before implementation. The following v0.7 pass was separately authorized.
+
+
+十、识别模块重新定义与系统设计讨论（2026-10-29；未实施）
+
+本轮依据：用户提供的当天会议结论，以及对团队仓库 Issue #12、Issue #13、视觉后端文档和源码的只读检查。会议结论优先于旧任务中相冲突的范围说明。本轮是需求与工程方案讨论，没有重写识别原型、部署新版本、修改团队 Issue 或宣称真机能力已经验证。现有 v0.8 手帐原型保持原状。
+
+R21 — 识别入口与两个模块
+[待实施] 识别页默认直接进入实时取景，录音、相机、视频统一在一个主模块：取景上显示鸟的检测框，下方显示声音识别信息。辅助模块从相册导入图片/视频，或从文件导入音频；“先用系统相机拍、以后再识别”是正式核心流程。
+[讨论中] 常见短时使用和长期蹲守属于使用情境，不应让用户先选择“新手/专业用户”。同一界面可提供快速识别与省电等候。不到一分钟是设计目标场景，不是强制停止时间。
+[讨论中] 进入页面后，相机初始化与识别会话准备并行；已有授权时尽快显示取景，首次必要授权另行处理。拍摄不等待定位、天气、上传、模型或 WebSocket 成功。服务不可用时仍可拍摄，稍后识别。
+
+R22 — 分开处理预览、分析与保存
+[讨论中] 不用高分辨率 takePhoto 每秒拍多次作为默认识别输入。应评估微信相机实时帧接口，挑选并编码有限分析帧。
+四条数据流：原生取景预览；最新优先的低负载分析副本；用户主动拍摄的高质量照片/视频；最多 1–2 张待用户确认的自动候选补救图。音频另设有界窗口。相机运行、屏幕和编解码仍耗电，降低上传频率不等于没有发热。
+[讨论中] 限制同时上传数量、帧队列长度、每秒字节数、内存、缓存文件与会话时长。忙时丢弃过时分析帧，不积压一分钟照片等待识别；原始拍摄素材不因识别队列清理而删除。
+容量示例仅用于估算：10 秒 × 2 帧/秒 × 150 kB/帧约 3 MB 压缩图；720p RGBA 单帧约 3.52 MiB，真实峰值内存还包括原生相机、编码和拷贝。2 帧/秒、150 kB/帧约 2.4 Mbit/s、18 MB/分钟上传。以上不是实测或验收参数。
+
+R23 — 原生相机、缩放与 OEM 图像处理边界
+[外部依赖] 微信 camera 是原生组件，有 setZoom 和实时帧 API；不等于可以嵌入每家手机完整的系统相机应用，也不保证全部物理镜头、计算摄影、HDR 或成对 RAW/JPEG。
+[讨论中] 最可靠保留厂商相机效果的路径，是用户先用系统相机拍摄，再导入其保存的原图。导入原图保持不变，识别使用派生副本/鸟体裁切。
+[纠正概念] 相机预览的 RGBA 像素不等于传感器 RAW/DNG；非系统相机拍摄也不等于必然获得未处理 RAW。不能假定算法处理后的照片一定更不适合识别，应以模型真实样本验证。RAW 支持取决于具体机型/模式，不默认保存双份巨型文件。
+[外部依赖] 微信提供 ONNX 推理接口不代表现有 YOLO11n + ByteTrack + BioCLIP2 服务可直接搬入小程序。可另做小型检测/跟踪/质量判断的端侧实验；完整模型兼容性、速度、包大小和能耗需真机实测。项目继续不使用 OpenAI 服务。
+
+R24 — 自适应采样、弱网与长期等候
+[讨论中] 采样上限由设备、网络、服务三者共同决定。进入/新目标时适当提高；稳定后稀疏复查；按快门前后短时提高；拥塞、内存压力、相机错误或用户暂停时降低或停止分析。最初候选约 1 帧/秒，新目标约 1–2，稳定约 0.2–0.5；健康条件下短时上探服务建议 2–5。全部是测试起点，不是产品承诺。
+[讨论中] 置信稳定不能成为永远不再检查的理由；目标变化、视角变化、跟踪质量下降和定期复查均可重新采样。降低频率还须检查后端跟踪的时间基准、过期规则与速度估计，不能直接沿用固定帧率参数。
+[讨论中] 长期等候保持有界缓存；提供显式低负载/暂停状态。暂停相机后不能承诺仍有前 10 秒影像。极稀疏的前录帧也可能错过鸟瞬间动作。
+[讨论中] 70–120 ms 是同学报告的本地服务推理用时，非本轮复测，更非手机端到端延迟。须计入取帧、编码、上传、排队、推理、回传和绘制。300 kB 在 1 Mbit/s 上传仅传输就约 2.4 秒。
+[待实施] 每个结果关联源帧 ID、时间戳、会话和取景变换；缩放/旋转或旧响应不能把错误位置画在当前画面上。结果过时时淡出检测框，显示最近识别/等待网络或待鉴定，避免伪装实时。云端失联时优先保住拍摄。
+
+R25 — 稳定鸟名与诚实分数
+源码观察：视觉服务是 YOLO11n 检测、ByteTrack 会话跟踪、BioCLIP2 物种排序；文档还描述 AviList 与位置/月份候选约束。已有 stable、held、switch_pending；默认分类冷却 5 秒、刷新 15 秒、改名确认 2 次，可配置，不代表实际部署环境。检测帧率不等于物种分类频率。
+[讨论中] 稳定应依据同一目标的清晰度、鸟体大小、可见度、新视角和有界近期证据；不能仅因时间长就给最初标签越来越大的永久权重，也不能把高度相似连续帧当成独立证据累乘到 99%。
+[待实施] 新而清晰的相反证据应能纠正旧结论；目标丢失/换鸟时衰减或重置。前端尊重服务已有稳定逻辑，避免再叠加一个不透明的慢速平滑器。
+[纠正概念] relative_similarity 是当前候选集合内相对匹配分数，尚未校准为“识别正确概率”。显示百分数须标清含义；正式概率需要校准数据。动态分数只随真实新证据更新，不做虚构的上升动画。
+[待实施] held 当前可能保留旧预测及其分数；界面须区分“保留的上次判断”与“最新测量”，显示结果新鲜度，不能把旧分数当作实时新置信度。
+
+R26 — 声画结合、鸟鸣与麦克风并发
+[待实施] 统一交互，分别保留带时间戳的视觉结果与声音结果。画面里的鸟 A 和画外鸣叫的鸟 B 可能不同；声音不能未经关联就给画面中每个框加分。先显示一致/不一致/无法关联，后续再研究校准后的融合。
+[纠正概念] 鸟鸣识别与手帐的人类语音转文字不是同一服务；普通人声 VAD 也不能直接替代鸟鸣检测。
+[外部依赖] Issue #13 目前主要是上传音频后的 BirdNET 识别，明确未覆盖持续监听、端侧推理和声画融合。今天的会议扩大了范围，需共同补齐音频切窗、编码、时间对齐、速率、未知类和资源释放合同。
+[最高优先验证] 相机录像与 RecorderManager/音频识别能否并发，取决于真实微信版本、系统与机型；当前没有真机验证。优先尝试共享一条音频采集路径。无法并发时，录像期间提示声音识别暂缓，录像结束后分析其音轨，或采用经测试的其他方案，不虚假展示持续运行。
+[讨论中] 音频使用有界滚动窗口和有限请求，成功后丢弃普通窗口；仅将有价值短片段留为用户可确认的素材，不默认录存数小时。具体采样率/窗口与 BirdNET 输入及设备录音格式对齐后确定。
+
+R27 — 保存、补救与低存储行为
+[待实施] 用户按快门得到的高质量文件优先于分析任务；相册保存依赖独立权限、实际空间和 API 成功结果。分别显示已拍摄、已保存相册、已保存草稿、已上传；保存失败不能显示成功。
+[讨论中] 收藏由用户选择。自动补救最多留 1–2 张清晰、鸟体足够大、曝光可用且互不重复的候选图，不仅按最高识别分数选择；默认不写系统相册、不自动入收藏，明确其可能是预览质量。用户审核后再保留。
+[讨论中] 前 10 秒缓存按时间、字节和帧数共同限额覆盖；持久补救候选需少量有界临时文件/清单与回收策略。按快门的文件在确认安全保存前固定保护，普通分析帧完成即清理。离开页面、后台、异常结束和下次启动应释放/回收失效资源。
+[边界] 手机几乎无空间时不能保证相册或草稿一定写入成功；优先停止非必要缓存并清楚告知。内存缓存没有长期防丢保证。服务端用于分类的最佳鸟体裁切不是用户完整照片，不能把二者混为一个保存策略。
+
+R28 — 历史导入、环境信息与现场可用性
+[待实施] 图片、视频、音频导入入口始终容易找到，可离线选择素材后稍后识别。历史素材应使用拍摄时间、拍摄地点对应的上下文；未知时保持未知或请用户补充，不能用上传当天当前位置/天气冒充拍摄上下文。
+[讨论中] 日期和位置可作软先验；天气先作为上下文，实际增益应验证，不因罕见记录直接排除候选。首次权限与设置细节以后设计，不能无授权偷偷采集，定位/天气失败不阻塞快门。
+源码/接口观察：当前视觉接口接收 JPEG 帧并返回结果，不直接接收完整 MP4。正式导入视频流程可增加异步媒体处理任务，抽取有限关键帧和音轨，复用识别服务；不能假设浏览器原型已经具备，或要求手机逐帧高负载解码整部视频。
+
+I09 — 当前任务与会议结论需对齐
+[待团队讨论] Issue #12 开头仍排除连续相机/短视频，但后附 live vision 合同已经支持按帧 HTTP + WebSocket、最新优先队列、丢弃过时帧；建议以当前会议重新明确范围。Issue #13 仍排除实时音频与融合。此次只读核对，没有发帖或改任务。
+[讨论中] 优先顺序：先约定取景/分析/保存的资源合同和诚实降级；同时做原生微信能力小实验；把“快速拍摄 + 稍后导入识别 + 明确保存状态”做完整，再逐步增加自适应实时视觉、音频和经验证的融合。
+[外部依赖] 代表机型至少覆盖 Huawei Mate/Pura、中端 Android、iPhone，测试缩放、取帧、编码、快门、录像/录音并发、低存储、切后台、10 秒缓存、长期等候与冷热条件。测试时报告微信/系统/设备版本。
+[待验收] 分别测 P50/P95 首次取景、快门、相册落盘、首次可用结果及结果年龄；上传字节/分钟、峰值内存、电量/性能变化、缓存上限与退出后遗留文件。按 1、10、60 分钟场景设计测试；不把预估值当实测。
+
+本轮资料（只读）：
+- https://github.com/bird-assistant/bird-assistant/issues/12
+- https://github.com/bird-assistant/bird-assistant/issues/13
+- https://github.com/bird-assistant/bird-assistant/blob/main/docs/视觉识别后端/README.md
+- https://github.com/bird-assistant/bird-assistant/blob/main/backend/src/bird_vision/config.py
+- https://github.com/bird-assistant/bird-assistant/blob/main/backend/src/bird_vision/pipeline.py
+- https://github.com/wechat-miniprogram/api-typings/blob/master/types/wx/lib.wx.api.d.ts
+- https://uniapp.dcloud.net.cn/api/media/camera-context
+- https://consumer.huawei.com/cn/support/content/zh-cn15964925/
+- https://support.apple.com/en-ie/118431
+微信直接文档抓取失败的页面未作为已核实内容；改查微信官方 API 类型定义。API 存在不等于目标机型上全部并发与性能已验证。
+
+English update — recognition design discussion, 2026-10-29
+The meeting defines one default live camera/audio/video module and a first-class gallery/file import module. Capture must remain usable while recognition, context lookup or connectivity is unavailable. Keep preview frames, bounded analysis derivatives, intentional high-quality captures and at most one or two reviewable recovery candidates separate.
+Use bounded, adaptive sampling and a limited pre-capture ring rather than repeated full-resolution photos. Every proposed rate, buffer size and timing remains a test hypothesis. A sparse ten-second ring cannot promise full-quality replay; camera-off standby has no visual history.
+WeChat exposes a native camera component, zoom and frame access, but full OEM camera processing, all lenses and RAW/processed pairs are not portable guarantees. Preview RGBA is not sensor RAW. Preserve imported originals and derive analysis copies; stock-camera capture followed by import is a core path.
+The existing vision backend already has temporal label stability. Its relative similarity is not calibrated correctness probability, and held predictions must not look freshly measured. Better new evidence must be able to replace an earlier wrong label.
+Audio and vision can refer to different birds. Display and timestamp their evidence separately until a defensible association/fusion method exists. Current audio scope does not implement continuous recognition or fusion. Native camera-recording and microphone concurrency requires an early device experiment and an explicit fallback.
+Save-to-album, local drafts and collection are distinct states; low storage and denied permissions make unconditional saving impossible. Recovery candidates remain bounded and opt-in for promotion. Historical imports use capture-time context rather than the current upload location/weather.
+This round records proposals and verified source findings only. It does not change the prototype, deploy, comment on GitHub, benchmark model latency, or claim native-device validation.
+
+
+十一、识别系统讨论的团队同步与优先级（2026-10-30，Asia/Shanghai）
+
+R29 — 用户要求记录并用中文同步团队
+[已确认] 用户明确授权将上轮识别系统问题发布到团队 GitHub，形式可为 issue 或 comment；当前重点仍是先完成前端设计，不要求立即实施全部系统优化。
+[工程判断] 这些是应在系统设计阶段考虑的实际问题，涉及可用性、延迟、设备资源、存储、数据生命周期和人因。风险值得提前暴露，但采样频率、10 秒缓存质量、端侧模型与麦克风并发属于待实验方案，不能写成既定能力或强制排期。
+[发布方式] 只读检查发现 #12、#13 没有新的评论，也没有覆盖本轮跨模块问题的现有 issue。选择新建独立中文讨论 issue，引用 #12（识别界面）、#13（声音识别）、#11（视觉识别），便于跨模块追踪，不改写他人的原任务，不自动扩充本期验收。
+[内容边界] 发布稿保留默认实时入口、正式导入路径、短时/长期场景、预览与快门数据分流、弱网及过期框、自适应采样与有界前录、系统相机/OEM/RAW 边界、标签稳定与纠错、声画关联及并发、低存储与保存状态、历史素材上下文，以及后续验证顺序。明确现有最新优先队列和名称稳定机制已经提供部分基础，不将全部问题称为现存缺陷。
+[前端顺序] 先完成页面、交互和异常状态设计；明确 mock 边界。可独立开展小范围平台验证；系统能力后续由团队评审和分拆任务，不擅自分派负责人或设硬截止。
+[发布状态] 中文正文已完成并复核。尝试在 bird-assistant/bird-assistant 新建 issue 被 GitHub 返回 403 Resource not accessible by integration；随后尝试作为 #12 评论发布，返回同样 403。没有成功发布、没有创建 issue 或评论，不虚构链接。后续可在用户批准浏览器备用方式后发布，或修复连接权限。原型和代码未改变。
+
+English update — team communication, 2026-10-30
+The user authorized publishing these concerns in Chinese to the team repository and confirmed frontend design remains the immediate priority. The concerns are legitimate system-design issues, while specific rates, pre-capture quality and native concurrency remain hypotheses. Creating a team issue and adding a comment to #12 both returned GitHub 403: Resource not accessible by integration. Neither action was published. The reviewed Chinese post is retained below; browser fallback awaits user permission. No code or prototype changes are part of this task.
+
+
+附录：中文团队讨论正文（2026-10-30；后续已发布至 GitHub #20，见第十二节）
+标题：[讨论记录] 识别模块的实时采集、稍后导入与性能/保存边界（前端设计优先）
+
+## 记录目的与当前优先级
+
+补充记录 2026-10-29 组会后对识别模块的考虑，供前端、视觉和声音模块一起参考。
+
+**当前仍先完成前端页面与交互设计。本 issue 先记录场景、风险和待讨论方案，不要求立即完成全部能力，也不自动扩大 #12、#13 的本期验收范围。** 后续确定方案后，再拆成具体开发任务、明确负责人和排期。
+
+关联：#12（识别界面）、#13（声音识别）、#11（视觉识别）。下面区分会议方向、使用场景和工程建议；示例参数都不是已经确定的实现要求。
+
+## 一、会议方向：一个实时模块 + 一个导入模块
+
+- **实时识别为默认入口**：进入识别 Tab 后直接进入取景。录音、相机和视频在同一模块中，交互可参考微信拍视频：画面上标出鸟的位置，下方展示声音识别信息。
+- **辅助导入模块**：支持相册图片/视频，以及文件中的音频。用户先用系统相机拍摄、回头再上传识别，应当是一条完整、方便的使用路径。
+- 用户主动按快门拍摄的素材，应支持保存到手机相册；是否进入收藏由用户决定。相册保存需要实际权限、空间和成功回执，不能只调用接口就显示“保存成功”。
+- 希望用户忘记按快门时，也有机会保留 1–2 张较好的背景候选图；具体质量、保存位置和确认方式需要继续设计。
+
+## 二、为什么需要提前考虑这些问题
+
+**场景 A：临时遇到鸟，使用不到一分钟。** 用户可能先听到或看到鸟，再打开小程序；时间主要花在找鸟、对焦、变焦和拍摄。不能因为识别服务尚未连接、定位未完成或上传慢，就错过拍摄。
+
+**场景 B：长期蹲守，使用数分钟甚至更久。** 固定频率不断生成、上传和保留高质量照片，会持续占用相机、CPU、网络、内存和存储；声音分析也在竞争资源。不能把短时演示参数直接当作长期运行方案。两种情境可以由同一用户切换，不必先把人分成“新手/专业用户”。
+
+另外，用户可能选择直接打开系统相机，因为启动更快、熟悉变焦操作，而且希望保留手机厂商的拍照/视频效果。拍摄后再识别不是次要异常流程。
+
+## 三、需要共同讨论的工程与体验边界
+
+### 1. 拍摄与识别解耦，区分预览帧和正式照片
+
+建议将以下数据分开处理：
+
+| 数据 | 用途 | 建议处理 |
+| --- | --- | --- |
+| 相机预览 | 找鸟、取景和变焦 | 不把每个预览帧都保存成照片 |
+| 分析副本 | 检测和物种识别 | 限量取帧、适当压缩、最新优先，用后释放 |
+| 用户主动拍摄的照片/视频 | 用户希望保留的素材 | 优先保护，确认保存结果后再清理临时文件 |
+| 自动补救候选图 | 忘按快门时提供选择 | 有界保留 1–2 张，用户确认后再入相册/收藏 |
+
+不建议默认用高分辨率拍照接口每秒连续拍多张。应先验证小程序实时帧接口与编码开销，再决定取样方式。实际图片体积受分辨率和压缩影响，不能一概认为每一分析帧都必须是数 MB。
+
+即使降低上传频率，相机预览、屏幕和编解码仍在耗电。长时间运行还要考虑高低温、设备性能差异和低存储，而不仅是服务端推理速度。
+
+### 2. 服务端耗时不等于手机端实时体验
+
+同学报告的约 70–120 ms 是本地服务推理用时，尚不能直接代表手机端体验。端到端还包括取帧、编码、上传、排队、回传和绘制。例如 300 kB 经 1 Mbit/s 上行传输，仅上传就约需 2.4 秒；这是估算示例，不是实测。
+
+#12 已有单次上传、最新优先、丢弃过时帧和会话清理等约定，可在此基础上评估。服务建议的频率不应等同于“每个设备必须持续按此频率拍摄”。
+
+弱网下不能无限排队，也不能把旧画面上的框直接画到当前鸟的位置。需关联源帧、时间戳和取景变换；结果太旧时提示最近结果/等待网络，必要时淡出框。**识别失败或离线时，用户仍应能拍摄、保留素材并稍后识别。**
+
+端侧小模型、云端或混合方案需要实验后确定。端侧也会消耗内存、电量并发热；不能直接假定把现有服务搬入小程序就能解决所有问题。
+
+### 3. 原生组件不等于完整系统相机；预览图也不等于 RAW
+
+微信原生 camera 组件支持拍照、录像、缩放和实时帧，但能否获得所有物理镜头、厂商计算摄影/HDR，以及 RAW 与优化照片的双份输出，需按真实机型验证，不能直接承诺。
+
+“非系统相机”不等于“输出传感器 RAW”。用户希望保存好看的原图，模型需要合适的输入，这两件事可以通过保留原件、生成分析副本来处理；也不能预设处理过的照片一定更不利于识别。
+
+对 Huawei Mate/Pura 等重视系统相机效果的用户，应重视“系统相机先拍 → 相册导入”。完整厂商相机体验和我们自己的实时叠框，是否能同时得到，属于待验证的平台边界。
+
+### 4. 自适应取样与有限的前录缓存
+
+可研究按状态调整采样：初次寻找/新目标时较密；结果稳定后稀疏复查；快门前后短时提高；网络拥塞或设备压力时降低/暂停。上限应由设备、网络和服务能力共同决定，而不是写死一个 FPS。变帧率后还需复核后端跟踪和过期规则。
+
+“保留按快门前约 10 秒”可以研究有界环形缓存，但要明确：
+- 按时间、字节和帧数共同限额，覆盖旧内容，不随观察时间无限增长。
+- 预览质量候选不等于完整分辨率视频或照片；稀疏帧可能错过瞬间动作。
+- 相机暂停/未开启时，没有此前影像可供恢复。
+- 例如 10 秒 × 2 帧/秒 × 150 kB 约 3 MB 压缩图，但真实内存还包括原始帧、相机缓冲和编码副本；这只是容量示例，不能当真机结论。
+
+降低频率不能只看“当前分数高”：要保留定期复查，以及新目标、视角变化、跟踪质量下降后重新采样的机会。
+
+### 5. 鸟名稳定、动态分数与纠错
+
+用户不应看到鸟名随着每帧反复跳变，但最初判断也可能是错的。
+
+建议积累同一目标的近期有效证据，考虑清晰度、可见度和新视角；不能仅因持续时间增长就无限增加初始结论权重，也不能把大量相似帧当成独立确认。较强的新证据应能推翻旧结论；换鸟或丢失目标时应衰减/重置。
+
+#12 已提供 stable、held、switch_pending 等防闪烁状态，前端应复用，避免再叠一套不透明的延迟逻辑。检测更新和物种分类更新不是同一个频率，界面需区分当前检测、上次物种判断及其新鲜度。
+
+分数可以动态更新，但要明确含义：模型匹配分数不自动等于“识别正确概率”。尤其 held 保留旧判断时，不能把旧分数伪装成刚测得的置信度。
+
+### 6. 声画结合与音频资源
+
+画面中的鸟和麦克风听见的鸟可能不是同一只，也可能有多只鸟。因此先分别展示带时间信息的视觉、声音证据，再研究可靠关联；不能简单把两个分数平均，或给每个鸟框都加上声音分数。
+
+#13 目前交付录完上传的一次性识别，明确未包含持续监听、流式识别与声画融合。会议方向应另行对齐接口和阶段范围，不应默认这些已经具备。
+
+优先验证**相机录像与麦克风采集/声音识别能否在目标微信和手机上同时运行**。若不能共享采集路径，可评估录像期间暂缓独立声音分析、结束后识别视频音轨等降级，并在界面说明。
+
+长时间声音分析同样应使用有界窗口、限制并发和请求量；普通窗口用后释放，有价值短片段经用户确认后再保存，不默认保留整段长时间监听。
+
+### 7. 保存、补救与几乎满存储的手机
+
+- 明确区分“已拍摄”“已保存相册”“已保存草稿”“已加入收藏”，失败不能显示成功。
+- 快门素材的保护和落盘优先于后台分析；网络失败、取消识别不能顺带删除素材。
+- 自动补救图考虑清晰度、鸟体大小、曝光、遮挡和画面差异，不只选择最高识别分数；默认不自动入相册/收藏。
+- 对临时图、音频、缓存和异常退出后的遗留文件设清理策略；已保护的正式素材不能被普通缓存清理误删。
+- 手机接近满存储时，优先减少非必要缓存并说明保存失败；不能保证任何设备都能额外保存原图、RAW、前录视频和录音的全部副本。
+
+### 8. 日期、天气和地点应对应实际拍摄
+
+希望在获得授权后利用时间、地点等上下文辅助判断，相关同意与设置流程后续补充；获取失败不能阻塞拍摄。
+
+对于后来导入的照片/视频，不能拿“上传当天、当前位置、当前天气”冒充拍摄情境。优先使用可信拍摄信息；未知则保留未知或由用户补充。天气等信息对识别的实际增益应验证。
+
+视频导入还需明确抽帧和音轨处理由谁负责。当前 #12 的图片帧接口不直接接收整段 MP4；可研究异步媒体处理后复用现有服务，不要默认手机逐帧处理所有视频。
+
+## 四、建议的后续顺序（待组内确认）
+
+1. **先完成前端设计**：统一实时取景、变焦/快门、声音结果、导入、复核与保存入口；用明确标注的 mock 展示，包含弱网、权限拒绝、无可靠候选和保存失败。
+2. **尽早做小范围真机能力验证**：缩放、实时帧与编码、录像/录音并发、低存储、切后台及缓存回收。验证可以独立进行，不要求先重构识别后端。
+3. 再对齐前后端合同，分阶段落实“快速拍摄/导入 → 有界实时视觉 → 声音窗口 → 经验证的融合与优化”。
+
+建议验证覆盖 Huawei Mate/Pura、中端 Android 和 iPhone，记录具体系统/微信版本；分别观察短时使用与长期等候。指标至少考虑首次取景、快门响应、相册落盘、首次可用结果、结果年龄、上传量、峰值内存、耗电/性能变化和退出后遗留文件。当前没有对应真机结果，不将示例参数或浏览器演示写成已验证能力。
+
+希望大家后续评审时一起确定：哪些能力是首版必要、哪些先降级、哪些进入后续优化。**目标是先让用户可靠地拍到、保存和复核，再逐步提高实时识别体验。**
+
+参考：
+- [微信官方 API 类型定义（相机、帧、缩放与推理等接口）](https://github.com/wechat-miniprogram/api-typings/blob/master/types/wx/lib.wx.api.d.ts)
+- [当前视觉后端说明](https://github.com/bird-assistant/bird-assistant/blob/main/backend/README.md)
+
+_讨论记录：周厚霖；2026-10-30。场景依据 10 月 29 日组会后的补充讨论，方案与参数尚待评审。_
+
+
+—— 中文发布稿结束 ——
+
+
+十二、中文识别系统讨论已发布团队 GitHub（2026-10-30，Asia/Shanghai）
+
+I10 — 浏览器备用发布成功
+[已完成] 用户在上一轮确认请求之后回复“Well let's try”，授权使用浏览器备用方式。浏览器通过安全登录流程进入 NoctisBaguette 账户；正文预览后创建独立中文讨论 issue，未再重复提交。
+[已验证] 返回的 GitHub 页面显示 issue #20 为 Open，作者 NoctisBaguette；标题、中文正文、前端设计优先说明，以及 #12、#13、#11 关联均可见。
+正式链接：https://github.com/bird-assistant/bird-assistant/issues/20
+标题：[讨论记录] 识别模块的实时采集、稍后导入与性能/保存边界（前端设计优先）
+[范围] 只发布需求与工程讨论，不改原型或实现代码，不增加 #12/#13 本期验收、不设新负责人或截止日期。先完成前端设计，后续系统优化由团队讨论与拆分。
+[发布记录] 此次创建成功；前一轮两个接口请求的 403 仍作为历史阻塞保留。正文即上述附录中的中文稿，现已正式发布；无需再次复制发帖。
+[验证边界] GitHub 发布成功不代表相机/麦克风并发、端侧推理或其他拟议能力已经在微信真机实现或验收。
+
+English update — published, 2026-10-30
+After the user approved browser fallback, the reviewed Chinese discussion was published successfully as issue #20 in bird-assistant/bird-assistant, authored by NoctisBaguette. The visible result confirms its title, Open state, full discussion and links to #12, #13 and #11. It keeps frontend design as the immediate priority without expanding the existing iteration's acceptance criteria. No prototype or code changes were made.
+Published URL: https://github.com/bird-assistant/bird-assistant/issues/20
+
+十三、识别前端设计已落实为 v0.9 交互原型（2026-10-30，Asia/Shanghai）
+
+R30 — 先完成前端设计，再进入微信开发者工具
+[已确认] 用户要求按上述讨论完成识别前端设计，之后再开展微信 DevTools 实际开发。本轮范围为浏览器交互原型、页面状态、中文/英文设计交接与验证；不把真实相机、麦克风或模型当作已接入。
+
+I11 — v0.9 页面与素材流程
+[已实现] 原四入口改为默认统一取景，保留首页｜手帐｜识别｜讨论｜我的和中央圆形按钮。取景包含可缩放示意画面、鸟框与示例匹配度、独立声音线索、快速/等候、暂停/恢复、轻触照片、长按录像/松开结束、显式留鸟鸣、始终可见的相册/文件与复核入口。
+[已实现] 相册图片/视频、音频文件导入及明确标注的样例；本地图片须可解码。真实文件不上传、不改原件。视频/音频预览可选后续分析片段，保存范围元数据而不裁剪文件。每次六份、图片 6 MB、视频 40 MB、音频 20 MB 都是原型限制。
+[已实现] 统一复核包含素材选择/移除/预览、相册状态与失败重试、模拟分析及取消/重试/无候选、用户鸟种选择。所有勾选素材一起交接私人观察；默认仍为待鉴定。保存后可从观察详情重新打开各素材。观察时间、地点和天气未知时保留未知，收藏另选，地图/论坛不自动公开。
+[已实现] 无主动照片/视频时可提供最多两张未选中的预览质量补救示例；导入、暂停、相机拒绝和低存储不虚构现场补救。声音判断与被保留的音频文件分别记录，不把声音自动归因于画面鸟只。
+[已实现] 离线/过期结果隐藏旧框并说明声音等待网络；相机/声音拒绝分别降级，拍摄不等待识别。录像展示声音稍后分析的保守方案。稳定名称情景演示 stable → held → switch_pending → 新证据更正。分数明确是示例匹配，不是正确概率。
+[修复] 取景底部为上浮导航圆形按钮留出空间；矩形控件统一 12 px 圆角。新素材选择或分析片段使旧结果失效，过期分析不可覆盖；自动补救不重复堆积，正式快门素材不会被补救替换。修正样例导入曾显示为设备原件的文案；真实音频和合成音频分开展示。
+[已交接] 新增 09-live-identification-design.md 与 en/10-live-identification-design.md，覆盖 L01–L08 状态、采集/素材仓库/视觉/音频/上下文边界及原生验证顺序。原 19 故事/28 页、手帐 6 故事/8 状态为历史设计统计，不冒充微信实现数量。
+
+I12 — 本轮验证与发布
+[已验证] 41 项 Node 检查全部通过：既有 30 项，加识别状态与素材交接 11 项。JS 语法、v0.9 离线打包、中英文原始故事/链接、手帐结构和 git diff --check 通过。
+[已验证] 实际浏览器完成轻触照片、约 1.1 秒长按/松开生成视频样例、显式留鸟鸣、保存待鉴定观察及从观察详情重开视频。混合图片/视频/音频选择、视频分析起点改为 3 秒、分析失败保留三份素材与用户鸟名、私人保存失败后重试成功均已检查。
+[已验证] 无快门复核出现两张未选补救图，勾选前保存禁用；低存储示例拍摄后仍保留素材并显示相册失败。离线与过期不显示旧框，快门继续可用；相机与声音拒绝分别降级。实际观察名称依次保留树麻雀、确认中仍保留、后更正为大山雀。
+[已验证] 紧凑英文 app 为 346×598 px，scrollWidth/scrollHeight 与可视尺寸一致，没有横向或取景溢出；矩形控件 12 px，快门说明未被中央导航遮挡。中文标准及英文紧凑布局均目视检查。
+[验证限制] 一个生成的 QA PNG 已真实导入并标为设备素材。云浏览器文件选择器首次卡住，重试成功；未完成真实视频/音频文件导入与播放验收，样例流程不充当真实解码证据。
+[发布成功] 既有 owner-only 预览已更新，未更改访问范围。
+地址：https://bird-assistant-journal-v07.zhou-colin.chatgpt.site
+Site 源码提交：4886d83d5037cec7c73638abc05282fc0ff24a09
+部署：appgdep_6ae3985018f481919939c93d656db54e，返回 succeeded。
+离线文件：bird-assistant-prototype-offline-v0.9.html。
+[边界] 真实相机/变焦/OEM 画质、录像录音并发、相册写入、真实模型、手机资源与冷热表现仍需原生实现和真机验收。项目没有调用 OpenAI 或其他 AI 服务；普通观察与导入素材只在会话内保留，手帐保存仍为显式浏览器本机保存。
+
+English update — frontend design v0.9, 30 October 2026
+The user prioritized finishing frontend design before native WeChat development. Identify now opens a combined live-view design with zoom, quick/wait/pause, tap-photo/hold-video, independent audio clues and Keep call, plus a visible import/review route. Imported images/video/audio and explicit samples share selection, preview, analysis-range metadata, cancellation/error handling and a complete private-observation handoff. Recovery samples are bounded and opt-in; species is never auto-confirmed. Album, observation, collection and publication remain separate states.
+All 41 Node checks, syntax, standalone packaging and existing bilingual/link validations passed. Browser checks covered intentional video/audio, mixed selection, failure retention, private-save retry, reopening saved evidence, recovery opt-in, offline/permission/storage states, temporal correction and compact English layout without overflow. One real QA PNG import succeeded after a stalled chooser; real video/audio codec checks remain incomplete.
+The existing owner-private preview deployed successfully from Site source 4886d83d5037cec7c73638abc05282fc0ff24a09. This is a browser design handoff with Chinese and English specifications, not native camera/audio/model integration or device-performance validation.

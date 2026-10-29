@@ -1,6 +1,6 @@
-# 中英文手机竖屏交互原型 v0.8
+# 中英文手机竖屏交互原型 v0.9
 
-下载并打开[v0.8单文件原型](dist/bird-assistant-prototype-offline-v0.8.html)，或预览dist/index.html。历史v0.5/v0.6/v0.7 HTML保留为提交快照。
+下载并打开[v0.9单文件原型](dist/bird-assistant-prototype-offline-v0.9.html)，或预览dist/index.html。历史v0.5/v0.6/v0.7 HTML保留为提交快照。
 
 导航：首页｜手帐｜识别｜讨论｜我的；收藏在我的页面。中央56×56圆形识别按钮沿用原样。
 
@@ -24,7 +24,7 @@
 
 原有dist/app.js、dist/style.css与dist/index.html保留。手帐源码在dist/scrapbook.js和dist/scrapbook.css。
 
-- node scripts/build-offline.mjs：重建v0.8离线HTML。
+- node scripts/build-offline.mjs：重建v0.9离线HTML。
 - node --check dist/app.js 与 node --check dist/scrapbook.js：语法。
 - node --test tests/*.test.cjs：关键状态与异常保留。
 - 上级目录python validate.py与python validate-scrapbook.py：中英文结构和链接。
@@ -88,3 +88,12 @@ Verification: 18 Node behaviour regressions; actual browser wheel clustering/spl
 语音交互/捕获/供应商无关ASR契约位于dist/journal-voice.js。真实服务尚未接入，不使用OpenAI。自动中英混说、上下文同音词和微信录音仍需实际验收。30项行为检查通过，具体浏览器范围见QA.md。
 
 Text and voice share one composer in v0.8. Toggle, hold/release and swipe-to-cancel are implemented; explicit review presets demonstrate success/failure without audio capture. Real ASR remains unconnected. All 30 behaviour checks pass; native/accuracy limits remain as documented.
+
+
+## v0.9 识别前端设计（2026-10-30）
+
+识别默认打开统一取景：轻触照片、长按录像、缩放、快速/等候与暂停、独立声音线索和留鸟鸣。相册/文件入口始终可见，支持本地图片、视频和音频预览；示例分析、复核、所选素材整体交接至私人观察。未知时间/地点不自动填补，收藏另选。无主动照片/视频时可展示最多两张未选中的补救示例。
+
+通过外侧情景查看离线、结果过时、鸟名更正、声画分歧、权限拒绝与保存失败。相机、录音、模型和相册均未接入；浏览器中的真实导入只在当前会话保留。原型是微信 DevTools 实现前的设计依据。完整[中文设计交接](../09-live-identification-design.md)与[English handoff](../en/10-live-identification-design.md)对齐。
+
+Identify now opens one live view with tap-photo, hold-video, zoom, Quick/Wait/Pause, independent audio clues and Keep call. Gallery/files support local image/video/audio previews and an analysis segment. Review retains all selected evidence and hands it to private saving without confirming a species automatically. Recovery samples are bounded and opt-in. Camera/microphone/model/album behaviour is simulated; imported files are real but session-only. Native capability testing remains future work.
