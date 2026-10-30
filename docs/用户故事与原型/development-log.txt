@@ -1,7 +1,7 @@
 羽迹 Bird Assistant — 开发过程、反馈与决策记录
-文件版本：1.7
+文件版本：1.8
 记录日期：2026-10-30（Asia/Shanghai）
-当前检查点：v0.10 识别前端评阅已更新、中文说明已附于 #20、私有预览已发布；正式团队交接与微信开发者工具方案后续再讨论，真实相机/音频/模型仍待开发与验收。
+当前检查点：v0.11 地图与头像前端评阅已更新并发布；成长/消息范围与后续独立小程序仓库工作方式已记录，尚未开始微信原生实现。
 用途：保留本会话中的需求演化、困难、修复、验证与未决问题，供以后纳入 GitHub。
 语言：中文为团队阅读正文，末尾附英文摘要。
 日期规则：只使用会话或提交记录中可确定的日期；更早讨论无准确日期时明确注明。以下不是聊天逐字转录。
@@ -619,4 +619,45 @@ The portrait viewfinder now fills the available live area with overlaid controls
 The optional record-name step defaults to Unidentified, supports explicit adoption or a manual name and preserves original model evidence. Final media limits are undecided. Existing browser memory guards moved into prototype notes; automatic compression, compressor choice and video policy are still future work, with originals preserved.
 All 43 automated checks and the listed document/packaging checks passed. Browser checks covered portrait/compact layout, mode advice, clue navigation, optional naming and material handoff plus offline and permission states. No new real video/audio codec or native device-performance acceptance was completed.
 The code is on docs/recognition-prototype-v010 (implementation commit 206b09574a82285b59b1f42b24914f8860caf1df). A Chinese checkpoint was posted and verified on team issue #20. The existing owner-private preview deployed successfully from Site source f14fca3f05dd713e9c3f734839b65797e0e42581. Formal team handoff and WeChat DevTools discussion follow user review; native implementation has not begun.
+十五、地图、人因交互与头像 v0.11（2026-10-30，Asia/Shanghai）
+
+R32 — 用户反馈与后续工作约定
+[已确认] 进入微信开发者工具阶段时，计划使用独立仓库 NoctisBaguette/bird-assistant-miniprogram 保存完整代码与版本；每轮由用户命令行拉取，再编译查看。当前只记录此后续工作方式，不创建仓库或开始原生实现。
+[已确认] 头像应可上传个人图片、编辑裁剪，也可选默认图库。首页真实地图接入后移除“示意地图”并利用底部空间调整区域卡，地图供应商归属信息仍保留。
+[已确认] 定位按钮应把用户位置点实际居中；搜索应随输入显示建议，最多三行、内部上下滚动，选中地点继续居中并打开信息。地图拖到另一区域时，区域卡应根据地图中心附近区域动态更新。
+[已确认] 地点收藏和打卡按本轮要求设计为公开活动，公开范围需明确，不能隐式公开私人观察。用户同时提出现在讨论徽章/成长、私聊/群聊的范围，强调人因工程和便利性。
+
+I15 — 本轮实现与修复
+[已实现] 自有代码头像六种：夜枭、林雀、绿叶、山岚、湖光、名字首字。真实本地 JPG/PNG/WebP 可进入圆形预览裁剪页，支持拖动、缩放、位置滑杆、90° 旋转与重置。确认裁剪更新资料草稿，保存资料才应用；取消保留旧头像，可再次恢复裁剪参数。设备原件不改、不上传，仍为会话状态。
+[原型保护] 头像文件临时保护 20 MB/4000 万像素，处理副本最长边 2048，输出 512×512 JPEG；这些不等于鸟类素材正式上传限制。错误和迟到读取不会覆盖另一份资料草稿。
+[修复] 定位原来只把平移量归零，而示例点在画布下方；现按实际点/画布/缩放求平移，缩放也保持地图中心对应的示意点。区域卡按地图中心与示意区域位置更新，使用画布比例距离和边界缓冲减少来回跳变。
+[已实现] 六个中英示例地点可随输入筛选，空输入显示推荐；恰好三行，余项在内部滚动，支持方向键/回车/Esc和空结果。选中点与所在区域的观察范围分别说明，地点详情最多占地图高度45%，标记在上方可见。
+[已实现] 地点公开收藏/打卡先确认，明确用户名称与所选地点，打卡标为用户填写、未核验；可撤回，模拟失败可重试。新增“我的 → 地点收藏与打卡”重新打开入口。私人观察、鸟种收藏、公开地图观察、论坛及他人内容书签分别管理。
+[已实现/待接入] 区域卡下移并避开中央圆形按钮，演示标记移至上部缩小；因当前仍为虚构地图保留真实性说明。真实地图上线后再移除该演示标记，真实定位/地图 SDK/公开活动服务另行实施。
+[设计文档] 新增 10-map-profile-community-design.md 与 en/11-map-profile-community-design.md；同步 README、QA 和 v0.11 离线原型。原故事/状态统计保持历史设计含义，不计作微信完成功能。
+
+C04 — 成长与消息的本轮建议（未接入真实服务）
+[讨论中] 先做个人轻量里程碑：首次观察、行为/环境笔记、第一份手帐。私人和待鉴定记录有效，不按公开打卡/发帖/稀有鸟竞争，不重复奖励同一记录的编辑，不惩罚断签；徽章不证明鉴定正确或专家身份。庭院、羽叶和知识练习保留提案，具体积分和删除记录处理未定。
+[讨论中] 私聊先限双向好友；约鸟小群采用邀请、管理员、静音/退群、移除成员、屏蔽举报。先明确待发送/已发送/失败重试、未读、离线恢复、去重、历史和通知规则，分享卡片需显式选字段。建议核心链路稳定后接消息服务；不承诺已读回执或端到端加密。这是建议，不自动扩大团队当期范围。
+
+I16 — 验证与发布
+[已验证] 47 项 Node 检查通过（原43项，加定位几何、区域边界稳定、中英搜索、头像裁剪边界4项）；JS语法、v0.11单文件生成、19故事/28状态及手帐6故事/8状态中英文与本地链接检查、git diff --check通过。
+[已验证] 实际浏览器定位中心误差小于0.02 CSS px；紧凑英文346×598无地图溢出，定位后放大仍居中，区域卡不遮挡中央导航。空搜索6项/可视144px/总高288px，中文“湖畔”实时筛成2项；选中观鸟台标记在面板上方，英文方向键回车可选林间地点；实际拖动切换区域卡。
+[已验证] 公开打卡确认及撤回、公开收藏模拟失败与重试、从个人地点列表重开；观察/地图观察/帖子/鸟种计数保持2/2/1/1。成长与消息扩展提案可打开；不发送消息、不颁奖励。
+[已验证] QA PNG真实选择、缩放3/旋转90°/拖动到左右0.35、上下0.43，应用保存、重新裁剪和取消保留原头像。首次测试嵌套共享路径未到浏览器；确认根目录PNG的6018字节和签名后选择成功，未将该失败伪称为手机问题。
+[验证限制] 微信账号头像上传与跨设备同步、真实地图/定位、多人公开活动、真实消息和奖励均未接入。项目没有接入OpenAI或其他真实AI服务。本轮没有重跑真实视频/音频编解码或手机冷热性能验收。
+[代码已发布] fork分支 docs/prototype-v011-map-profile，实现提交040d4e1ae1f2106a860b8e1683f3206ba4b749c5；团队main未合并。没有向#20重复发布与其识别主题不同的地图/头像反馈评论。
+[预览发布成功] 保持既有owner-only范围，部署返回succeeded。
+地址：https://bird-assistant-journal-v07.zhou-colin.chatgpt.site
+Site源码提交：1dfd3a608898c41654dd64cfeaa29cda208a84a6
+部署：appgdep_6ae43b8765dc8191b777ed30b57a892b
+离线文件：bird-assistant-prototype-offline-v0.11.html。
+[后续] 用户评阅前端后提供正式交接，随后讨论小程序目录结构、AppID/设备能力/服务适配与独立仓库初始化。稳定main每轮提供提交和验证说明；用户先检查本地修改，再git pull --ff-only origin main并在DevTools编译，不强制覆盖本地工作。
+
+English update — map and avatar frontend v0.11, 30 October 2026
+The native phase will use a planned separate bird-assistant-miniprogram repository: clone once, pull validated main revisions with --ff-only and compile the same directory in WeChat DevTools. This round did not create it or start native implementation.
+The browser prototype adds six original default avatars and real local picture selection with circular crop, drag, zoom, rotation, reset, editable recropping and cancel/save boundaries. It fixes recentering the actual location point, preserves the centre under zoom, bounds live search suggestions to three scrollable rows, and changes the area card as the map centre moves with boundary hysteresis. Public place saves and user-supplied/unverified check-ins require confirmation, support withdrawal/failure/retry and can be reopened under Profile; they do not publish private observations or change species counts. The illustration disclosure stays until a real map replaces the demo.
+Badges and messaging pages now contain scoped proposals: lightweight private/unresolved-friendly milestones, mutual-friend direct chat and invitation-based outing groups, with delivery, retry, offline, access and moderation rules to define. There are no rewards or real messages; the proposals do not expand the team's accepted scope automatically.
+All 47 checks plus syntax, offline packaging and bilingual/link validations passed. Browser checks covered compact centering/zoom/clearance, live Chinese and keyboard English suggestions, regional panning, public-action confirmation/retry/withdrawal/reopening and a real PNG avatar crop/save/recrop/cancel. The first fixture path was unavailable in the browser; a verified shared-root file resolved it. Native accounts/maps/uploads/multi-user activity and real phone performance remain unverified.
+Implementation commit 040d4e1ae1f2106a860b8e1683f3206ba4b749c5 is on docs/prototype-v011-map-profile. The owner-private preview deployed successfully from Site source 1dfd3a608898c41654dd64cfeaa29cda208a84a6; the team main branch was not merged.
 
