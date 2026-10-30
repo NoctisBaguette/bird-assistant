@@ -1,7 +1,7 @@
 羽迹 Bird Assistant — 开发过程、反馈与决策记录
-文件版本：1.6
+文件版本：1.7
 记录日期：2026-10-30（Asia/Shanghai）
-当前检查点：v0.9 识别前端设计与中英文交接已完成、私有预览已发布；真实微信相机/音频/模型仍待开发与验收。
+当前检查点：v0.10 识别前端评阅已更新、中文说明已附于 #20、私有预览已发布；正式团队交接与微信开发者工具方案后续再讨论，真实相机/音频/模型仍待开发与验收。
 用途：保留本会话中的需求演化、困难、修复、验证与未决问题，供以后纳入 GitHub。
 语言：中文为团队阅读正文，末尾附英文摘要。
 日期规则：只使用会话或提交记录中可确定的日期；更早讨论无准确日期时明确注明。以下不是聊天逐字转录。
@@ -583,4 +583,40 @@ Site 源码提交：4886d83d5037cec7c73638abc05282fc0ff24a09
 English update — frontend design v0.9, 30 October 2026
 The user prioritized finishing frontend design before native WeChat development. Identify now opens a combined live-view design with zoom, quick/wait/pause, tap-photo/hold-video, independent audio clues and Keep call, plus a visible import/review route. Imported images/video/audio and explicit samples share selection, preview, analysis-range metadata, cancellation/error handling and a complete private-observation handoff. Recovery samples are bounded and opt-in; species is never auto-confirmed. Album, observation, collection and publication remain separate states.
 All 41 Node checks, syntax, standalone packaging and existing bilingual/link validations passed. Browser checks covered intentional video/audio, mixed selection, failure retention, private-save retry, reopening saved evidence, recovery opt-in, offline/permission/storage states, temporal correction and compact English layout without overflow. One real QA PNG import succeeded after a stalled chooser; real video/audio codec checks remain incomplete.
-The existing owner-private preview deployed successfully from Site source 4886d83d5037cec7c73638abc05282fc0ff24a09. This is a browser design handoff with Chinese and English specifications, not native camera/audio/model integration or device-performance validation.
+The existing owner-private preview deployed successfully from Site source 4886d83d5037cec7c73638abc05282fc0ff24a09. This is a browser design handoff with Chinese and English specifications, not native camera/audio/model integration or device-performance validation.十四、竖向识别界面与模式提示 v0.10（2026-10-30，Asia/Shanghai）
+
+R31 — 本轮反馈与设计约束
+[已确认] 快速模式长时间使用时应温和提示可能发热、耗电或卡顿，建议较长时间观鸟改用等候。提示属于使用建议，不以未经真机验证的时间或温度作强制切换依据，等候也不保证没有发热。
+[已确认] 图片、视频及素材数量的正式限制后续决定。超限图片可考虑高质量压缩到允许范围；应保留原件、生成处理副本，避免鸟体细节不足，必要时裁切/重新选择/稍后处理。压缩能力不能预先保证任意图片在任意上限下保留质量。
+[已确认] “我的鸟种选择”含义不清；竖屏取景应占主要空间，画面和声音信息可通过紧凑面板与左右滑动切换。先完成前端评阅检查点，由用户再提供正式交接，然后讨论微信开发者工具方案。
+
+I13 — 本轮交互与文案修订
+[已实现] 取景铺满可用竖向区域，模式、变焦、快门覆盖其上；原示意图保持自身比例，预览尺寸不被写成设备原图尺寸。画面方向、实际裁切与检测框坐标映射留到真实相机阶段验证。
+[已实现] 快速模式保留一行发热建议，点击显示详细说明与“切换等候”按钮；等候提示长期使用仍可能发热。没有自动时限、温度测量或暗中模式切换。
+[已实现] 画面/声音共用底部面板，默认收起详情，支持点选、横滑及左右方向键。切换的只是展示焦点，声音开关及采集模式独立。导入和复核始终可直接进入；展开详情不改变整个取景区域尺寸，变焦与快门留有独立空间。
+[已实现] 将固定鸟名下拉列表改为“记录鸟名（可选）”，解释这是保存记录使用的名称。默认待鉴定，可明确采用视觉或不同的声音建议、手动填写任意鸟名，或恢复待鉴定；不修改模型原始线索，也不强迫用户确认物种。
+[已实现] 导入主文案明确正式限制未定，将六份/图片 6 MB/视频 40 MB/音频 20 MB 的浏览器保护值放入折叠原型说明。
+[待实施] 图片自动压缩、具体压缩器、正式上传限制与视频处理策略尚未接入或确定。浏览器当前仍执行既有内存保护，设备原件不会被修改或上传。
+[文档] 同步更新中文设计说明、英文对应说明、原型 README、QA 与 v0.10 离线 HTML。保留旧离线版本供历史对照。
+
+I14 — 验证、发布与团队可见材料
+[已验证] 43 项 Node 检查全部通过，新增展示焦点不影响流状态、可选手动名称不改写模型线索的检查。JS 语法、v0.10 离线生成、原 19 故事/28 状态及手帐 6 故事/8 状态结构与链接检查、git diff --check 通过。
+[已验证] 浏览器实际检查：快速提示及切换等候，横滑切换声音且音频保持开启，展开声音并留鸟鸣、约 900 ms 长按/松开生成视频样例；复核保持待鉴定，分析完成也不自动采用名称，显式采用建议/恢复待鉴定/手写“雨燕（待复核）”后连同两份素材交接保存页。
+[已验证] 紧凑英文 app 与取景为 346×598 px，页面 scrollWidth/scrollHeight 与可视尺寸一致；展开详情的正常、离线、相机拒绝、声音拒绝分别检查，旧框隐藏及快门降级独立；方向键可以切换线索面板，导航圆形按钮没有遮挡拍摄说明。
+[验证限制] 本轮没有重试真实文件选择器。先前真实 PNG 导入证据保留，真实视频/音频编解码、微信权限与相机/麦克风并发、真实设备冷热与持续负载仍未验收。所有采集及识别显示仍为明确标注的样例，不调用 OpenAI 或其他 AI 服务。
+[代码已发布] fork 分支 docs/recognition-prototype-v010；交互实现提交 206b09574a82285b59b1f42b24914f8860caf1df。未合并团队 main，未自动扩大 #12/#13 范围。
+[团队记录已发布] GitHub 插件对团队仓库评论返回 403；沿用用户先前明确授权的浏览器方式发布一次，随后读取评论确认作者和正文，无重复评论。
+评论：https://github.com/bird-assistant/bird-assistant/issues/20#issuecomment-6516085669
+[预览发布成功] 保持既有 owner-only 访问范围；部署返回 succeeded。
+地址：https://bird-assistant-journal-v07.zhou-colin.chatgpt.site
+Site 源码提交：f14fca3f05dd713e9c3f734839b65797e0e42581
+部署：appgdep_6ae431e84ca88191ad6edcdbff5c4af3
+离线文件：bird-assistant-prototype-offline-v0.10.html。
+[下一检查点] 用户评阅当前界面并提供正式团队交接，之后讨论微信开发者工具实施。尚未开始原生实现，不将浏览器 UI 验证计作真机验收。
+
+English update — frontend review v0.10, 30 October 2026
+The portrait viewfinder now fills the available live area with overlaid controls. A gentle Quick-mode note explains possible warmth, battery use and slowdown and offers a direct switch to Wait; Wait is not a guarantee against heat. Visual and Sound share an expandable panel with tabs, swipe and keyboard navigation; changing presentation does not disable either stream. Import and review remain directly available.
+The optional record-name step defaults to Unidentified, supports explicit adoption or a manual name and preserves original model evidence. Final media limits are undecided. Existing browser memory guards moved into prototype notes; automatic compression, compressor choice and video policy are still future work, with originals preserved.
+All 43 automated checks and the listed document/packaging checks passed. Browser checks covered portrait/compact layout, mode advice, clue navigation, optional naming and material handoff plus offline and permission states. No new real video/audio codec or native device-performance acceptance was completed.
+The code is on docs/recognition-prototype-v010 (implementation commit 206b09574a82285b59b1f42b24914f8860caf1df). A Chinese checkpoint was posted and verified on team issue #20. The existing owner-private preview deployed successfully from Site source f14fca3f05dd713e9c3f734839b65797e0e42581. Formal team handoff and WeChat DevTools discussion follow user review; native implementation has not begun.
+
