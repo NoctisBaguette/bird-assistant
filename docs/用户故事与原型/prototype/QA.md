@@ -208,3 +208,16 @@ Design handoff: ../09-live-identification-design.md and ../en/10-live-identifica
 - Product media limits are undecided. Demo memory guards remain functional but are under collapsed prototype notes. Automatic image compression is a future design, not a tested feature.
 
 The previous v0.9 snapshots and QA remain historical. Current offline output is bird-assistant-prototype-offline-v0.10.html. The user will provide the later team handoff; this revision is a frontend review checkpoint, not the start of native WeChat implementation.
+
+
+## v0.11 地图与头像评阅（2026-10-30，Asia/Shanghai）
+
+- 47 项 Node 检查通过。新增不同尺寸/缩放下真实点居中、区域边界稳定与明确切换、中英搜索/空结果、头像各旋转/缩放/位置组合始终在原图内的几何检查。保留滚轮/双指即时聚合回归。
+- JS 语法、v0.11 单文件生成、原 19 故事/28 状态中英文与链接检查、手帐 6 故事/8 状态检查、git diff --check 通过。
+- 实际浏览器定位点与地图中心误差小于 0.02 CSS px。紧凑英文 app 为 346×598，内容与可视尺寸相等，定位后再放大仍居中，区域卡与中央圆形导航按钮不重叠。
+- 空搜索六条建议，列表可视高度 144 px、内容高度 288 px，恰好三行；中文输入即时筛为两条湖畔结果，选中观鸟台居中且标记位于详情面板上方。英文方向键与回车选中林间小径；地图实际拖动后卡片更新为林间小径。
+- 公开打卡先确认，展示“用户填写、未核验”，确认后出现活动，重复按钮可撤回。公开收藏模拟失败保留确认页，切换正常后重试成功。私人观察/地图观察/帖子/鸟种计数仍为 2/2/1/1；“我的”地点列表可重新打开收藏地点。
+- 六个默认头像已显示，夜枭可选。生成的 QA PNG 真实导入成功；缩放到 3、旋转 90°、指针拖动使左右/上下位置变为 0.35/0.43；应用、保存并重新裁剪恢复缩放，取消裁剪保留同一头像。最初使用嵌套共享路径的测试文件未到浏览器，导致无法解码；确认根目录文件的 PNG 签名与 6018 字节后重新选择成功。没有把失败归因于模型或真实手机能力。
+- 头像原件不修改，输出为本地处理结果；微信账号上传/同步、真实地图与定位、公开活动服务均未接入。成长/私聊/群聊只有扩展提案，不发送消息、不颁发奖励。
+
+English: All 47 automated checks and the listed syntax, standalone and bilingual/link checks passed. Browser checks verified centering within 0.02 CSS px, centred zoom and compact map clearance, three-row suggestions, Chinese live filtering and English keyboard selection, region-card changes after panning, public activity confirmation/failure/retry/withdrawal and reopening. A real QA PNG exercised avatar zoom/rotation/drag/apply/save/recrop/cancel after resolving a shared-path fixture error. Native account/media/map services, messaging and rewards remain unimplemented.

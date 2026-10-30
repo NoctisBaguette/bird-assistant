@@ -1,6 +1,6 @@
-# 中英文手机竖屏交互原型 v0.10
+# 中英文手机竖屏交互原型 v0.11
 
-下载并打开[v0.10单文件原型](dist/bird-assistant-prototype-offline-v0.10.html)，或预览dist/index.html。历史v0.5/v0.6/v0.7 HTML保留为提交快照。
+下载并打开[v0.11单文件原型](dist/bird-assistant-prototype-offline-v0.11.html)，或预览dist/index.html。历史v0.5/v0.6/v0.7 HTML保留为提交快照。
 
 导航：首页｜手帐｜识别｜讨论｜我的；收藏在我的页面。中央56×56圆形识别按钮沿用原样。
 
@@ -24,7 +24,7 @@
 
 原有dist/app.js、dist/style.css与dist/index.html保留。手帐源码在dist/scrapbook.js和dist/scrapbook.css。
 
-- node scripts/build-offline.mjs：重建v0.10离线HTML。
+- node scripts/build-offline.mjs：重建v0.11离线HTML。
 - node --check dist/app.js 与 node --check dist/scrapbook.js：语法。
 - node --test tests/*.test.cjs：关键状态与异常保留。
 - 上级目录python validate.py与python validate-scrapbook.py：中英文结构和链接。
@@ -104,3 +104,10 @@ Identify now opens one live view with tap-photo, hold-video, zoom, Quick/Wait/Pa
 识别取景铺满可用竖向区域；画面/声音共用可收起面板，支持点选、横滑与方向键，切换展示不关闭识别流。快速模式提供发热/耗电/卡顿说明与切换等候操作。记录鸟名为可选：待鉴定、明确采用建议或手动填写；不再使用固定鸟种下拉列表。正式媒体限制待定，临时演示保护移至折叠说明，超限图片压缩仅为未来方案。当前仍是浏览器前端检查点，非微信原生实现。
 
 The v0.10 portrait finder overlays controls and uses one collapsible visual/audio clue panel. Mode guidance, optional record naming and provisional media limits are clearer. Native capture and image compression remain future work.
+
+
+## v0.11 地图与头像评阅（2026-10-30）
+
+新增真实本地头像选择、圆形裁剪/拖动/缩放/旋转/重置、再次编辑及六个默认头像。修复地图定位归零但不居中的问题；区域卡随地图中心变化并在边界保持稳定。搜索建议最多三行，内部滚动，选中后居中并显示地点详情。公开地点收藏/打卡须明确确认，可撤回；在“我的”中可重新打开，与鸟类观察和他人书签分别管理。徽章和消息页补充讨论范围，未接奖励或消息服务。
+
+地图仍为示意，真实地图接入后移除演示标记并调整卡片，供应商归属信息保留。新源码在 dist/experience.js 和 dist/experience.css。独立小程序仓库及 pull → DevTools 工作方式已记录，当前不创建仓库或开始原生实现。完整[中文说明](../10-map-profile-community-design.md) / [English](../en/11-map-profile-community-design.md)。

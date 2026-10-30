@@ -8,8 +8,8 @@ test('wheel and two-pointer pinch refresh clusters in the next animation frame w
  const layer={innerHTML:''},style={setProperty(name,value){this[name]=value;}},world={style,querySelector:()=>layer};
  const el={isConnected:true,querySelector:()=>world,addEventListener:(n,fn)=>events[n]=fn,setPointerCapture(){}};
  const ctx={S:{map:{z:1,x:0,y:0,filter:'public',date:'all',species:'all'},pins:[{available:true,location:{place:'lake'}},{available:true,location:{place:'wood'}}],records:[]},
-  T:zh=>zh,L:x=>x.zh,esc:String,icon:()=>'',places:{lake:{zh:'湖畔'},wood:{zh:'林间'}},document:{querySelectorAll:()=>[el]},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;}};
- vm.createContext(ctx);vm.runInContext(src.slice(src.indexOf('function mapData()'),src.indexOf('function mainMap('))+src.slice(src.indexOf('function bindMap(){'),src.lastIndexOf('\nreset();')),ctx);ctx.bindMap();
+  BirdUX:require('../dist/experience.js'),X:{searchIndex:-1},$:()=>null,T:zh=>zh,L:x=>x.zh,esc:String,icon:()=>'',places:{lake:{zh:'湖畔'},wood:{zh:'林间'}},document:{querySelectorAll:()=>[el]},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;}};
+ vm.createContext(ctx);vm.runInContext(src.slice(src.indexOf('function mapData()'),src.indexOf('function mainMap('))+src.slice(src.indexOf('function bindMap(){'),src.indexOf("\ndocument.addEventListener('focusin'")),ctx);ctx.bindMap();
  const target={closest:()=>null},flush=()=>{while(frames.length)frames.shift()();},count=()=>[...layer.innerHTML.matchAll(/class="map-pin group"/g)].length;
  let prevented=false;events.wheel({target,deltaY:100,preventDefault(){prevented=true;}});flush();events.wheel({target,deltaY:100,preventDefault(){}});flush();
  assert.equal(prevented,true);assert.equal(count(),1);assert.match(layer.innerHTML,/data-id="all"/);
