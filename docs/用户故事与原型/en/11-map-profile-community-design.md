@@ -47,3 +47,16 @@ The expanded concept page sends no messages. Start direct chat with mutual frien
 Define pending/sent/failed-and-retry states, unread counts, offline recovery, deduplication, history access, notifications and deletion/withdrawal rules. Do not promise read receipts or end-to-end encryption. Sharing a journal or observation requires a field preview and must not implicitly grant access to private source records. Precise group meeting locations are not public by default.
 
 Suggested sequencing is stable map/identification/journal/private-save flows, lightweight milestones, then real messaging infrastructure. This is a design recommendation for review, not an automatic expansion of the team's current acceptance scope.
+
+
+## Chevron polish and four-day experience-build preparation
+
+30 October 2026: the existing clue-panel toggle now uses a fixed-size, rounded-stroke SVG chevron. aria-expanded controls its rotation; reduced-motion preferences remove the transition. Panel behaviour is unchanged.
+
+Suggested repository creation settings: NoctisBaguette / bird-assistant-miniprogram, retain the screenshot's description, Public matching the course-source workflow (Private is also a user choice), no initial README, no .gitignore and no license selection. Seed the project README and mini-program ignore rules together with the first source commit. Use stable main and Issues. This round does not create the repository.
+
+The four days are relative working days; no start date was specified. Proposed scope: Day 1 confirms AppID/member/configuration and an early phone-running/upload path with the native shell and five tabs. Day 2 establishes capture/import → review → private save/reopen with permission fallbacks and retained evidence on errors. Day 3 adds map/search, journal, avatars and available identification adapters, then freezes features. Day 4 focuses on real-device, weak-network, lifecycle, permission, cache, text and screen regression, blockers and a tester-ready build with known issues. Full messaging, complex garden mechanics and optimized real-time multimodal inference remain later work.
+
+A DushiSports retrospective would help: record exact tool/library/language versions, build structure/configuration, AppID/member setup, component/style/safe-area issues, cloud/function deployment, login/database permissions, media uploads/temp paths, domains/network/device differences, privacy permissions and experience-build delivery. For each actual issue give trigger → original error → root cause → applied fix → verification, with resolved/unresolved/reusable status. Exclude credentials and unrelated personal data. Those project files were not read in this round; this checklist does not claim all listed failures occurred or authorize reuse of its identity/data environment.
+
+GitHub creation reference: https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-new-repository .

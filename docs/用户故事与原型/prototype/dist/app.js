@@ -10,7 +10,7 @@ const paths = {
   journal:'M4 3h13l3 3v15H4ZM8 8h8M8 12h6M8 16h4', home:'M3 10 12 3l9 7v10H3Z M9 20v-7h6v7', collection:'M5 3h14v18l-7-4-7 4Z',
   scan:'M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M7 12h10M12 7v10',
   chat:'M4 4h16v12H9l-5 5Z',user:'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M4 21a8 8 0 0 1 16 0',
-  leaf:'M20 3C8 2 3 9 6 16c7 6 16-1 14-13ZM5 21 17 7', arrow:'m9 5 7 7-7 7',back:'m15 5-7 7 7 7',
+  leaf:'M20 3C8 2 3 9 6 16c7 6 16-1 14-13ZM5 21 17 7', arrow:'m9 5 7 7-7 7',chevron:'m5 15 7-7 7 7',back:'m15 5-7 7 7 7',
   camera:'M3 7h4l2-3h6l2 3h4v13H3ZM12 10a4 4 0 1 0 0 8 4 4 0 0 0 0-8',
   image:'M3 3h18v18H3ZM3 17l6-6 4 4 3-3 5 5M16 7h.01',mic:'M8 5a4 4 0 0 1 8 0v7a4 4 0 0 1-8 0ZM5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8',
   video:'M3 6h12v12H3Zm12 4 6-4v12l-6-4',locate:'M12 2v4m0 12v4M2 12h4m12 0h4M12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12',

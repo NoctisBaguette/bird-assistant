@@ -221,3 +221,10 @@ The previous v0.9 snapshots and QA remain historical. Current offline output is 
 - 头像原件不修改，输出为本地处理结果；微信账号上传/同步、真实地图与定位、公开活动服务均未接入。成长/私聊/群聊只有扩展提案，不发送消息、不颁发奖励。
 
 English: All 47 automated checks and the listed syntax, standalone and bilingual/link checks passed. Browser checks verified centering within 0.02 CSS px, centred zoom and compact map clearance, three-row suggestions, Chinese live filtering and English keyboard selection, region-card changes after panning, public activity confirmation/failure/retry/withdrawal and reopening. A real QA PNG exercised avatar zoom/rotation/drag/apply/save/recrop/cancel after resolving a shared-path fixture error. Native account/media/map services, messaging and rewards remain unimplemented.
+
+
+## v0.11 线索展开图标微调（2026-10-30）
+
+仅将展开/收起字符改为共享 SVG 图标，保持原交互。实际浏览器检查：中文标准布局与英文紧凑布局均保留正确按钮名称/aria-expanded；收起为无变换，展开为 180°，按钮仍为 38×38，内部只有一个 SVG 且无字符文本。保留减少动态效果支持。语法、离线重新打包及既有47项检查通过；没有为可逆的字形替换新增镜像测试。
+
+English: The toggle now uses one SVG without glyph text. Standard Chinese and compact English checks confirmed labels, aria-expanded, the 180° expanded orientation and the existing 38×38 button. Syntax, standalone packaging and the existing 47 checks passed. Behaviour remains unchanged.
