@@ -1,6 +1,6 @@
-# 中英文手机竖屏交互原型 v0.9
+# 中英文手机竖屏交互原型 v0.10
 
-下载并打开[v0.9单文件原型](dist/bird-assistant-prototype-offline-v0.9.html)，或预览dist/index.html。历史v0.5/v0.6/v0.7 HTML保留为提交快照。
+下载并打开[v0.10单文件原型](dist/bird-assistant-prototype-offline-v0.10.html)，或预览dist/index.html。历史v0.5/v0.6/v0.7 HTML保留为提交快照。
 
 导航：首页｜手帐｜识别｜讨论｜我的；收藏在我的页面。中央56×56圆形识别按钮沿用原样。
 
@@ -24,7 +24,7 @@
 
 原有dist/app.js、dist/style.css与dist/index.html保留。手帐源码在dist/scrapbook.js和dist/scrapbook.css。
 
-- node scripts/build-offline.mjs：重建v0.9离线HTML。
+- node scripts/build-offline.mjs：重建v0.10离线HTML。
 - node --check dist/app.js 与 node --check dist/scrapbook.js：语法。
 - node --test tests/*.test.cjs：关键状态与异常保留。
 - 上级目录python validate.py与python validate-scrapbook.py：中英文结构和链接。
@@ -97,3 +97,10 @@ Text and voice share one composer in v0.8. Toggle, hold/release and swipe-to-can
 通过外侧情景查看离线、结果过时、鸟名更正、声画分歧、权限拒绝与保存失败。相机、录音、模型和相册均未接入；浏览器中的真实导入只在当前会话保留。原型是微信 DevTools 实现前的设计依据。完整[中文设计交接](../09-live-identification-design.md)与[English handoff](../en/10-live-identification-design.md)对齐。
 
 Identify now opens one live view with tap-photo, hold-video, zoom, Quick/Wait/Pause, independent audio clues and Keep call. Gallery/files support local image/video/audio previews and an analysis segment. Review retains all selected evidence and hands it to private saving without confirming a species automatically. Recovery samples are bounded and opt-in. Camera/microphone/model/album behaviour is simulated; imported files are real but session-only. Native capability testing remains future work.
+
+
+## v0.10 竖向取景与评阅修订
+
+识别取景铺满可用竖向区域；画面/声音共用可收起面板，支持点选、横滑与方向键，切换展示不关闭识别流。快速模式提供发热/耗电/卡顿说明与切换等候操作。记录鸟名为可选：待鉴定、明确采用建议或手动填写；不再使用固定鸟种下拉列表。正式媒体限制待定，临时演示保护移至折叠说明，超限图片压缩仅为未来方案。当前仍是浏览器前端检查点，非微信原生实现。
+
+The v0.10 portrait finder overlays controls and uses one collapsible visual/audio clue panel. Mode guidance, optional record naming and provisional media limits are clearer. Native capture and image compression remain future work.

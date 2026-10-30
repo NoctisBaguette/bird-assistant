@@ -57,3 +57,13 @@ test('analysis segment validation preserves the original file and invalidates ol
  assert.equal(s.setSegment(a.id,10,20),true);assert.deepEqual(a.segment,{from:10,to:20});assert.equal(a.url,'blob:original');assert.equal(s.result,null);
  assert.equal(s.setSegment(a.id,30,20),false);assert.equal(s.setSegment(a.id,10,70),false);assert.deepEqual(a.segment,{from:10,to:20});
 });
+test('changing clue focus preserves both analysis streams, selected evidence and user name',()=>{
+ const s=new RecognitionSession();s.add('photo','shutter');s.chooseName('tit');const token=s.beginAnalysis();s.focusOn('audio');
+ assert.equal(s.audio,true);assert.equal(s.mode,'quick');assert.equal(s.chosen().length,1);assert.equal(s.selection,'tit');assert.equal(s.complete(token),true);
+ s.focusOn('visual');assert.equal(s.result.visualSpecies,'sparrow');assert.equal(s.selection,'tit');
+});
+test('an optional manually entered name never overwrites model evidence and can return to unresolved',()=>{
+ const s=new RecognitionSession();s.add('photo','import');s.complete(s.beginAnalysis());assert.equal(s.selection,'unresolved');
+ s.chooseName('  自己填写的鸟名  ');assert.equal(s.selection,'自己填写的鸟名');assert.equal(s.result.visualSpecies,'sparrow');
+ s.chooseName('   ');assert.equal(s.selection,'unresolved');assert.equal(s.analysis,'done');
+});

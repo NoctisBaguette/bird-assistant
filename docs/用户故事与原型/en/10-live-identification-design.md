@@ -1,4 +1,4 @@
-# Live and imported identification: frontend handoff v0.9
+# Live and imported identification: frontend handoff v0.10
 
 30 October 2026. Based on [discussion #20](https://github.com/bird-assistant/bird-assistant/issues/20), the 29 October meeting and the current #12/#13 contracts. [中文](../09-live-identification-design.md).
 
@@ -70,3 +70,16 @@ Before native integration, test preview/zoom, shutter latency, camera-video/micr
 ## Review
 
 Open v0.9 and Identify. External review presets cover offline, stale results, stable/corrected names, conflicting audio, camera/audio denial, low storage/album failure and existing analysis/unknown/private-save errors. Compact and English modes check layout. Source is recognition.js/recognition.css with app.js/index.html integration; build-offline.mjs creates the standalone file. See prototype/QA.md for actual verification and its limits.
+
+
+## v0.10 review revision — 30 October 2026
+
+These changes supersede the v0.9 presentation while retaining its capture/save boundaries. This is a frontend review checkpoint; the user will provide the team handoff later. Native DevTools implementation has not started.
+
+- The preview fills the available portrait camera area, with controls overlaid. Preview, sensor buffer and saved-photo ratios are separate. Native scaling must preserve proportions and use the same rotation/crop/mirror transform for boxes; screen framing must not silently crop device originals.
+- Quick has a gentle extended-use heat hint. Expanded guidance explains possible heat, battery use and slowdown, offers Switch to Wait, and makes clear that Wait can still generate heat. No untested mandatory duration or silent mode change is introduced.
+- One compact, expandable clue panel replaces stacked visual/audio cards. Tabs, horizontal swipes and arrow keys select the displayed channel without disabling either recognition stream or changing capture mode. Import stays one tap away.
+- My species choice becomes Name in your record (optional). Unresolved remains the default. Users may explicitly adopt a visual/audio suggestion, enter a name, or return to unresolved. There is no fixed short species dropdown, and the original model evidence remains separate.
+- Product size/count/format limits remain undecided. Temporary browser guards move into collapsed prototype notes. Future oversized-image handling should preserve originals and optimize a derivative to an agreed target while checking bird detail. Crop/reselect/defer are alternatives if quality cannot be maintained. Automatic compression, its provider/library and video policies are not implemented or selected.
+
+Review portrait layout, collapsed/expanded control access, channel-switch independence, mode advice, optional naming and save handoff, compact Chinese/English, permissions and offline states. Two added state regressions cover display-channel independence and manual names preserving model evidence.

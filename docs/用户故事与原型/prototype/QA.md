@@ -196,3 +196,15 @@ Scope: clickable browser design, not native WeChat capture or recognition.
 Still unverified: native camera/zoom/OEM processing, real microphone/video concurrency, ASR/BirdNET/vision APIs, phone-album writes, actual thermal/battery/memory behaviour, native touch and background lifecycle. The browser never requested camera/microphone permission, uploaded media or called an AI provider. Review presets simulate those states. Imported evidence and observations are session-only; journal persistence remains browser-local.
 
 Design handoff: ../09-live-identification-design.md and ../en/10-live-identification-design.md. Further system optimization remains the discussion in GitHub #20; this release does not expand #12/#13 implementation acceptance.
+
+## v0.10 portrait and review revision — 2026-10-30
+
+- All 43 Node checks passed, including the 41 existing checks and two new state regressions: clue focus changes preserve audio, capture mode, selection and in-flight analysis; optional manual names preserve original model evidence and can return to unresolved.
+- Browser: portrait preview fills the compact 346×598 px app area. Collapsed and expanded layouts have no horizontal/vertical overflow; zoom clears the dock and the capture hint clears the raised navigation button. Compact English was visually inspected.
+- Browser: Quick heat guidance opened, explained continued heat risk in Wait, and its Switch to Wait action changed mode and closed the guidance. No timed or silent automatic switch is implemented.
+- Browser: a horizontal pointer swipe selected Sound without muting audio or changing Wait mode; keyboard ArrowRight moved focus to Sound. Tabs and expand/collapse exposed the independent audio toggle and Keep call.
+- Browser: Keep call plus a 900 ms hold/release created selected audio/video samples; review kept both. After sample analysis, the name remained unresolved until explicit adoption. Clearing the suggestion and entering a custom name handed that name and both items to the private save form. The fixed species dropdown is absent.
+- Browser: compact offline/camera-denied/audio-denied cases retained the intended capture and independent-sound behaviour. No real media upload or native camera/microphone was attempted this revision; prior real video/audio codec limits remain unverified.
+- Product media limits are undecided. Demo memory guards remain functional but are under collapsed prototype notes. Automatic image compression is a future design, not a tested feature.
+
+The previous v0.9 snapshots and QA remain historical. Current offline output is bird-assistant-prototype-offline-v0.10.html. The user will provide the later team handoff; this revision is a frontend review checkpoint, not the start of native WeChat implementation.

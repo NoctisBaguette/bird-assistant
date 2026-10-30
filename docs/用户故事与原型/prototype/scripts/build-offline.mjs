@@ -19,5 +19,5 @@ const bundled = html.replace('<link rel="stylesheet" href="style.css">', () => `
   .replace('<link rel="stylesheet" href="recognition.css">', () => `<style>${recognitionCss}</style>`)
   .replace('<script src="recognition.js"></script>', () => `<script>${recognitionJs}</script>`)
   .replace('<script src="app.js"></script>', () => `<script>${js}</script>`);
-writeFileSync(resolve(root, 'dist/bird-assistant-prototype-offline-v0.9.html'), bundled);
+writeFileSync(resolve(root, 'dist/bird-assistant-prototype-offline-v0.10.html'), bundled);
 process.stdout.write('Offline HTML generated.\n');
