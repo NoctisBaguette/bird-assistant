@@ -1,7 +1,7 @@
 羽迹 Bird Assistant — 开发过程、反馈与决策记录
-文件版本：1.8
+文件版本：1.9
 记录日期：2026-10-30（Asia/Shanghai）
-当前检查点：v0.11 地图与头像前端评阅已更新并发布；成长/消息范围与后续独立小程序仓库工作方式已记录，尚未开始微信原生实现。
+当前检查点：v0.11 线索面板 SVG 图标微调已发布；独立仓库创建设置、DushiSports 经验整理与四天体验版阶段计划已记录，原生实现待下一阶段启动。
 用途：保留本会话中的需求演化、困难、修复、验证与未决问题，供以后纳入 GitHub。
 语言：中文为团队阅读正文，末尾附英文摘要。
 日期规则：只使用会话或提交记录中可确定的日期；更早讨论无准确日期时明确注明。以下不是聊天逐字转录。
@@ -660,4 +660,32 @@ The browser prototype adds six original default avatars and real local picture s
 Badges and messaging pages now contain scoped proposals: lightweight private/unresolved-friendly milestones, mutual-friend direct chat and invitation-based outing groups, with delivery, retry, offline, access and moderation rules to define. There are no rewards or real messages; the proposals do not expand the team's accepted scope automatically.
 All 47 checks plus syntax, offline packaging and bilingual/link validations passed. Browser checks covered compact centering/zoom/clearance, live Chinese and keyboard English suggestions, regional panning, public-action confirmation/retry/withdrawal/reopening and a real PNG avatar crop/save/recrop/cancel. The first fixture path was unavailable in the browser; a verified shared-root file resolved it. Native accounts/maps/uploads/multi-user activity and real phone performance remain unverified.
 Implementation commit 040d4e1ae1f2106a860b8e1683f3206ba4b749c5 is on docs/prototype-v011-map-profile. The owner-private preview deployed successfully from Site source 1dfd3a608898c41654dd64cfeaa29cda208a84a6; the team main branch was not merged.
+
+十六、线索面板图标与体验版启动准备（2026-10-30，Asia/Shanghai）
+
+R33 — 用户反馈与目标
+[已确认] 画面/声音线索面板的展开收起功能可保留，仅嫌字形 ^/v 不美观，要求改善图标。用户希望先获得独立 GitHub 仓库设置，接近启动微信开发者工具开发；考虑先在 DushiSports 项目整理已有小程序开发问题，以减少重复踩坑。
+[已确认] 目标是四天内形成体验版。这里记录相对 Day 1–4，不擅自确定开始/截止日，也不把所有规划功能承诺在四天内完成。
+
+I17 — 图标微调与验证
+[已实现] 共用图标库增加 chevron，取代面板中的文本符号；圆角描边、固定20px图标，原38×38按钮与交互保留。aria-expanded 控制180°旋转，焦点样式限制在按钮内，减少动态效果时取消过渡。
+[已验证] 中文标准与英文紧凑界面中，展开/收起按钮名称、aria-expanded 和方向一致；只有一个SVG，字符文本为空。原47项检查、JS语法、离线重新生成、原故事/手帐中英文链接和 git diff --check 通过，没有为字形替换新增镜像测试。
+[已记录] 面板截图导出曾一次超时，随后已成功保存实际可见面板；未把截图工具问题当作产品缺陷。
+[代码已发布] docs/prototype-v011-map-profile 分支，功能/文档提交06a2735f277046da5048403d7a7cc2639e88609f；v0.11离线文件已重新生成。
+[预览发布成功] 既有owner-only访问范围保留，部署返回succeeded。
+地址：https://bird-assistant-journal-v07.zhou-colin.chatgpt.site
+Site源码：ca3ab58dbb517160a8f10f4c93436018f34d0fc1
+部署：appgdep_6ae447a49e0081918d05bedb0dfde50b
+
+P01 — 下一阶段准备建议（未代建仓库、未开始原生开发）
+创建页建议沿用 NoctisBaguette / bird-assistant-miniprogram 和原描述，Public 与先前截图/课程源码工作方式一致；README Off、.gitignore None、License No license，保留空仓库供首次源代码提交。README与小程序忽略规则在初始代码中统一加入，稳定main、Issues用于实际缺陷。可见性仍由用户决定。
+Day 1：确认AppID/成员/配置，原生目录与五个Tab，尽早验证手机运行与上传路径。Day 2：采集或导入→复核→私人保存与重开、权限降级和错误保留。Day 3：地图/搜索、手帐、头像、已有可用识别接口，冻结新功能。Day 4：真机、弱网、前后台、权限、缓存与布局回归，修阻断项并交付可体验构建及已知问题。
+成长游戏、完整消息与实时多模态优化保持后续范围；具体四天范围须结合已有后端和AppID实际状态收敛。
+DushiSports 摘要建议按触发条件→原错误→根因→实际修复→验证证据，列已解决/未解决/可复用。重点为真实工具/基础库版本、构建结构、成员与AppID、组件/样式、安全区、云环境/函数、登录/数据库权限、媒体临时路径/上传、请求域名、真机差异、隐私权限和体验版流程；排除凭据和无关用户数据。本轮未读取该项目，不声称这些问题全部发生过，也不默认复用其身份或数据环境。
+[文档] 中文/英文地图头像评阅说明已同步补充仓库设置、阶段计划和DushiSports整理清单。GitHub创建流程核对官方文档： https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-new-repository 。
+
+English update — chevron polish and four-day preparation, 30 October 2026
+The clue-panel text glyphs are replaced by a shared rounded-stroke SVG chevron. Existing interaction, button size, labels and aria-expanded remain; rotation follows state and reduced-motion preferences remove transitions. Standard Chinese and compact English browser checks and all existing 47 checks passed, along with syntax, offline generation and bilingual/link validation.
+The fork branch now contains implementation/documentation commit 06a2735f277046da5048403d7a7cc2639e88609f. The owner-private preview deployed successfully from Site source ca3ab58dbb517160a8f10f4c93436018f34d0fc1; the v0.11 offline artifact is refreshed.
+Repository creation settings and a relative four-day experience-build plan are documented. A DushiSports retrospective should preserve exact actual errors, fixes, configuration and verification while excluding secrets. Its sources were not read this round. No new repository was created and native implementation has not started; the user retains visibility choice and the plan must be scoped against actual AppID/access/backend readiness.
 
