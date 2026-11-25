@@ -1,9 +1,10 @@
+import {cleanLocalMetadata,LocalPhotoMetadata} from './photo-metadata';
 import {cleanPhotoDetails,PhotoDetails} from './photo-details';
 import {key} from './community';
 
 export const POST_IMAGE_LIMIT=9;
 export const POST_JOURNAL_LIMIT=3;
-export interface PostImage {id:string;path:string;kind:'photo'|'journal';label:string;journalId?:string;manualCamera:PhotoDetails;}
+export interface PostImage {id:string;path:string;kind:'photo'|'journal';label:string;journalId?:string;manualCamera:PhotoDetails;fileMetadata?:LocalPhotoMetadata;}
 export function postImage(path:string,kind:PostImage['kind']='photo',label='照片',journalId?:string):PostImage {
   return {id:key(),path,kind,label:label.slice(0,100),...(journalId?{journalId}:{}),manualCamera:{}};
 }
@@ -17,5 +18,5 @@ export function postGallery(record:any):Array<{image:string;kind:string;label:st
 }
 export function cleanPostImage(item:any):PostImage {
   if(!item||typeof item.id!=='string'||typeof item.path!=='string'||!['photo','journal'].includes(item.kind)||typeof item.label!=='string')throw new Error('帖子草稿无法读取，原有资料未覆盖。');
-  return {...item,manualCamera:cleanPhotoDetails(item.manualCamera)};
+  return {...item,manualCamera:cleanPhotoDetails(item.manualCamera),fileMetadata:cleanLocalMetadata(item.fileMetadata)};
 }

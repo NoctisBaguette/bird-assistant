@@ -9,7 +9,7 @@ from bird_business.trip_parks import PARK_CONTEXT
 
 
 class TripEvidence:
-    def __init__(self, database, point, start, hours, sites, parks):
+    def __init__(self, database, point, start, hours, sites, parks, discussions=()):
         self.database = database
         self.point = point
         self.start = start
@@ -50,6 +50,15 @@ class TripEvidence:
             ]
         self.weather = {}
         self.guides = {}
+        self.discussions = {}
+        for index, discussion in enumerate(discussions, 1):
+            area = next(
+                (key for key, site in self.sites.items() if site["point"] == discussion["point"]), None
+            )
+            if area:
+                key = f"D{index}"
+                self.discussions[key] = {**discussion, "id": key, "area": area}
+                self.sources[key] = f"《{discussion['title']}》· 社区经验 · 发布于{discussion['published']}"
 
     def forecast(self, area):
         if area not in self.weather:
@@ -90,6 +99,10 @@ class TripEvidence:
             },
             "W0": self.forecast("origin"),
             "guides": list(self.guides.values()),
+            "community": {
+                "basis": "仅检索近180天已审核讨论，且关联到本次候选区域的公开历史鸟讯；发布日不是观察日",
+                "items": list(self.discussions.values()),
+            },
         }
 
     def tools(self):
@@ -129,6 +142,15 @@ class TripEvidence:
                     list(self.sites),
                 )
             )
+        if self.discussions:
+            tools.append(
+                tool(
+                    "get_community_discussions",
+                    "查看关联该公开区域的社区经验，保留发布日、观察日和位置精度；并非实时目击。",
+                    "area",
+                    list(self.sites),
+                )
+            )
         return tools
 
     def call(self, name, arguments):
@@ -140,6 +162,8 @@ class TripEvidence:
             return {"error": "参数格式无效"}
         area = args.get("area")
         if isinstance(area, str):
+            if name == "get_community_discussions" and area in self.sites:
+                return {"items": [row for row in self.discussions.values() if row["area"] == area]}
             if name == "get_forecast" and area in ("origin", *self.sites, *self.parks):
                 return self.forecast(area)
             if name == "get_sightings" and area in self.sites:
@@ -250,7 +274,7 @@ class TripEvidence:
                 }
             )
         return {
-            "schemaVersion": 4,
+            "schemaVersion": 5,
             "answer": named(answer.answer),
             "brief": brief,
             "referenceMap": [
@@ -272,6 +296,7 @@ class TripEvidence:
                     "id": key,
                     "label": self.sources[key],
                     **({"url": self.source_urls[key]} if key in self.source_urls else {}),
+                    **({"record": self.discussions[key]["record"]} if key in self.discussions else {}),
                 }
                 for key in source_ids
             ],
@@ -281,6 +306,14 @@ class TripEvidence:
             "guideCards": [
                 {"id": row["speciesId"], "name": row["name"]}
                 for row in self.guides.values()
+                if row["id"] in answer.sources
+            ],
+            "communityCards": [
+                {
+                    key: row[key]
+                    for key in ("id", "record", "title", "published", "observed", "excerpt", "basis")
+                }
+                for row in self.discussions.values()
                 if row["id"] in answer.sources
             ],
             "stages": [

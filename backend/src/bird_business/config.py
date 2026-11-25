@@ -45,6 +45,8 @@ class BusinessSettings(BaseSettings):
     qwen_model: str = Field(default="qwen3-vl-plus", pattern=r"^[a-zA-Z0-9_.-]{1,80}$")
     qwen_text_model: str = Field(default="qwen-plus", pattern=r"^[a-zA-Z0-9_.-]{1,80}$")
     qwen_daily_requests: int = Field(default=20, ge=1, le=100)
+    asr_enabled: bool = False
+    asr_model: str = Field(default="qwen3-asr-flash", pattern=r"^qwen3-asr-flash(?:-\d{4}-\d{2}-\d{2})?$")
     allow_anonymous: bool = True
     cors_origins: str = ""
 

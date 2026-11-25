@@ -1,5 +1,7 @@
 # 0.4.7 candidate and acceptance boundary
 
+[Development continuation:229 client passes and501 local backend passes](SPRINT-2026-11-26.md). Installed0.4.6 remains unchanged. Counts195/184 below describe earlier stages, not the current candidate total.
+
 26 November 2026, Beijing time. [中文](../ACCEPTANCE-0.4.7.md) · [Full backlog](BACKLOG.md)
 
 The user's current native acceptance baseline remains0.4.6. Candidate code is prepared on `fix/recognition-acceptance-0.4.7` for review. No current pull/recompile, team merge or backend deployment is requested.

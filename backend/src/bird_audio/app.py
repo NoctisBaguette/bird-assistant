@@ -23,8 +23,8 @@ from bird_audio.labels import (
 from bird_audio.metrics import AudioMetrics
 from bird_audio.service import AudioAnalysisService
 from bird_common.app_factory import build_service_app
-from bird_common.auth import ApiKeyAuth
 from bird_common.catalog import load_catalog, sha256_file
+from bird_common.mobile_auth import MobileAuth
 
 LOGGER = logging.getLogger(__name__)
 
@@ -131,7 +131,7 @@ def create_app(
             app.state.asset_digests = digests
             app.state.ffmpeg_path = ffmpeg
             app.state.metrics = metrics
-            app.state.auth = ApiKeyAuth(resolved)
+            app.state.auth = MobileAuth(resolved, ("/api/v1/audio",))
             metrics.engine_ready.set(1 if audio_engine.ready else 0)
             LOGGER.info("audio service ready", extra={"detail": f"engine={audio_engine.backend}"})
             yield

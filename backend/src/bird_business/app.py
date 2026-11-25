@@ -16,6 +16,8 @@ from bird_business.guide_api import router as guide_router
 from bird_business.metrics import BusinessMetrics
 from bird_business.social import router as social_router
 from bird_business.social_groups import router as groups_router
+from bird_business.transcription import router as transcription_router
+from bird_business.transcription import transcribe
 from bird_business.trip import router as trip_router
 from bird_business.writing import install as install_writing
 from bird_business.writing import router as writing_router
@@ -36,6 +38,7 @@ def create_app(settings: BusinessSettings | None = None, *, store: ObservationSt
         metrics.stored.set(observations.count())
         app.state.settings = resolved
         install_writing(app)
+        app.state.transcription_upstream = transcribe
         app.state.admin_sessions = AdminSessions(resolved.admin_password_sha256)
         app.state.store = observations
         app.state.metrics = metrics
@@ -78,6 +81,7 @@ def create_app(settings: BusinessSettings | None = None, *, store: ObservationSt
     service.include_router(social_router)
     service.include_router(groups_router)
     service.include_router(writing_router)
+    service.include_router(transcription_router)
     return service
 
 

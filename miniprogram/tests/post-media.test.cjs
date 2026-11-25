@@ -86,3 +86,19 @@ test('a partial journal render keeps completed snapshots and retries only the re
   await p.addJournals();assert.equal(p.data.attachments.length,1);assert.equal(p.data.journalChosen,1);assert.equal(p.data.journalPicker,true);
   await p.addJournals();assert.deepEqual(p.data.attachments.map(item=>item.journalId),['one','two']);assert.deepEqual(rendered,['one','two','two']);assert.equal(p.data.journalPicker,false);
 });
+
+test('metadata arriving during a draft save preserves the managed file path and the newly read fields',async t=>{
+  environment();const p=page(),image=postImage('/tmp/original.jpg');p.setImages([image]);p.data.body='Still writing';
+  let finish;t.mock.method(drafts,'savePostDraft',value=>new Promise(resolve=>finish=()=>resolve({...value,images:[{...image,path:'/user/bird-post-draft/saved.jpg'}]})));
+  const job=p.saveDraft();const fileMetadata={state:'ready',format:'jpeg',camera:{iso:'800'},hasExif:true};
+  p.setData({attachments:[{...p.data.attachments[0],fileMetadata}],activeMetadata:fileMetadata});finish();await job;
+  assert.equal(p.data.attachments[0].path,'/user/bird-post-draft/saved.jpg');assert.equal(p.data.attachments[0].fileMetadata.camera.iso,'800');assert.equal(p.data.body,'Still writing');
+});
+test('late file metadata follows its own attachment and cannot revive removed or unloaded composer content',async t=>{
+  environment();const metadata=require('../.test-build/services/photo-metadata.js'),pending=[];
+  t.mock.method(metadata,'readLocalPhotoMetadata',path=>new Promise(resolve=>pending.push({path,resolve})));
+  const p=page(),a=postImage('a.jpg'),b=postImage('b.jpg'),meta={state:'ready',format:'jpeg',camera:{iso:'800'},hasExif:true};p.setImages([a,b],b.id);p.readImageMetadata([a,b]);
+  pending[0].resolve(meta);await new Promise(resolve=>setImmediate(resolve));assert.equal(p.data.activeMetadata,null);assert.equal(p.data.attachments[0].fileMetadata.camera.iso,'800');
+  p.removeAttachment(tap(b.id));pending[1].resolve(meta);await new Promise(resolve=>setImmediate(resolve));assert.equal(p.data.attachments.length,1);
+  const c=postImage('c.jpg');p.setImages([c]);p.readImageMetadata([c]);p.onUnload();pending[2].resolve(meta);await new Promise(resolve=>setImmediate(resolve));assert.equal(p.data.attachments[0].fileMetadata,undefined);
+});

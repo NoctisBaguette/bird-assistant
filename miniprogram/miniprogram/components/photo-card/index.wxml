@@ -8,5 +8,5 @@
       <text wx:if="{{resolution}}" class="photo-copy">显示副本 · {{resolution}}</text><text class="photo-return">再次轻点返回照片</text>
     </scroll-view></view>
   </view>
-  <view class="photo-caption"><text>{{flipped ? '摄影参数' : '照片'}}</text><button class="photo-expand" catchtap="preview" aria-label="放大查看照片">放大查看 <image class="photo-expand-icon" src="/assets/icons/scan.png"/></button></view>
+  <view class="photo-caption"><text>{{flipped ? '摄影参数' : '照片'}}</text><button wx:if="{{canSave}}" class="photo-expand" catchtap="save" disabled="{{saving}}" loading="{{saving}}">保存图片</button><button class="photo-expand" catchtap="preview" aria-label="放大查看照片">放大查看 <image class="photo-expand-icon" src="/assets/icons/scan.png"/></button></view>
 </view>

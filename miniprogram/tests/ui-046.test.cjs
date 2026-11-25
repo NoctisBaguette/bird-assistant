@@ -66,6 +66,12 @@ test('legacy A references expand their own source labels and never inherit a car
   assert.doesNotMatch(old.answer,/\b[AP]\d/);assert.match(old.answer,/颐和园/);assert.equal(old.referenceMap,undefined);assert.match(old.legacyWarning,/坐标/);
   const fresh=presentTrip({...plan(),answer:'先到P1。',referenceMap:[{id:'P1',name:'颐和园',point:{latitude:40,longitude:116.3},kind:'park'}]});assert.equal(fresh.answer,'先到颐和园。');assert.equal(fresh.legacyWarning,'');
 });
+
+test('cited community experience keeps the original post link and dates when rendering and restoring a consultation',()=>{
+  const stored=storage(),source={id:'D1',label:'社区经验 · 发布2026-11-25',record:'post_approved'},experience={id:'D1',record:'post_approved',title:'冬日岸线观察',published:'2026-11-25',observed:'2026-11-20',excerpt:'安静观察。',basis:'公开区域约十公里'};
+  const value=presentTrip({...plan(),sources:[source],communityCards:[experience]});history.saveTripHistory('owner',{id:'forum-context',updated:new Date().toISOString(),conditions,turns:[{question:'附近怎么找？',plan:value,saved:new Date().toISOString()}]});
+  const saved=history.readTripHistory('owner')[0].turns[0].plan;assert.deepEqual(saved.sources,[source]);assert.deepEqual(saved.communityCards,[experience]);assert.equal(saved.referenceMap,undefined);assert.equal(stored.size,1);
+});
 test('consultations are bounded, account-separated, and corrupt history is never overwritten',()=>{
   const stored=storage();for(let i=0;i<22;i++)history.saveTripHistory('owner-a',{id:'c'+i,updated:new Date().toISOString(),conditions,turns:Array.from({length:8},(_,n)=>({question:'问题'+n,plan:plan(n),saved:new Date().toISOString()}))});
   const rows=history.readTripHistory('owner-a');assert.equal(rows.length,20);assert.equal(rows[0].id,'c21');assert.equal(rows[0].turns.length,6);assert.deepEqual(history.readTripHistory('owner-b'),[]);
