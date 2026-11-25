@@ -668,3 +668,129 @@ def test_observation_date_cursor_is_stable_and_cannot_be_used_for_collection_ord
     assert not cursor
     first = client.get(MAP, headers=owner, params={"sort": "recent", "limit": 1}).json()
     assert client.get(MAP, headers=owner, params={"cursor": first["nextCursor"]}).status_code == 422
+
+
+def gallery_upload(client, author, color):
+    output = BytesIO()
+    exif = Image.Exif()
+    exif[272] = "Camera " + str(color)
+    Image.new("RGB", (80, 60), (color, 10, 20)).save(output, "JPEG", exif=exif)
+    response = client.post(
+        ROOT + "/media", headers=author, files={"file": ("gallery.jpg", output.getvalue())}
+    )
+    assert response.status_code == 201
+    return response.json()["id"]
+
+
+def test_gallery_moderation_visibility_order_and_withdrawal(field):
+    client, (author, _, _), staff, _ = field
+    assert client.get(ROOT + "/capabilities").json()["maxImages"] == 9
+    images = [gallery_upload(client, author, color) for color in (40, 80)]
+    response = client.post(
+        ROOT + "/previews",
+        headers=author,
+        json={
+            "body": "A photo and a journal",
+            "channels": ["post"],
+            "share_photo": True,
+            "share_camera": True,
+            "gallery": [
+                {"media": images[0], "manual_camera": {"iso": "800"}},
+                {"media": images[1], "kind": "journal", "label": "A saved journal"},
+            ],
+        },
+    )
+    assert response.status_code == 200, response.text
+    shown = response.json()["display"]["post"]["gallery"]
+    assert "media" not in shown[0] and shown[0]["manualCamera"]["iso"] == "800"
+    submitted = client.post(
+        ROOT + "/publications", headers=author, json={"preview": response.json()["id"]}
+    ).json()["items"][0]["id"]
+    url = ROOT + "/publications/" + submitted
+    assert client.get(url + "/photos/1").status_code == 404
+    assert client.get(ROOT + "/moderation/" + submitted + "/photo?index=1", headers=staff).status_code == 200
+    assert (
+        client.post(ROOT + "/moderation/" + submitted, headers=staff, json={"status": "approved"}).status_code
+        == 200
+    )
+    record = client.get(url).json()
+    assert [image["kind"] for image in record["gallery"]] == ["photo", "journal"]
+    assert record["gallery"][0]["camera"]["model"] == "Camera 40"
+    assert client.get(url + "/photo").content == client.get(url + "/photos/0").content
+    assert client.get(url + "/photos/0").content != client.get(url + "/photos/1").content
+    assert client.get(url + "/photos/2").status_code == 404
+    assert client.delete(url, headers=author).status_code == 204
+    assert client.get(url + "/photos/1").status_code == 404
+
+
+def test_gallery_limits_duplicates_ownership_and_camera_consent(field):
+    client, (author, reader, _), _, _ = field
+    images = [gallery_upload(client, author, color) for color in (20, 60)]
+    foreign = gallery_upload(client, reader, 100)
+    base = {"body": "Gallery", "channels": ["post"], "share_photo": True}
+    for gallery in (
+        [{"media": images[0]}] * 2,
+        [{"media": "id-" + str(i)} for i in range(10)],
+        [{"media": "id-" + str(i), "kind": "journal"} for i in range(4)],
+    ):
+        assert (
+            client.post(ROOT + "/previews", headers=author, json={**base, "gallery": gallery}).status_code
+            == 422
+        )
+    assert (
+        client.post(
+            ROOT + "/previews", headers=author, json={**base, "gallery": [{"media": foreign}]}
+        ).status_code
+        == 404
+    )
+    assert (
+        client.post(
+            ROOT + "/previews",
+            headers=author,
+            json={**base, "media": images[1], "gallery": [{"media": images[0]}]},
+        ).status_code
+        == 422
+    )
+    for share_photo in (False, True):
+        result = client.post(
+            ROOT + "/previews",
+            headers=author,
+            json={
+                **base,
+                "share_photo": share_photo,
+                "gallery": [{"media": images[0], "manual_camera": {"device": "Hand filled"}}],
+            },
+        ).json()
+        shown = result["display"]["post"]["gallery"]
+        if share_photo:
+            assert shown[0]["camera"] == {} and shown[0]["manualCamera"] == {}
+        else:
+            assert shown == [] and not result["display"]["post"]["media"]
+
+
+def test_nine_image_gallery_keeps_all_moderation_photos_private_until_approved(field):
+    client, (author, reader, _), staff, _ = field
+    images = [gallery_upload(client, author, 10 + index * 20) for index in range(9)]
+    result = client.post(
+        ROOT + "/previews",
+        headers=author,
+        json={
+            "body": "Nine images",
+            "channels": ["post"],
+            "share_photo": True,
+            "gallery": [
+                {"media": media, "kind": "journal" if index < 3 else "photo"}
+                for index, media in enumerate(images)
+            ],
+        },
+    )
+    assert result.status_code == 200
+    record = client.post(
+        ROOT + "/publications", headers=author, json={"preview": result.json()["id"]}
+    ).json()["items"][0]["id"]
+    path = ROOT + "/moderation/" + record + "/photo?index=8"
+    assert client.get(path).status_code == 401
+    assert client.get(path, headers=reader).status_code == 403
+    last = client.get(path, headers=staff)
+    assert last.status_code == 200 and not Image.open(BytesIO(last.content)).getexif()
+    assert client.get(ROOT + "/publications/" + record + "/photos/8").status_code == 404

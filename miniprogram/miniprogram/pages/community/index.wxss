@@ -86,3 +86,5 @@
 @media(prefers-reduced-motion:reduce){.pull-flight.is-flying .flight-bird{animation:none;opacity:1;left:3px}.pull-flight.is-flying .bird-two{left:20px}.pull-flight.is-flying .bird-three{left:37px}}
 
 .post-action-hover{background:#edf3e7}
+
+.compose-tools{flex-wrap:wrap;gap:8px}.compose-tools .compose-tool{flex:1;min-width:90px;padding:10px 6px}.compose-footer{margin-top:22px}

@@ -50,7 +50,15 @@ class Sighting(Input):
     note: str = Field("", max_length=2000)
 
 
+class GalleryImage(Input):
+    media: Key
+    kind: Literal["photo", "journal"] = "photo"
+    label: Label = ""
+    manual_camera: Camera = Field(default_factory=Camera)
+
+
 class Preview(Input):
+    gallery: list[GalleryImage] = Field(default_factory=list, max_length=9)
     species: Key | None = None
     external: Key | None = None
     sighting: Key | None = None
@@ -65,6 +73,15 @@ class Preview(Input):
 
     @model_validator(mode="after")
     def validate_content(self):
+        if self.gallery:
+            if self.sighting or self.external or self.channels != {"post"}:
+                raise ValueError("gallery applies only to standalone discussion posts")
+            if len({item.media for item in self.gallery}) != len(self.gallery):
+                raise ValueError("gallery media must be unique")
+            if sum(item.kind == "journal" for item in self.gallery) > 3:
+                raise ValueError("at most three journal pages")
+            if self.media and self.media != self.gallery[0].media:
+                raise ValueError("legacy cover must match the first gallery image")
         if self.species and (self.sighting or self.external or self.channels != {"post"}):
             raise ValueError("topic species applies only to standalone discussion posts")
         if not self.sighting and not self.body:

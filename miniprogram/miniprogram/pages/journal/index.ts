@@ -1,3 +1,4 @@
+import {renderJournal} from '../../services/journal-render';
 import { selectTab } from '../../services/tabs';
 import { layout, editorPanes, EDITOR_CHROME_HEIGHT } from '../../services/layout';
 import { localRepository, isSampleObservation } from '../../services/repository';
@@ -10,7 +11,7 @@ import { ratioLocks, ratioLock, setRatioLock, resizePhoto, resizeOrnament, isOrn
 import { papers, paperColors, paperSource } from '../../services/journal-paper';
 import { round2, floor2, numberDraft, parseNumberDraft } from '../../services/numbers';
 import { clamp } from '../../services/map-model';
-import { getCanvas, loadCanvasImage, exportCanvas } from '../../services/canvas';
+import { getCanvas, exportCanvas } from '../../services/canvas';
 import { resetPageScroll } from '../../services/navigation';
 import { JournalAsset, JournalDocument, JournalElement, Snapshot, JOURNAL_KEY, copy, element, elementLabel, fit, focusOffset, makeJournal, compositionName, changeJournalRatio, reflowJournalPhotos, journalFingerprint, readJournals, recordHistory, snapshot, textLayout } from '../../services/journal-model';
 type Touch=WechatMiniprogram.TouchEvent;
@@ -282,22 +283,8 @@ Page({
     this.finishAdjustment();this.endTextEdit();if(!this.data.doc||this.data.busy||this.data.exporting)return;
     const d=copy(this.data.doc);this.setData({exporting:true,error:'',exportPath:''});
     try{
-      const canvas=await getCanvas(this,'#journal-export',d.width,d.height),ctx=canvas.getContext('2d');
-      ctx.fillStyle=d.background;ctx.fillRect(0,0,d.width,d.height);
-      const texture=paperSource(d.paper);if(texture){const image=await loadCanvasImage(canvas,texture);ctx.drawImage(image,0,0,d.width,d.height,0,0,d.width,d.height);}
-      for(const e of d.elements){
-        ctx.save();ctx.translate(e.x+e.w/2,e.y+e.h/2);ctx.rotate(e.rotation*Math.PI/180);
-        if(e.type==='photo'){
-          const image=await loadCanvasImage(canvas,e.src),crop=photoCrop({...e,iw:image.width,ih:image.height});
-          ctx.fillStyle='#fffef9';ctx.fillRect(-e.w/2-6,-e.h/2-6,e.w+12,e.h+12);
-          ctx.drawImage(image,crop.sourceX,crop.sourceY,crop.sourceW,crop.sourceH,-e.w/2,-e.h/2,e.w,e.h);
-        }else if(e.type==='text'){
-          ctx.fillStyle=e.color;ctx.textBaseline='top';
-          for(const row of textLayout(e,d).rows){ctx.font=(row.bold?'600 ':'400 ')+row.size+'px '+(e.font==='sans'?'sans-serif':e.font==='hand'?'KaiTi,serif':'serif');ctx.fillText(row.text,-e.w/2,-e.h/2+row.y);}
-        }else if(e.type==='tape'){ctx.fillStyle=e.color;ctx.globalAlpha=.65;ctx.fillRect(-e.w/2,-e.h/2,e.w,e.h);}
-        else {const image=await loadCanvasImage(canvas,'/assets/decorations/'+e.type+'.png');ctx.drawImage(image,-e.w/2,-e.h/2,e.w,e.h);}
-        ctx.restore();
-      }
+      const canvas=await getCanvas(this,'#journal-export',d.width,d.height);
+      await renderJournal(canvas,d);
       const path=await exportCanvas(canvas);if(this.data.doc&&journalFingerprint(this.data.doc)===journalFingerprint(d))this.setData({exportPath:path});else this.setData({error:'已导出开始时的版本；画布已修改，请重新导出当前版本。'});
       wx.previewImage({urls:[path],fail:()=>this.setData({error:'成品图已生成，预览暂未打开；可点击保存到手机相册。'})});
     }catch(error){this.setData({error:errorText(error)});}

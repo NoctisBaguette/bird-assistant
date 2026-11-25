@@ -82,11 +82,15 @@ function observationCard(item) {
   const channel=item.channels.find(entry=>entry.status==='pending' && entry.photo);
   const layout=element('div','','observation-layout');
   if(channel){
-    const image=document.createElement('img');
-    const link=element('a','','photo');
-    link.href='/admin/photos/'+encodeURIComponent(channel.id);
-    link.target='_blank';link.rel='noopener noreferrer';
-    image.src=link.href;image.loading='lazy';image.alt='放大观察照片';link.append(image);layout.append(link);
+    const deck=element('div','','review-gallery');
+    for(let index=0;index<(channel.photoCount||1);index++){
+      const image=document.createElement('img'),link=element('a','','photo');
+      link.href='/admin/photos/'+encodeURIComponent(channel.id)+'?index='+index;
+      link.target='_blank';link.rel='noopener noreferrer';
+      image.src=link.href;image.loading='lazy';image.alt='放大第'+(index+1)+'张照片或手帐';
+      link.append(image);deck.append(link);
+    }
+    layout.append(deck);
   }
   const channels=element('div');
   for(const entry of item.channels){

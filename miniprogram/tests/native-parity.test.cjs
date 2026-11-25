@@ -271,9 +271,9 @@ test('forum writing preparation keeps the draft unchanged and associates only an
 });
 test('forum writing validation rejects empty or impossible polish requests and draft settings survive saving',async()=>{
   const brief=require('../.test-build/services/post-writing.js'),base={title:'',body:'',instructions:'',purpose:1,image:'',includeImage:false};assert.throws(()=>brief.postWritingBrief(base),/先写一点/);assert.throws(()=>brief.postWritingBrief({...base,instructions:'polish',purpose:0}),/已有标题或正文/);
-  let saved;const {p}=page('community',390,844,{setStorageSync:(key,value)=>{if(key==='bird-assistant.post-draft.v1')saved=value;},showToast:()=>{}});p.compose();p.setData({title:'Title',body:'Draft',writingInstructions:'Natural wording',writingPurpose:2});p.saveDraft();await Promise.resolve();assert.equal(saved.body,'Draft');assert.equal(saved.writing.instructions,'Natural wording');assert.equal(p.data.busy,false);
-  const restored=page('community',390,844,{getStorageSync:()=>saved}).p;restored.loadDraft();assert.equal(restored.data.writingPurpose,2);assert.equal(restored.data.writingInstructions,'Natural wording');
-  const legacy=page('community',390,844,{getStorageSync:()=>({title:'Old title',body:'Old draft',image:''})}).p;legacy.loadDraft();assert.equal(legacy.data.body,'Old draft');assert.equal(legacy.data.writingInstructions,'');assert.equal(legacy.data.writingPurpose,1);
+  let saved;const {p}=page('community',390,844,{setStorageSync:(key,value)=>{if(key==='bird-assistant.post-draft.v2')saved=value;},getStorageSync:()=>'',removeStorageSync:()=>{},showToast:()=>{}});p.compose();p.setData({title:'Title',body:'Draft',writingInstructions:'Natural wording',writingPurpose:2});await p.saveDraft();assert.equal(saved.body,'Draft');assert.equal(saved.writing.instructions,'Natural wording');assert.equal(p.data.busy,false);
+  const restored=page('community',390,844,{getStorageSync:key=>key==='bird-assistant.post-draft.v2'?saved:''}).p;restored.loadDraft();assert.equal(restored.data.writingPurpose,2);assert.equal(restored.data.writingInstructions,'Natural wording');
+  const legacy=page('community',390,844,{getStorageSync:key=>key==='bird-assistant.post-draft.v1'?{title:'Old title',body:'Old draft',image:''}:''}).p;legacy.loadDraft();assert.equal(legacy.data.body,'Old draft');assert.equal(legacy.data.writingInstructions,'');assert.equal(legacy.data.writingPurpose,1);
 });
 
 test('free deformation stretches each image axis, preserves the source and exports the same preview',async()=>{

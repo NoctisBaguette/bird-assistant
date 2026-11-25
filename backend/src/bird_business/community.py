@@ -7,7 +7,7 @@ from io import BytesIO
 from math import isfinite
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Query, Request, Response, UploadFile
+from fastapi import APIRouter, Depends, Path, Query, Request, Response, UploadFile
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 from bird_business.community_geo import display_point
@@ -239,6 +239,11 @@ def capture_number(capture, key):
         return None
 
 
+@router.get(ROOT + "/capabilities")
+def capabilities():
+    return {"postGallery": 1, "maxImages": 9, "maxJournals": 3, "video": False, "audio": False}
+
+
 @router.post(ROOT + "/media", status_code=201)
 def upload(file: UploadFile, database: DB, owner: Member):
     if file.size and file.size > 24 * 1024 * 1024:
@@ -383,7 +388,26 @@ def preview(body: Preview, database: DB, owner: Member):
             raise ServiceError(
                 "MAP_LOCATION_RESTRICTED", "map requires location and a non-sensitive confirmed species", 422
             )
-        media = (body.media or sighting.get("media")) if body.share_photo else None
+        gallery = []
+        for item in body.gallery:
+            uploaded = one(db, "SELECT camera FROM photos WHERE owner=? AND id=?", owner, item.media)
+            if body.share_photo:
+                gallery.append(
+                    {
+                        "media": item.media,
+                        "kind": item.kind,
+                        "label": item.label,
+                        "camera": json.loads(uploaded["camera"]) if body.share_camera else {},
+                        "manualCamera": item.manual_camera.model_dump(exclude_defaults=True)
+                        if body.share_camera
+                        else {},
+                    }
+                )
+        media = (
+            (body.media or (gallery[0]["media"] if gallery else None) or sighting.get("media"))
+            if body.share_photo
+            else None
+        )
         if media:
             one(db, "SELECT id FROM photos WHERE owner=? AND id=?", owner, media)
         camera = sighting.get("camera", {})
@@ -404,6 +428,7 @@ def preview(body: Preview, database: DB, owner: Member):
             "camera": {key: val for key, val in camera.items() if val} if body.share_camera else {},
             "source": "羽迹社区",
             "media": media,
+            **({"gallery": gallery} if body.gallery else {}),
             "coordinateSystem": "GCJ-02",
         }
         displays = {
@@ -422,7 +447,22 @@ def preview(body: Preview, database: DB, owner: Member):
         )
         return {
             "id": preview_id,
-            "display": {key: {**val, "media": bool(val["media"])} for key, val in displays.items()},
+            "display": {
+                key: {
+                    **val,
+                    "media": bool(val["media"]),
+                    **(
+                        {
+                            "gallery": [
+                                {k: v for k, v in image.items() if k != "media"} for image in val["gallery"]
+                            ]
+                        }
+                        if "gallery" in val
+                        else {}
+                    ),
+                }
+                for key, val in displays.items()
+            },
         }
 
 
@@ -465,7 +505,20 @@ def publish(body: Submit, database: DB, owner: Member):
 def public(row: sqlite3.Row) -> dict:
     info = json.loads(row["display"])
     media = info.pop("media", None)
+    gallery = info.pop("gallery", [])
+    base = ROOT + "/publications/" + row["id"]
     return {
+        **(
+            {
+                "gallery": [
+                    {k: v for k, v in image.items() if k != "media"}
+                    | {"image": base + "/photos/" + str(index)}
+                    for index, image in enumerate(gallery)
+                ]
+            }
+            if gallery
+            else {}
+        ),
         **info,
         "id": row["id"],
         "channel": row["channel"],
@@ -500,6 +553,19 @@ def photo(record: str, database: DB):
         )
     except (OSError, ValueError) as error:
         raise ServiceError("PHOTO_UNAVAILABLE", "原社区照片暂不可用", 503) from error
+
+
+@router.get(ROOT + "/publications/{record}/photos/{index}")
+def gallery_photo(record: str, index: Annotated[int, Path(ge=0, le=8)], database: DB):
+    with database.transaction() as db:
+        row = visible(db, record)
+        images = json.loads(row["display"]).get("gallery", [])
+        if index >= len(images):
+            raise missing()
+        contents = one(
+            db, "SELECT jpeg FROM photos WHERE owner=? AND id=?", row["owner"], images[index]["media"]
+        )["jpeg"]
+        return Response(contents, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
 
 
 def discussion_summary(db, record, owner):
@@ -1038,14 +1104,28 @@ def queue(database: DB, staff: Annotated[str, Depends(reviewer)]):
 
 
 @router.get(ROOT + "/moderation/{record}/photo")
-def review_photo(record: str, database: DB, staff: Annotated[str, Depends(reviewer)]):
+def review_photo(
+    record: str,
+    database: DB,
+    staff: Annotated[str, Depends(reviewer)],
+    index: Annotated[int, Query(ge=0, le=8)] = 0,
+):
     with database.transaction() as db:
-        return moderation_photo(db, record)
+        return moderation_photo(db, record, index)
 
 
-def moderation_photo(db, record):
+def moderation_photo(db, record, index=0):
     row = one(db, "SELECT owner,display FROM publications WHERE id=?", record)
-    media = json.loads(row["display"]).get("media")
+    display = json.loads(row["display"])
+    images = display.get("gallery", [])
+    if images:
+        if index >= len(images):
+            raise missing()
+        media = images[index]["media"]
+    else:
+        if index:
+            raise missing()
+        media = display.get("media")
     return Response(
         one(db, "SELECT jpeg FROM photos WHERE owner=? AND id=?", row["owner"], media)[0],
         media_type="image/jpeg",
