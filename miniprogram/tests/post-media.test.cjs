@@ -76,3 +76,13 @@ test('gallery preview preserves order and per-image parameters and reuses upload
   await p.prepare(tap(''));assert.equal(p.data.error,'');assert.deepEqual(sent[0].gallery.map(item=>item.media),['media-a','media-b']);assert.equal(sent[0].gallery[0].manual_camera.iso,'800');assert.equal(sent[0].gallery[1].kind,'journal');
   await p.prepare(tap(''));assert.deepEqual(uploaded,['a','b']);assert.equal(sent.length,2);
 });
+
+test('a partial journal render keeps completed snapshots and retries only the remaining selection',async t=>{
+  environment();const p=page();p._journalDocuments=[{id:'one',width:900,height:1200,title:'One'},{id:'two',width:900,height:1200,title:'Two'}];
+  p.data.journalPicker=true;p.data.journalChosen=2;p.data.journalChoices=p._journalDocuments.map(item=>({...item,selected:true}));
+  const canvas=require('../.test-build/services/canvas.js'),renderer=require('../.test-build/services/journal-render.js');
+  t.mock.method(canvas,'getCanvas',async()=>({}));let exports=0;t.mock.method(canvas,'exportCanvas',async()=>'/tmp/journal-'+(++exports)+'.png');
+  const rendered=[];let fail=true;t.mock.method(renderer,'renderJournal',async(_canvas,document)=>{rendered.push(document.id);if(document.id==='two'&&fail){fail=false;throw Error('image unavailable');}});
+  await p.addJournals();assert.equal(p.data.attachments.length,1);assert.equal(p.data.journalChosen,1);assert.equal(p.data.journalPicker,true);
+  await p.addJournals();assert.deepEqual(p.data.attachments.map(item=>item.journalId),['one','two']);assert.deepEqual(rendered,['one','two','two']);assert.equal(p.data.journalPicker,false);
+});

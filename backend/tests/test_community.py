@@ -716,6 +716,7 @@ def test_gallery_moderation_visibility_order_and_withdrawal(field):
     record = client.get(url).json()
     assert [image["kind"] for image in record["gallery"]] == ["photo", "journal"]
     assert record["gallery"][0]["camera"]["model"] == "Camera 40"
+    assert not any(media in str(record["gallery"]) for media in images)
     assert client.get(url + "/photo").content == client.get(url + "/photos/0").content
     assert client.get(url + "/photos/0").content != client.get(url + "/photos/1").content
     assert client.get(url + "/photos/2").status_code == 404

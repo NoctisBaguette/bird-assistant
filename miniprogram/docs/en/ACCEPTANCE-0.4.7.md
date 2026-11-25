@@ -12,4 +12,4 @@ Native equal-height explanations, unclipped cards, scrolling, picker compatibili
 
 Continue testing unpublished forum drafts/previews, species navigation and local profile edits on the existing0.4.6 build. The infrastructure maintainer must inspect the active Caddy route, GPU readiness and tunnel before identification acceptance can resume.
 
-The expanded candidate now passes194 client checks, retaining the original184 and adding ten post-media/draft regressions. [Post media details](POST-MEDIA.md) cover the square deck,9/3 visuals/journals, recovery and companion backend/moderation changes. Deployment and native acceptance remain pending.
+The expanded candidate now passes195 client checks, retaining the original184 and adding eleven post-media/draft regressions. [Post media details](POST-MEDIA.md) cover the square deck,9/3 visuals/journals, recovery and companion backend/moderation changes. Deployment and native acceptance remain pending.

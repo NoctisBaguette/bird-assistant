@@ -100,7 +100,7 @@ Page({
     try{for(const choice of this.data.journalChoices.filter(item=>item.selected)){
       const document=this._journalDocuments.find(item=>item.id===choice.id);if(!document)continue;
       const canvas=await getCanvas(this,'#post-journal-export',document.width,document.height);await renderJournal(canvas,document);const path=await exportCanvas(canvas);
-      if(generation!==this._composeGeneration)return;this.setImages([...this.data.attachments,postImage(path,'journal',document.title,document.id)]);
+      if(generation!==this._composeGeneration)return;this.setImages([...this.data.attachments,postImage(path,'journal',document.title,document.id)]);this.setData({journalChoices:this.data.journalChoices.map(item=>item.id===choice.id?{...item,selected:false}:item),journalChosen:Math.max(0,this.data.journalChosen-1)});
     }this.setData({journalPicker:false,journalChosen:0});
     }catch(error){if(generation===this._composeGeneration)this.setData({error:errorText(error)});}finally{if(generation===this._composeGeneration)this.setData({busy:false});}
   },

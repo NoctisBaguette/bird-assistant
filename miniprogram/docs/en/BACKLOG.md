@@ -36,4 +36,4 @@ Six additions bring the queue from42 to48; previous responsibilities remain. [Ca
 | P05 | Draft saving fails | Screenshot shows file quota; candidate adds reusable byte-preserving managed copies, scoped cleanup, rollback and text/parameter recovery. Real exhausted space still prevents photo persistence. |
 | P06 | Extract photo metadata itself | Server allowlisted EXIF extraction exists; original bytes preserved; local pre-upload reading/display still pending. |
 
-Client194 passes. Production deployment and native acceptance remain separate; keep the installed0.4.6 build.
+Client195 passes. Production deployment and native acceptance remain separate; keep the installed0.4.6 build.
