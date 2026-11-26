@@ -163,6 +163,78 @@ def test_provider_host_is_constrained_and_secret_not_in_settings_repr():
     assert "not-visible-key" not in repr(BusinessSettings(qwen_api_key="not-visible-key"))
 
 
+def test_planning_only_config_shares_credentials_and_workspace_with_journal(monkeypatch):
+    monkeypatch.delenv("BIRD_BUSINESS_QWEN_API_KEY", raising=False)
+    monkeypatch.delenv("BIRD_BUSINESS_QWEN_BASE_URL", raising=False)
+    settings = BusinessSettings(trip_api_key="shared-test-only", trip_workspace="course-workspace")
+    assert settings.qwen_api_key.get_secret_value() == "shared-test-only"
+    assert (
+        settings.qwen_base_url == "https://course-workspace.cn-beijing.maas.aliyuncs.com/compatible-mode/v1"
+    )
+    reverse = BusinessSettings(qwen_api_key="writer-test-only")
+    assert reverse.trip_api_key == reverse.qwen_api_key
+    explicit = BusinessSettings(
+        trip_api_key="planning-test-only",
+        qwen_api_key="writing-test-only",
+        trip_workspace="course-workspace",
+        qwen_base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+    )
+    assert explicit.qwen_api_key.get_secret_value() == "writing-test-only"
+    assert explicit.trip_api_key.get_secret_value() == "planning-test-only"
+    assert explicit.qwen_base_url == "https://dashscope.aliyuncs.com/compatible-mode/v1"
+
+
+def test_writing_capabilities_are_authenticated_and_do_not_expose_credentials(setup):
+    client, app, calls, _ = setup
+    reply = client.get("/api/v1/journal/capabilities")
+    assert reply.status_code == 200
+    assert reply.headers["cache-control"] == "no-store"
+    assert reply.json() == {
+        "version": 1,
+        "configured": True,
+        "textModel": "qwen-plus",
+        "imageModel": "qwen3-vl-plus",
+        "asrEnabled": False,
+        "sharedPlanningCredential": True,
+    }
+    assert "qwen-test-secret" not in reply.text
+    assert not calls
+    client.headers.pop("Authorization")
+    assert client.get("/api/v1/journal/capabilities").status_code == 401
+    client.headers["Authorization"] = "Bearer " + app.state.auth.issue("wx:test:writer")
+    app.state.settings.qwen_api_key = app.state.settings.qwen_api_key.__class__("")
+    assert client.get("/api/v1/journal/capabilities").json()["configured"] is False
+
+
+@pytest.mark.parametrize(
+    ("status", "code"),
+    [
+        (401, "PROVIDER_AUTH"),
+        (403, "PROVIDER_AUTH"),
+        (404, "MODEL_UNAVAILABLE"),
+        (400, "PROVIDER_INPUT"),
+        (429, "RATE_LIMITED"),
+        (500, "UPSTREAM_UNAVAILABLE"),
+    ],
+)
+def test_provider_failures_identify_the_stage_without_echoing_provider_secrets(monkeypatch, status, code):
+    from urllib.error import HTTPError
+
+    from bird_business import writing
+
+    class Transport:
+        def open(self, request, timeout):
+            raise HTTPError(request.full_url, status, "private provider details", {}, None)
+
+    monkeypatch.setattr(writing, "build_opener", lambda *_: Transport())
+    with pytest.raises(ServiceError) as error:
+        writing.generate(
+            BusinessSettings(qwen_api_key="test-only-secret"), writing.Brief.model_validate(brief()), []
+        )
+    assert error.value.code == code
+    assert "private provider details" not in str(error.value)
+
+
 @pytest.mark.parametrize("mode", ["valid", "invalid_json", "oversized", "truncated"])
 def test_provider_http_payload_output_bound_and_no_retry(monkeypatch, mode):
     import json

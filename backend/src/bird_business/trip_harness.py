@@ -92,7 +92,7 @@ def cloud_chat(settings, payload, timeout):
     endpoint = (
         f"https://{settings.trip_workspace}.cn-beijing.maas.aliyuncs.com/compatible-mode/v1/chat/completions"
         if settings.trip_workspace
-        else ENDPOINT
+        else settings.qwen_base_url + "/chat/completions"
     )
     request = Request(
         endpoint,

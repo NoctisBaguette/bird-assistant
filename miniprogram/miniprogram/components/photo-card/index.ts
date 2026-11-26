@@ -3,6 +3,7 @@ Component({
   data:{flipped:false,canFlip:false},
   observers:{src(){this.setData({flipped:false});},'fileInfo,manualInfo'(fileInfo:unknown,manualInfo:unknown){this.setData({canFlip:!!(fileInfo||manualInfo),flipped:false});}},
   methods:{
+    hold(){},
     save(){if(this.data.canSave&&!this.data.saving)this.triggerEvent('save');},
     flip(){if(!this.data.fileInfo&&!this.data.manualInfo){wx.showToast({title:'暂无可用拍摄参数',icon:'none'});return;}this.setData({flipped:!this.data.flipped});},
     loaded(event:WechatMiniprogram.CustomEvent<{width:number;height:number}>){this.triggerEvent('loaded',event.detail);},

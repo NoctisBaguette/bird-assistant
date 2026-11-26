@@ -20,7 +20,7 @@ Page({
   data:{savingPhoto:false,publishAttachments:[] as PostImage[],recordGallery:[] as any[],reactionBusy:{like:false,bookmark:false},placesError:'',postsError:'',placeSort:'recent',placePoint:null as {latitude:number;longitude:number}|null,mapOpening:false,displayResolution:'',manualCamera:{} as PhotoDetails,manualPhotoInfo:null as ReturnType<typeof photoInfo>,photoInfo:null as ReturnType<typeof photoInfo>,postSpecies:'',postSpeciesName:'',speciesSupported:false,placeLoading:false,replyTarget:null as {id:string;name:string}|null,replyFocused:false,replySuggestOpen:false,replyThreads:[] as Array<{id:string;root:ReplyView;children:ReplyView[]}>,pendingReplies:[] as any[],photoWidth:300,photoFailed:false,photoHeight:200,featured:[] as {id:string;name:string;english:string;image:string;photo:{credit:string;license:string}|null}[],sourceId:'',tab:'identity',placeCount:0,recordCount:0,places:[] as any[],speciesPosts:[] as any[],screen:'',id:'',items:[] as any[],record:null as any,keyword:'',body:'',title:'',error:'',notice:'',busy:false,
     draft:null as Draft|null,anonymous:true,shareDate:false,shareCamera:false,sharePhoto:true,map:false,post:true,
     externalPage:0,externalNext:false,preview:null as any,previewLines:[] as string[],photo:'',replySpecies:'',self:'',selectedSpecies:'',matches:[] as any[]},
-  _galleryUploads:new Map<string,{id:string;camera:Record<string,string>}>(),
+  _galleryUploads:null as unknown as Map<string,{id:string;camera:Record<string,string>}>,
   _placesSequence:0,_mapGeneration:0,_cameraDetails:{} as Record<string,string>,_media:'',_sighting:'',_generation:0,_submitKey:'',_replySignature:'',_path:'',_closed:false,_replyOffset:0,_replyLoading:false,
   onLoad(options:Record<string,string|undefined>){
     this._galleryUploads=new Map();
@@ -180,7 +180,7 @@ Page({
         gallery=[];
         for(const image of images){
           if(!image.path)throw new Error('有照片未保留，请返回重新选择。');
-          let uploaded=this._galleryUploads.get(image.path);
+          this._galleryUploads??=new Map();let uploaded=this._galleryUploads.get(image.path);
           if(!uploaded){uploaded=await uploadPhoto(image.path);this._galleryUploads.set(image.path,uploaded);}
           if(this._closed)return;
           gallery.push({media:uploaded.id,kind:image.kind,label:image.label,manual_camera:cleanPhotoDetails(image.manualCamera)});

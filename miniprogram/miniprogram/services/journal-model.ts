@@ -61,7 +61,7 @@ export function reflowJournalPhotos(d:JournalDocument) {
     const inset=d.style==='minimal'?90:72,maxW=d.width-2*inset;
     const place=(photo:JournalElement,x:number,y:number,w:number,h:number)=>{
       Object.assign(photo,{x,y,w,h,rotation:0,lockedRatio:w/h});
-      for(const text of d.elements.filter(e=>e.photoId===photo.id))Object.assign(text,{x,y:y+h+18,w,maxLines:2,fontSize:22});
+      for(const text of d.elements.filter(e=>e.photoId===photo.id))Object.assign(text,{x,y:y+h+18,w,maxLines:text.maxLines===0?0:2,fontSize:22});
     };
     const contained=(p:JournalElement,w:number,h:number)=>{
       const r=p.iw>0&&p.ih>0?p.iw/p.ih:4/3;
@@ -103,7 +103,7 @@ export function reflowJournalPhotos(d:JournalDocument) {
     }
     if(d.variant%2===0&&n>1)x=d.width-x-w;
     Object.assign(photo,{x,y,w,h});
-    for(const text of d.elements.filter(e=>e.photoId===photo.id))Object.assign(text,{x,y:y+h+32,w,maxLines:2});
+    for(const text of d.elements.filter(e=>e.photoId===photo.id))Object.assign(text,{x,y:y+h+32,w,maxLines:text.maxLines===0?0:2});
   });
   return finishPhotoLayout(d);
 }

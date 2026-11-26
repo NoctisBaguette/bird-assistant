@@ -94,8 +94,8 @@ Page({
     if(this.data.doc&&this.data.dirty){void this.persistDraft().then(ok=>{if(ok)then?.();});return false;}
     return true;
   },
-  newJournal(){if(!this.canOpenAnother(()=>this.newJournal()))return;this._catalog=[];this.setData({view:'picker',headerTitle:'选择素材',assets:[],chosen:0,source:'observations',error:''});this.loadAssets();resetPageScroll(this);},
-  sample(e?:Touch){if(!this.canOpenAnother(()=>this.sample(e)))return;const count=Number(e?.currentTarget.dataset.count)||4;this._catalog=copy(samples).map((a,i)=>({...a,source:'sample',selected:i<count}));this.setData({view:'picker',headerTitle:'选择素材',source:'sample',error:''});this.syncAssets();resetPageScroll(this);},
+  newJournal(){if(!this.canOpenAnother(()=>this.newJournal()))return;this._catalog=[];this.setData({title:'',view:'picker',headerTitle:'选择素材',assets:[],chosen:0,source:'observations',error:''});this.loadAssets();resetPageScroll(this);},
+  sample(e?:Touch){if(!this.canOpenAnother(()=>this.sample(e)))return;const count=Number(e?.currentTarget.dataset.count)||4;this._catalog=copy(samples).map((a,i)=>({...a,source:'sample',selected:i<count}));this.setData({title:'',view:'picker',headerTitle:'选择素材',source:'sample',error:''});this.syncAssets();resetPageScroll(this);},
   syncAssets(){const favorites=this.data.source==='collection'?(wx.getStorageSync('bird-assistant.favorites.v1')||[]):[],d=this.data;this.setData({assets:this._catalog.filter(a=>(d.source==='collection'?favorites.includes(a.id):a.source===d.source)&&(!a.date?d.unknown:(!d.from||a.date>=d.from)&&(!d.to||a.date<=d.to))),chosen:this._catalog.filter(a=>a.selected).length,picked:this._catalog.filter(a=>a.selected)});},
   date(e:Input){const key=String(e.currentTarget.dataset.key);if(key==='from'||key==='to'){this.setData({[key]:e.detail.value});this.syncAssets();}},
   clearDates(){this.setData({from:'',to:''});this.syncAssets();},
@@ -139,7 +139,7 @@ Page({
   select(e:Touch){this.finishAdjustment();this.endTextEdit();this.setData({selectedId:String(e.currentTarget.dataset.id),backgroundSelected:false,layersOpen:false,numberEditing:'',numberDrafts:{}});this.refresh();},
   beginTextEdit(){if(!this._editBefore)this._editBefore=snapshot(this.data.doc!,this.data.selectedId);},
   endTextEdit(){if(this._editBefore){const before=this._editBefore;this._editBefore=null;this.commit(before);}},
-  text(e:Input){const d=this.data.doc,selected=this.data.selected;if(!d||!selected)return;this.beginTextEdit();const key=String(e.currentTarget.dataset.key);if(key==='title'||key==='text'){const a=d.elements.find(a=>a.id===selected.id)!;a[key]=e.detail.value;if(key==='title'&&a===d.elements.filter(e=>e.type==='text'&&!e.photoId)[1])d.title=e.detail.value.trim()||'未命名手帐';this.setData({doc:d,dirty:true,exportPath:''});this.scheduleSave();this.refresh();}},
+  text(e:Input){const d=this.data.doc,selected=this.data.selected;if(!d||!selected)return;this.beginTextEdit();const key=String(e.currentTarget.dataset.key);if(key==='title'||key==='text'){const a=d.elements.find(a=>a.id===selected.id)!;a[key]=e.detail.value;a.maxLines=0;if(key==='title'&&a===d.elements.filter(e=>e.type==='text'&&!e.photoId)[1])d.title=e.detail.value.trim()||'未命名手帐';this.setData({doc:d,dirty:true,exportPath:''});this.scheduleSave();this.refresh();}},
   previewAdjust(e:WechatMiniprogram.CustomEvent<{value:number|string}>){
     if(e.currentTarget.dataset.control==='slider'&&this.data.numberEditing)this.setData({numberEditing:''});
     const d=this.data.doc,id=this.data.selectedId,key=String(e.currentTarget.dataset.key),raw=Number(e.detail.value);

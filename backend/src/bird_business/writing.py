@@ -173,12 +173,36 @@ def generate(settings, brief: Brief, images: list[str]) -> dict:
             raise ValueError()
         return json.loads(choice["message"]["content"])
     except HTTPError as error:
-        code, status = ("RATE_LIMITED", 429) if error.code == 429 else ("UPSTREAM_UNAVAILABLE", 503)
+        code, status = {
+            401: ("PROVIDER_AUTH", 503),
+            403: ("PROVIDER_AUTH", 503),
+            404: ("MODEL_UNAVAILABLE", 503),
+            400: ("PROVIDER_INPUT", 502),
+            429: ("RATE_LIMITED", 429),
+        }.get(error.code, ("UPSTREAM_UNAVAILABLE", 503))
         raise ServiceError(code, "writing provider unavailable", status) from None
     except (TimeoutError, URLError):
         raise ServiceError("TIMEOUT", "writing provider unavailable", 504) from None
     except (ValueError, KeyError, IndexError, TypeError):
         raise ServiceError("INVALID_OUTPUT", "writing suggestion failed validation", 502) from None
+
+
+@router.get("/api/v1/journal/capabilities")
+async def capabilities(
+    request: Request, response: Response, principal: Annotated[Principal, Depends(require_principal)]
+):
+    if principal.subject == "anonymous":
+        raise ServiceError("AUTH_REQUIRED", "authenticated writing session required", 401)
+    settings = request.app.state.settings
+    response.headers["Cache-Control"] = "no-store"
+    return {
+        "version": 1,
+        "configured": bool(settings.qwen_api_key.get_secret_value()),
+        "textModel": settings.qwen_text_model,
+        "imageModel": settings.qwen_model,
+        "asrEnabled": settings.asr_enabled,
+        "sharedPlanningCredential": settings.qwen_api_key == settings.trip_api_key,
+    }
 
 
 @router.post("/api/v1/journal/suggestions")
