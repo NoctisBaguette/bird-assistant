@@ -8,7 +8,7 @@ function environment(){
   const storage=new Map(),files=new Map([['/tmp/original.jpg','original-exif-bytes'],['/tmp/second.png','second-original']]),deleted=[],copies=[];
   const fs={mkdirSync(){},accessSync(path){if(!files.has(path)&&path!=='/user/bird-post-draft/')throw Error('missing file');},readdirSync:()=>[...files.keys()].filter(p=>p.startsWith('/user/bird-post-draft/')).map(p=>p.split('/').pop()),
     copyFile(options){copies.push(options);files.set(options.destPath,files.get(options.srcPath));options.success();},unlinkSync(path){deleted.push(path);files.delete(path);}};
-  global.wx={env:{USER_DATA_PATH:'/user'},getFileSystemManager:()=>fs,getStorageSync:key=>structuredClone(storage.get(key)||''),setStorageSync:(key,value)=>storage.set(key,structuredClone(value)),removeStorageSync:key=>storage.delete(key),showToast(){},getWindowInfo:()=>({windowWidth:390,windowHeight:844,safeArea:{bottom:844}}),getMenuButtonBoundingClientRect:()=>({top:28,height:32,right:380}),pageScrollTo(){},canIUse:()=>false};
+  global.wx={env:{USER_DATA_PATH:'/user'},getFileSystemManager:()=>fs,getStorageSync:key=>structuredClone(storage.get(key)||''),setStorageSync:(key,value)=>storage.set(key,structuredClone(value)),removeStorageSync:key=>storage.delete(key),showToast(){},getImageInfo:o=>o.success({width:640,height:480,type:'jpeg'}),getWindowInfo:()=>({windowWidth:390,windowHeight:844,safeArea:{bottom:844}}),getMenuButtonBoundingClientRect:()=>({top:28,height:32,right:380}),pageScrollTo(){},canIUse:()=>false};
   return{storage,files,deleted,copies,fs};
 }
 function input(images){return{version:2,title:'A real observation',body:'Keep the words',images,writing:{purpose:2,instructions:'Keep uncertainty',includeImage:false}};}
@@ -52,13 +52,13 @@ test('legacy single-photo drafts migrate without losing manual metadata',()=>{
   const e=environment();e.storage.set('bird-assistant.post-draft.v1',{title:'Old',body:'Still here',image:'/tmp/original.jpg',manualCamera:{iso:'800'}});
   const restored=drafts.readPostDraft();assert.equal(restored.images[0].manualCamera.iso,'800');assert.equal(restored.images[0].path,'/tmp/original.jpg');
 });
-test('composer appends photos, previews full originals, edits per-photo settings and rejects late picker results',()=>{
+test('composer appends photos, previews full originals, edits per-photo settings and rejects late picker results',async()=>{
   environment();let picker,preview;global.wx.chooseImage=options=>picker=options;global.wx.previewImage=options=>preview=options;
-  const p=page();p.attach();assert.equal(picker.count,9);picker.success({tempFilePaths:['/tmp/original.jpg','/tmp/second.png']});picker.complete();
+  const p=page();p.attach();assert.equal(picker.count,9);await picker.success({tempFilePaths:['/tmp/original.jpg','/tmp/second.png']});
   assert.equal(p.data.attachments.length,2);p.photoDetails({detail:{iso:'800'}});p.attachmentDetails(tap(p.data.attachments[1].id));p.photoDetails({detail:{iso:'1600'}});
   assert.equal(p.data.attachments[0].manualCamera.iso,'800');assert.equal(p.data.attachments[1].manualCamera.iso,'1600');
   p.previewAttachment(tap(p.data.attachments[0].id));assert.deepEqual(preview.urls,['/tmp/original.jpg','/tmp/second.png']);assert.equal(p.data.attachments.length,2);
-  p.attach();p.onUnload();picker.success({tempFilePaths:['late.jpg']});assert.equal(p.data.attachments.length,2);
+  p.attach();p.onUnload();await picker.success({tempFilePaths:['late.jpg']});assert.equal(p.data.attachments.length,2);
 });
 test('missing recovered media cannot silently disappear when opening publication preview',()=>{
   environment();const p=page(),image=postImage('');p.setImages([image]);p.data.body='Recovered words';p.publish();assert.match(p.data.error,/重新添加/);assert.equal(p.data.body,'Recovered words');

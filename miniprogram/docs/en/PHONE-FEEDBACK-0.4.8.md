@@ -1,5 +1,7 @@
 # 0.4.8 phone feedback and next acceptance
 
+Follow-up0.4.9: U01 passed, R13 reopened, parameter scrolling works but tap return regressed. See the [latest fixes/retest](IMPORT-AND-SHEETS-0.4.9.md); the following is the historical0.4.8 record.
+
 2026-11-26, Asia/Shanghai. [中文 / all sixteen findings](../PHONE-FEEDBACK-0.4.8.md) · [Full queue](BACKLOG.md)
 
 The user tested0.4.7 experience builds on Huawei Pura70 Pro+ and iPhone. Those reports are real device evidence, not a blanket acceptance.0.4.8 addresses the immediate defects on the existing candidate branch; production and the team PR remain unchanged.

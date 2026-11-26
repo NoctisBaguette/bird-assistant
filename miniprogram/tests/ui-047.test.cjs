@@ -53,13 +53,13 @@ test('domain rejection and missing local bridge have distinct actionable errors'
   await assert.rejects(local.service.connectVision(),/本机视觉联调/);
 });
 
-test('the photo fallback appears only after picker failure and disappears after a later successful multi-select',()=>{
-  let picker;global.wx={chooseMedia:options=>picker=options};const p=page();
+test('the photo fallback appears only after picker failure and disappears after a later successful multi-select',async()=>{
+  let picker;global.wx={chooseMedia:options=>picker=options,getImageInfo:o=>o.success({width:640,height:480,type:'jpeg'})};const p=page();
   const existing=p.addEvidence('existing.jpg','photo','album');p.data.notes='Existing note.';
   assert.equal(p.data.photoFallback,false);p.chooseFiles();picker.fail({errMsg:'chooseMedia:fail cancel'});
   assert.equal(p.data.photoFallback,false);assert.equal(p.data.notes,'Existing note.');assert.equal(p.data.assets[0].id,existing.id);
   p.chooseFiles();picker.fail({errMsg:'chooseMedia:fail unavailable'});assert.equal(p.data.photoFallback,true);
-  p.chooseFiles();picker.success({tempFiles:[{tempFilePath:'a.jpg',fileType:'image'},{tempFilePath:'b.jpg',fileType:'image'}]});
+  p.chooseFiles();picker.success({tempFiles:[{tempFilePath:'a.jpg',fileType:'image'},{tempFilePath:'b.jpg',fileType:'image'}]});await settle();
   assert.equal(p.data.photoFallback,false);assert.equal(p.data.assets.length,3);assert.ok(p.data.assets.every(a=>a.selected));
 });
 

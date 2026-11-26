@@ -1,3 +1,4 @@
+import {acceptPickedMedia,PickedMedia} from '../../services/media-import';
 import {readLocalPhotoMetadata,LocalPhotoMetadata} from '../../services/photo-metadata';
 import {LocalAudioPlayback} from '../../services/audio-playback';
 import {SpeechCapture} from '../../services/speech-capture';
@@ -69,7 +70,8 @@ Page({
   refreshImportSelection(value?:string){
     const mode=value||this.data.importMode;
     for(const item of this.data.assets)item.included=!!(item.selected&&!item.sample&&(item.kind==='photo'&&mode!=='audio'||item.kind==='audio'&&mode!=='media'));
-    this.setData({assets:this.data.assets});
+    const patch:Record<string,unknown>={};this.data.assets.forEach((item,index)=>{patch['assets['+index+'].included']=item.included;});
+    if(this.data.assets.length)this.setData(patch);
   },
   choose(event: WechatMiniprogram.TouchEvent) {
     if (this.data.busy || this.data.picking) return;
@@ -180,9 +182,20 @@ Page({
   clueEnd(){this._clueStart=null;},
   focus(e:WechatMiniprogram.TouchEvent){this.setData({focus:String(e.currentTarget.dataset.id)},()=>this.measureClues());},expand(){this.setData({expanded:!this.data.expanded},()=>this.measureClues());},toggleAudio(){this.setData({audio:!this.data.audio});},
   import(){this.releaseCapture();this.stopVision();this.cancelAnalysis();this.resetZoomRequests();this.setData({view:'import',paused:true,cameraReady:false,error:''});this.updateZoomView(this.data.zoom);resetPageScroll(this);},importKind(e:WechatMiniprogram.TouchEvent){this.setData({importKind:String(e.currentTarget.dataset.id)});},
-  chooseFiles(){if(this.data.picking||this.data.busy||this.data.batching)return;const token=++this._pickToken;this.setData({picking:true,error:''});if(this.data.importKind==='audio'){wx.chooseMessageFile({count:6,type:'file',extension:['mp3','wav','m4a','aac','mp4','ogg'],success:r=>{if(token!==this._pickToken)return;for(const f of r.tempFiles)this.addEvidence(f.path,'audio','album',false,{name:f.name,size:f.size});this.setData({picking:false});},fail:e=>{if(token!==this._pickToken)return;this.setData({picking:false});if(!/cancel/i.test(e.errMsg))this.setData({error:'音频文件选择未完成，已有素材保留。'});}});return;}
+  async receiveFiles(files:PickedMedia[],token:number){
+    try{const accepted=await acceptPickedMedia(files,()=>token===this._pickToken&&!this._unloaded);
+      if(token!==this._pickToken||this._unloaded)return;
+      for(const file of accepted)this.addEvidence(file.path,file.kind,'album',false,{name:file.name,size:file.size,duration:file.duration});
+      this.setData({picking:false,photoFallback:false});
+    }catch{if(token===this._pickToken&&!this._unloaded)this.setData({picking:false,error:'素材验证未完成，请重新选择；已有素材仍保留。'});}
+  },
+  chooseFiles(){
+    if(this.data.picking||this.data.busy||this.data.batching)return;const token=++this._pickToken;this.setData({picking:true,error:''});
+    if(this.data.importKind==='audio'){
+      wx.chooseMessageFile({count:6,type:'file',extension:['mp3','wav','m4a','aac','mp4','ogg'],success:r=>{void this.receiveFiles(r.tempFiles.map(f=>({path:f.path,kind:'audio',name:f.name,size:f.size})),token);},fail:e=>{if(token!==this._pickToken||this._unloaded)return;this.setData({picking:false});if(!/cancel/i.test(e.errMsg))this.setData({error:'音频文件选择未完成，已有素材保留。'});}});return;
+    }
     if(typeof wx.chooseMedia!=='function'){this.setData({picking:false,photoFallback:true,error:'当前设备的媒体选择器不可用，可用下方照片选择重试。'});return;}
-    wx.chooseMedia({count:6,mediaType:['image','video'],sizeType:['original'],sourceType:['album'],success:r=>{if(token!==this._pickToken)return;for(const f of r.tempFiles)this.addEvidence(f.tempFilePath,f.fileType==='video'?'video':'photo','album',false,{size:f.size,duration:f.duration});this.setData({picking:false,photoFallback:false});},fail:e=>{if(token!==this._pickToken)return;this.setData({picking:false});if(!/cancel/i.test(e.errMsg))this.setData({photoFallback:true,error:'素材选择未完成，可用下方照片选择重试，已有素材保留。'});}});
+    wx.chooseMedia({count:6,mediaType:['image','video'],sizeType:['original'],sourceType:['album'],success:r=>{void this.receiveFiles(r.tempFiles.map(f=>({path:f.tempFilePath,kind:f.fileType==='video'?'video':'photo',size:f.size,duration:f.duration})),token);},fail:e=>{if(token!==this._pickToken||this._unloaded)return;this.setData({picking:false});if(!/cancel/i.test(e.errMsg))this.setData({photoFallback:true,error:'素材选择未完成，可用下方照片选择重试，已有素材保留。'});}});
   },
   addEvidence(path:string,kind:Evidence['kind'],source:Evidence['source'],sample=false,info:{name?:string;size?:number;duration?:number}={}){this._player?.stop();this.cancelAnalysis();this.retainReviewDraft();const name=(info.name||((kind==='audio'?path.split('/').pop():'')||(kind==='photo'?'照片':'视频')+' '+(this.data.assets.length+1))).replace(/[\x00-\x1f]/g,'').slice(0,160);const a:Evidence={included:false,selected:!sample&&kind!=='video',name,sizeLabel:(info.size?info.size>=1048576?(info.size/1048576).toFixed(1)+' MB':Math.ceil(info.size/1024)+' KB':'')+(info.duration?' · '+Math.round(info.duration)+' 秒':''),status:sample?'示例 · 不参与识别':kind==='video'?'视频 · 私人保留':'未识别',id:'e-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),path,kind,source,sample,persisted:sample,album:source==='camera'?'尚未保存到相册':'保留设备原件',birdName:'',notes:'',observedDate:'',observedTime:'',placeName:''};this.setData({fileMetadata:null,savedDraft:null,currentName:name,latitude:'',longitude:'',analysis:null,isSample:sample,assets:[...this.data.assets,a],currentId:a.id,imagePath:path,mediaKind:kind,source,persisted:sample,albumStatus:a.album,birdName:'',notes:'',observedDate:'',observedTime:'',placeName:'',contextOpen:false,error:''});this.refreshImportSelection();if(kind==='photo'&&!sample){const generation=this._metadataGeneration;void readLocalPhotoMetadata(path).then(fileMetadata=>{if(generation!==this._metadataGeneration)return;const current=this.data.assets.find(item=>item.id===a.id);if(!current)return;current.fileMetadata=fileMetadata;this.setData({assets:this.data.assets,...(this.data.currentId===a.id?{fileMetadata}:{})});});}return a;},
   importMode(e:WechatMiniprogram.TouchEvent){if(this.data.batching||this.data.analyzing)return;const mode=String(e.currentTarget.dataset.id);if(['media','audio','both'].includes(mode)){this.setData({importMode:mode,error:''});this.refreshImportSelection(mode);}},

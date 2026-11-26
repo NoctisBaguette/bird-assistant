@@ -1,3 +1,4 @@
+import {acceptPickedMedia} from '../../services/media-import';
 import {readLocalPhotoMetadata,LocalPhotoMetadata} from '../../services/photo-metadata';
 import {PostImage,postImage,postGallery,checkPostImages,POST_IMAGE_LIMIT,POST_JOURNAL_LIMIT} from '../../services/post-media';
 import {readPostDraft,savePostDraft,PostDraft} from '../../services/post-draft';
@@ -63,6 +64,7 @@ Page({
   moreSections(){this.setData({moreOpen:!this.data.moreOpen});},
   closeMore(){this.setData({moreOpen:false});},
   holdMenu(){},
+  holdSheet(){},
   moreSection(event:WechatMiniprogram.TouchEvent){const id=String(event.currentTarget.dataset.id);if(!this.data.moreItems.some(item=>item.id===id))return;this.closeMore();if(id==='draft')this.loadDraft();else hub(id);},
   section(event:WechatMiniprogram.TouchEvent){hub(event.currentTarget.dataset.screen,event.currentTarget.dataset.id||'');},
   compose(){this.setData({view:'compose',error:'',moreOpen:false});this.resizeFeed();resetPageScroll(this);},
@@ -83,11 +85,14 @@ Page({
     if(this.data.busy||this.data.picking)return;const remaining=POST_IMAGE_LIMIT-this.data.attachments.length;
     if(remaining<=0){this.setData({error:'最多添加9张照片或手帐成品。'});return;}
     const generation=this._composeGeneration;this.setData({picking:true,error:''});
-    wx.chooseImage({count:remaining,sourceType:['album'],sizeType:['original'],success:r=>{if(generation!==this._composeGeneration)return;
-      const images=r.tempFilePaths.slice(0,remaining).map((path,i)=>postImage(path,'photo','照片 '+(this.data.attachments.length+i+1)));
-      this.setImages([...this.data.attachments,...images],images[0]?.id);this.readImageMetadata(images);},
-      fail:error=>{if(generation===this._composeGeneration&&!/cancel/i.test(error.errMsg))this.setData({error:'照片选择未完成，已有素材仍保留。'});},
-      complete:()=>{if(generation===this._composeGeneration)this.setData({picking:false});}});
+    wx.chooseImage({count:remaining,sourceType:['album'],sizeType:['original'],success:async r=>{
+      try{const files=await acceptPickedMedia(r.tempFilePaths.slice(0,remaining).map(path=>({path,kind:'photo' as const})),()=>generation===this._composeGeneration);
+        if(generation!==this._composeGeneration||!files.length)return;
+        const images=files.map((file,i)=>postImage(file.path,'photo','照片 '+(this.data.attachments.length+i+1)));
+        this.setImages([...this.data.attachments,...images],images[0]?.id);this.readImageMetadata(images);
+      }catch{if(generation===this._composeGeneration)this.setData({error:'照片验证未完成，已有素材仍保留。'});}
+      finally{if(generation===this._composeGeneration)this.setData({picking:false});}
+    },fail:error=>{if(generation===this._composeGeneration){this.setData({picking:false});if(!/cancel/i.test(error.errMsg))this.setData({error:'照片选择未完成，已有素材仍保留。'});}}});
   },
   previewAttachment(event:WechatMiniprogram.TouchEvent){const id=String(event.currentTarget.dataset.id),item=this.data.attachments.find(image=>image.id===id);if(!item?.path)return;
     this.setData({activeAttachment:id,activeKind:item.kind,image:item.path,manualCamera:item.manualCamera,activeMetadata:item.fileMetadata||null,writingIncludeImage:false});this.clearWritingBrief();wx.previewImage({current:item.path,urls:this.data.attachments.map(image=>image.path).filter(Boolean)});

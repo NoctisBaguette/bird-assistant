@@ -6,6 +6,7 @@ import { places, currentPoint, mapRecords, clamp, markers, offsetFor, centerAt, 
 const tiles=Array.from({length:9},(_,i)=>({id:i,x:(i%3-1)*100,y:(Math.floor(i/3)-1)*100}));
 type Touch = WechatMiniprogram.TouchEvent;
 Page({
+  holdSheet(){},
   data: {mapMoving:false,searchFocused:false,screenMarkers:[] as Array<ReturnType<typeof markers>[number]&{screenX:number;screenY:number}>,focusPin:null as {screenX:number;screenY:number}|null,height:600,viewportW:390,sheetHeight:390,tiles,focusPoint:null as {x:number;y:number}|null,selectedMarkerIds:[] as string[],worldW:400,worldH:640,x:0,y:0,zoom:1,invZoom:1,markers:markers(mapRecords,400,640,1),query:'',searchOpen:false,results:places,visibility:0,date:0,species:0,visibilityOptions:['公开与我的','公开鸟讯','我的标记'],dateOptions:['所有示例日期','10月21日'],speciesOptions:['所有鸟种','树麻雀','大山雀','普通翠鸟'],region:'lake',regionName:'湖畔公园',focused:'',sheet:false,detail:null as typeof mapRecords[number]|null,sheetRecords:mapRecords.slice(0,1),saved:false,checked:false },
   _gesture:null as {x:number;y:number;offsetX:number;offsetY:number;distance:number;zoom:number;moved:boolean}|null,
   _flight:null as {from:MapView;to:MapView;startedAt:number|null}|null,

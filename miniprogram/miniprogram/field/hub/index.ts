@@ -1,3 +1,4 @@
+import {acceptPickedMedia} from '../../services/media-import';
 import {savePublishedPhoto} from '../../services/media-save';
 import {PostImage,postGallery,checkPostImages} from '../../services/post-media';
 import {cleanPhotoDetails,withPhotoDetails,withEmbeddedPhotoDetails,PhotoDetails} from '../../services/photo-details';
@@ -151,7 +152,7 @@ Page({
   pickSpecies(event:Tap){const item=this.data.matches.find(row=>row.id===event.currentTarget.dataset.id);if(!item)return;
     if(this.data.draft){this._sighting='';this.setData({draft:{...this.data.draft,species:item.id,speciesName:item.name||item.english||item.scientific},preview:null});}
     this.setData({replySpecies:item.id,selectedSpecies:item.name||item.english||item.scientific,matches:[]});},
-  async attach(){if(this.data.publishAttachments.length){wx.showToast({title:'请返回帖子编辑中调整素材',icon:'none'});return;}try{const result=await wx.chooseImage({count:1,sizeType:['original'],sourceType:['album']});this._media='';this.setData({photo:result.tempFilePaths[0],manualCamera:{},sharePhoto:true,preview:null});}catch{}},
+  async attach(){if(this.data.publishAttachments.length){wx.showToast({title:'请返回帖子编辑中调整素材',icon:'none'});return;}try{const result=await wx.chooseImage({count:1,sizeType:['original'],sourceType:['album']});const files=await acceptPickedMedia(result.tempFilePaths.map(path=>({path,kind:'photo' as const})),()=>!this._closed);if(this._closed||!files.length)return;this._media='';this.setData({photo:files[0].path,manualCamera:{},sharePhoto:true,preview:null});}catch{}},
   discussExternal(){
     const record=this.data.record;
     if(!record?.sourceUrl)return;

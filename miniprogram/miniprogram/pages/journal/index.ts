@@ -1,3 +1,4 @@
+import {acceptPickedMedia} from '../../services/media-import';
 import {renderJournal} from '../../services/journal-render';
 import { selectTab } from '../../services/tabs';
 import { layout, editorPanes, EDITOR_CHROME_HEIGHT } from '../../services/layout';
@@ -41,11 +42,13 @@ Page({
     else {patch.selected=original;patch.pixels=pixelValues(original);patch.dirty=true;patch.exportPath='';}
     this.setData(patch);
   },
-  onUnload(){this.selectComponent?.('#journal-speech')?.stopWork?.();this._active=false;clearTimeout(this._autosave);this.finishAdjustment();this.endTextEdit();void this.persistDraft();this._previews?.cancel();this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;},
+  onUnload(){this._assetPickToken++;this.selectComponent?.('#journal-speech')?.stopWork?.();this._active=false;clearTimeout(this._autosave);this.finishAdjustment();this.endTextEdit();void this.persistDraft();this._previews?.cancel();this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;},
   _autosave:0 as unknown as ReturnType<typeof setTimeout>,
   _saveJob:null as Promise<boolean>|null,
   _revision:0,
   _active:true,
+  _assetPickToken:0,
+  holdSheet(){},
   scheduleSave(){
     this._revision++;clearTimeout(this._autosave);
     this.setData({saveStatus:'更改待保存'});
@@ -105,7 +108,15 @@ Page({
   period(e:Input){this.setData({period:Number(e.detail.value)});},notes(){this.setData({includeNotes:!this.data.includeNotes});},
   loadAssets(){try{const records=localRepository().list().filter(r=>!r.mediaKind||r.mediaKind==='photo');for(const r of records)if(!this._catalog.some(a=>a.id===r.id))this._catalog.push({id:r.id,src:r.imagePath,label:r.birdName,notes:r.notes,sample:isSampleObservation(r),selected:false,persisted:true,source:'observations',date:r.observedDate||undefined});this.syncAssets();}catch(e){this.setData({error:errorText(e)});}},
   source(e:Touch){const source=String(e.currentTarget.dataset.id);this.setData({source});if(source==='sample'&&!this._catalog.some(a=>a.source==='sample'))this._catalog.push(...copy(samples).map(a=>({...a,source:'sample',selected:false})));if(source==='observations'||source==='collection')this.loadAssets();else this.syncAssets();},
-  importPhotos(){const count=6-this.data.chosen;if(count<1){wx.showToast({title:'每页先选最多 6 张，可先取消一张',icon:'none'});return;}wx.chooseImage({count,sizeType:['original'],sourceType:['album'],success:r=>{this._catalog.push(...r.tempFilePaths.map((src,i)=>({id:'album-'+Date.now()+'-'+i,src,label:'片段 '+(i+1),notes:'',sample:false,selected:true,source:'album'})));this.setData({source:'album',error:''});this.syncAssets();},fail:e=>{if(!/cancel/i.test(e.errMsg))this.setData({error:'照片选择未完成，已有素材保留。'});}});},
+  importPhotos(){
+    const count=6-this.data.chosen;if(count<1){wx.showToast({title:'每页先选最多 6 张，可先取消一张',icon:'none'});return;}
+    const token=++this._assetPickToken,catalog=this._catalog;
+    wx.chooseImage({count,sizeType:['original'],sourceType:['album'],success:async r=>{
+      const active=()=>token===this._assetPickToken&&catalog===this._catalog&&this.data.view==='picker';
+      const files=await acceptPickedMedia(r.tempFilePaths.map(path=>({path,kind:'photo' as const})),active);if(!active()||!files.length)return;
+      this._catalog.push(...files.map((file,i)=>({id:'album-'+Date.now()+'-'+i,src:file.path,label:'片段 '+(i+1),notes:'',sample:false,selected:true,source:'album'})));this.setData({source:'album',error:''});this.syncAssets();
+    },fail:e=>{if(token===this._assetPickToken&&!/cancel/i.test(e.errMsg))this.setData({error:'照片选择未完成，已有素材保留。'});}});
+  },
   chooseAsset(e:Touch){const a=this._catalog.find(a=>a.id===e.currentTarget.dataset.id);if(a){if(!a.selected&&this.data.chosen>=6){wx.showToast({title:'每页先选最多 6 张，可先取消一张',icon:'none'});return;}a.selected=!a.selected;}this.syncAssets();},
   next(){if(this.data.from&&this.data.to&&this.data.from>this.data.to)return;if(this.data.chosen)this.setData({view:'setup',headerTitle:'风格与比例',assets:this._catalog.filter(a=>a.selected)});resetPageScroll(this);},
   setting(e:Touch){const key=String(e.currentTarget.dataset.key);if(['ratio','style'].includes(key))this.setData({[key]:String(e.currentTarget.dataset.id)});},
@@ -222,7 +233,14 @@ Page({
   },
   addText(){const before=this.before(),d=this.data.doc!,a=element('text',{x:90,y:d.height*.45,w:600,h:60,title:'',text:'写下这一刻的感想',fontSize:28});d.elements.push(a);this.setData({selectedId:a.id});this.commit(before);},
   addDecoration(e:Touch){const before=this.before(),d=this.data.doc!,a=element(String(e.currentTarget.dataset.id),{x:700,y:d.height*.48,w:80,h:80,color:'#839771',ornamentOriginalRatio:1,ornamentRatioLocked:false});d.elements.push(a);this.setData({selectedId:a.id});this.commit(before);},
-  addPhoto(){wx.chooseImage({count:1,sourceType:['album'],sizeType:['original'],success:r=>{const before=this.before(),d=this.data.doc!,number=Math.max(0,...d.elements.map(e=>e.photoNumber))+1,a=element('photo',{x:100,y:d.height*.3,w:360,h:270,src:r.tempFilePaths[0],photoNumber:number});d.elements.push(a);this.setData({selectedId:a.id});this.commit(before);}});},
+  addPhoto(){
+    const id=this.data.doc?.id;if(!id)return;const token=++this._assetPickToken;
+    wx.chooseImage({count:1,sourceType:['album'],sizeType:['original'],success:async r=>{
+      const active=()=>token===this._assetPickToken&&this.data.doc?.id===id&&this.data.view==='editor';
+      const files=await acceptPickedMedia(r.tempFilePaths.map(path=>({path,kind:'photo' as const})),active);if(!active()||!files.length)return;
+      const before=this.before(),d=this.data.doc!,number=Math.max(0,...d.elements.map(e=>e.photoNumber))+1,a=element('photo',{x:100,y:d.height*.3,w:360,h:270,src:files[0].path,photoNumber:number});d.elements.push(a);this.setData({selectedId:a.id});this.commit(before);
+    }});
+  },
   imageLoaded(e:WechatMiniprogram.CustomEvent<{width:number;height:number}>){
     const id=e.currentTarget.dataset.id,a=this.data.doc?.elements.find(a=>a.id===id);let changed=false;
     for(const image of [a,this.data.cropDraft?.id===id?this.data.cropDraft:null])if(image&&(image.iw!==e.detail.width||image.ih!==e.detail.height)){image.iw=e.detail.width;image.ih=e.detail.height;changed=true;}
