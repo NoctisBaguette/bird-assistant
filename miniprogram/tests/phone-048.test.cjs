@@ -67,8 +67,8 @@ test('locating requests GCJ02 high accuracy, zooms to street level, and cannot m
   const saved=environment(),p=map();let options,resolve;global.wx.getLocation=o=>{options=o;return new Promise(r=>resolve=r);};const work=p.position();assert.equal(options.type,'gcj02');assert.equal(options.isHighAccuracy,true);resolve({latitude:40.000123,longitude:116.300456,accuracy:12});await work;assert.equal(p.data.scale,16);assert.equal(p.data.longitude,116.300456);assert.equal(p.data.showUserLocation,true);assert.equal(saved.get('bird-assistant.map-view.v1').latitude,40.000123);
   const late=p.position();p.suspend();resolve({latitude:20,longitude:100,accuracy:10});await late;assert.equal(p.data.latitude,40.000123);assert.equal(p.data.locating,false);
 });
-test('a trip retains the personal starting point rather than rounding it to a ten-kilometre grid',async()=>{
-  environment();const p=map();let url;global.getCurrentPages=()=>[];global.wx.navigateTo=o=>url=o.url;global.wx.createMapContext=()=>({getCenterLocation:o=>o.success({latitude:40.000123,longitude:116.300456})});await p.planTrip();assert.match(url,/lat=40\.000123&lon=116\.300456/);
+test('the advisor receives an approximate area while the native map keeps its own precise location',async()=>{
+  environment();const p=map();let url;global.getCurrentPages=()=>[];global.wx.navigateTo=o=>url=o.url;global.wx.createMapContext=()=>({getCenterLocation:o=>o.success({latitude:40.000123,longitude:116.300456})});await p.planTrip();assert.match(url,/lat=40\.0&lon=116\.3/);
 });
 test('journal failures distinguish local image preparation, missing deployment and provider authorization',async t=>{
   environment();const {journalGatewayTransport}=require('../.test-build/services/journal-gateway.js');const input={requestId:'phone-diagnostic',prompt:'只整理原稿',purpose:'手帐',maxChars:120,images:[]};let calls=0;

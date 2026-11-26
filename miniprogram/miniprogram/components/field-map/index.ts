@@ -62,7 +62,7 @@ Component({
         const map=wx.createMapContext('field-map',this);
         const center=await Promise.race([new Promise<WechatMiniprogram.GetCenterLocationSuccessCallbackResult>((resolve,reject)=>map.getCenterLocation({success:resolve,fail:reject})),new Promise<never>((_resolve,reject)=>{deadline=setTimeout(()=>reject(new Error('native map read timeout')),1800);})]);
         if(!this.data._visible||token!==this.data._tripSeq)return;
-        const latitude=center.latitude.toFixed(6),longitude=center.longitude.toFixed(6);
+        const latitude=center.latitude.toFixed(1),longitude=center.longitude.toFixed(1);
         navigate({url:`/field/trip/index?lat=${latitude}&lon=${longitude}&species=${encodeURIComponent(this.data.species)}&label=${encodeURIComponent(this.data.speciesLabel)}`});
       }catch{if(this.data._visible&&token===this.data._tripSeq)navigate({url:'/field/trip/index'});}finally{clearTimeout(deadline);}
     },

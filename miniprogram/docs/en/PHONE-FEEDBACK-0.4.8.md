@@ -8,7 +8,7 @@ The user tested0.4.7 experience builds on Huawei Pura70 Pro+ and iPhone. Those r
 
 - Photo parameters accept vertical scrolling; a return action avoids accidental flips. Caption label, centered save and right preview have separate positions.
 - Journal editing removes inherited template line caps, preserving titles and authored newlines through save/reflow. New journals clear prior setup titles. Page-edge clipping still applies.
-- Personal locate uses native GCJ02 high accuracy and street zoom16. Trip departure no longer rounds to one decimal degree. Public sighting locations retain their privacy grid.
+- Personal locate uses native GCJ02 high accuracy and street zoom16. The advisor retains its intentional approximate-area input; public sighting locations retain their privacy grid.
 - Cluster count and circle share one PNG, with bounded width, serialized exports, reuse and disposal. Actual Huawei/iPhone rendering needs a new test.
 - Identify handles support tap/swipe, shortcut levels have independent tap routing, Huawei shortcuts prefer3.5× without a physical-lens claim. Audio highlighting matches the batch submission set.
 - Capture exits dispose microphone work and stop/unmount camera/video, including pending native starts and late callbacks. System camera/mic indicators need real phone verification.
