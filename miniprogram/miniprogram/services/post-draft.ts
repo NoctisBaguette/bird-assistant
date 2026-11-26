@@ -61,7 +61,15 @@ export function readPostDrafts():PostDraft[] {
   for(const recovery of recoveries()){
     const index=items.findIndex(item=>item.id===recovery.id);
     if(index>=0&&items[index].saveId&&items[index].saveId===recovery.saveId)continue;
-    if(index>=0)items[index]=recovery;else items.push(recovery);
+    if(index>=0){
+      // An earlier media copy can finish after a newer text recovery was cached.
+      // Stable attachment IDs let that recovery reuse its now-durable originals.
+      const dir=prefix(),images=recovery.images.map(image=>{
+        const saved=items[index].images.find(previous=>previous.id===image.id);
+        return !image.path&&saved&&(saved.path.startsWith('/assets/')||(dir&&saved.path.startsWith(dir)))?{...image,path:saved.path}:image;
+      });
+      items[index]={...recovery,images,missingMedia:images.filter(image=>!image.path).length};
+    }else items.push(recovery);
   }
   return items.sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
 }

@@ -52,9 +52,9 @@ test('a queued save cannot overwrite newer synchronous recovery when the app clo
   const e=environment(),a={...drafts.newPostDraft(),body:'First',images:[postImage('/tmp/a.jpg')]},b={...drafts.newPostDraft(),body:'Earlier text',images:[]};
   let finish;e.fileSystem.copyFile=o=>{finish=()=>{e.files.set(o.destPath,e.files.get(o.srcPath));o.success();};};
   const saveA=drafts.savePostDraft(a);await settle();const saveB=drafts.savePostDraft(b);
-  drafts.cachePostDraft({...b,body:'LATEST AFTER QUEUE'});finish();await Promise.all([saveA,saveB]);
+  drafts.cachePostDraft({...b,body:'LATEST AFTER QUEUE'});drafts.cachePostDraft({...a,body:'LATEST DURING COPY'});finish();await Promise.all([saveA,saveB]);
   assert.equal(drafts.readPostDraft(b.id).body,'LATEST AFTER QUEUE');assert.equal(e.storage.get(drafts.POST_DRAFTS_KEY).items.find(item=>item.id===b.id).body,'Earlier text');
-  assert.equal(drafts.readPostDraft(a.id).body,'First');
+  assert.equal(drafts.readPostDraft(a.id).body,'LATEST DURING COPY');assert.equal(drafts.readPostDraft(a.id).images[0].path,e.storage.get(drafts.POST_DRAFTS_KEY).items.find(item=>item.id===a.id).images[0].path);
 });
 
 test('a collection quota failure preserves both prior complete drafts and the newest words for the failed save',async()=>{
@@ -74,7 +74,7 @@ test('composer autosave recovery survives a new page before media copying finish
   p.setImages([postImage('/tmp/a.jpg')]);let finish;e.fileSystem.copyFile=o=>{finish=()=>{e.files.set(o.destPath,e.files.get(o.srcPath));o.success();};};
   const pending=p.persistPostDraft(true);await settle();p.change(input('body','CANCEL-KEEP-123 newest words'));p.onHide();
   const {p:fresh}=page('community');assert.equal(fresh.data.draftCount,1);fresh.loadDraft(id);assert.equal(fresh.data.body,'CANCEL-KEEP-123 newest words');assert.equal(fresh.data.attachments[0].path,'');assert.match(fresh.data.error,/照片/);
-  finish();await pending;await settle();assert.equal(p.data.body,'CANCEL-KEEP-123 newest words');assert.ok(p.data.attachments[0].path.startsWith('/user/bird-post-draft/'));assert.equal(drafts.readPostDraft(id).body,'CANCEL-KEEP-123 newest words');
+  finish();await pending;await settle();assert.equal(p.data.body,'CANCEL-KEEP-123 newest words');assert.ok(p.data.attachments[0].path.startsWith('/user/bird-post-draft/'));assert.equal(drafts.readPostDraft(id).body,'CANCEL-KEEP-123 newest words');assert.equal(drafts.readPostDraft(id).images[0].path,p.data.attachments[0].path,'latest text recovery reuses a completed original with the same attachment ID');
 });
 
 test('selected text is sent as context; applying it changes only that text box and keeps its existing title and saved name',()=>{
