@@ -80,3 +80,20 @@ def test_local_developer_app_refuses_a_production_configuration():
         dev.create_local_app(
             BusinessSettings(_env_file=None, environment="production", allow_anonymous=False, api_keys="test")
         )
+
+
+def test_fresh_checkout_creates_runtime_and_preserves_database_on_restart(tmp_path):
+    database = tmp_path / "fresh-checkout" / "runtime" / "writing-dev.sqlite3"
+    assert not database.parent.exists()
+    settings = BusinessSettings(_env_file=None, database_path=database, qwen_api_key="test-provider-secret")
+    member = None
+    for _ in range(2):
+        app = dev.create_local_app(settings)
+        with TestClient(app, base_url=dev.ORIGIN, client=("127.0.0.1", 50000)) as client:
+            assert client.get("/readyz").json() == {"mode": "local-writing-test", "configured": True}
+            restored = app.state.community.member("fresh-writing-check")
+            if member is None:
+                member = restored
+            else:
+                assert restored == member
+    assert database.is_file()

@@ -50,6 +50,7 @@ def create_local_app(settings: BusinessSettings):
     async def lifespan(app):
         app.state.settings = isolated
         app.state.auth = MobileAuth(isolated, ("/api/v1/journal",))
+        isolated.database_path.parent.mkdir(parents=True, exist_ok=True)
         app.state.community = CommunityStore(isolated.database_path, isolated.catalog_path)
         writing.install(app)
         try:
