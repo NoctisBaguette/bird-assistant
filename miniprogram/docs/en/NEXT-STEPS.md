@@ -1,14 +1,18 @@
-# Current plan: upgrade, focused acceptance and deployment
+# Next steps
 
-Latest: the user tested0.4.8 and passed equal two-line explanation spacing. [0.4.9 focused retest](IMPORT-AND-SHEETS-0.4.9.md) covers file rejection, audio deck/borders, tap return, fixed headers and map strip. Retain the same branch; expect0.4.9 and257 client passes. Start with those five checks, then resume the broader plan.
+Updated 26 November 2026, Beijing time. This is our canonical English working plan; update this page on GitHub in place. Team/public handoffs use Chinese.
 
-26 November2026, Beijing time. [中文](../NEXT-STEPS.md) · [Full48-item backlog](BACKLOG.md)
+**Latest user results:** the focused 0.4.9 retests are good for now, including audio highlight borders. Preserve those passes. Current work is **0.4.10**: one material-review flow and independent own-account Qwen testing. [Changes and boundaries](REVIEW-AND-WRITING-0.4.10.md) · [Own Qwen setup and exact commands](WRITING-LOCAL-0.4.10.md) · [Full backlog](BACKLOG.md).
 
-The user now authorizes upgrading whenever useful; the earlier instruction to stay on0.4.6 is superseded. The user has run0.4.7 experience builds on Huawei and iPhone. The0.4.9 fixes still need an updated experience build and acceptance. Use `fix/recognition-acceptance-0.4.7` first and consider normal-main promotion after the core native flows pass. Team merges and production deployment remain separate.
+## Immediate priorities
 
-## Update the existing Windows project
+1. Restore actual services. This session still reproduces journal suggestions/capabilities404, public vision readiness502, audio404 and trip GET405. The attached console also shows real journal POST404 and vision analyses POST502. A client update cannot deploy missing business routes or restore the GPU upstream.
+2. Test Qwen independently with Baguette's own Beijing Model Studio API account. No GPU, team WeChat secret or production database is needed for the direct checks and explicit DevTools-only local gateway. Real calls require the user's own key/model permissions; phone use later requires a deployed HTTPS gateway.
+3. Test the new unified material flow. Import only collects files; **进入素材复核** opens the common camera/import review. Choose photo/audio/both and submission checkmarks there. Only selected unanalysed files are sent; existing results/notes stay attached. Keep the current preview separate from the submission set.
 
-Run in PowerShell. This block preserves local edits by stopping before checkout, and stops at the first failed native command. It does not automatically stash, reset or delete user files.
+## Update the existing mini-program
+
+Keep the same private candidate branch and Windows project. Runtime promotion to main, team PR merges and deployment remain separate. Dependencies did not change; existing installs need no npm ci.
 
 ```powershell
 & {
@@ -26,48 +30,47 @@ Run in PowerShell. This block preserves local edits by stopping before checkout,
     Run-BirdStep git fetch origin
     Run-BirdStep git switch fix/recognition-acceptance-0.4.7
     Run-BirdStep git pull --ff-only origin fix/recognition-acceptance-0.4.7
-    Run-BirdStep npm.cmd ci
     Run-BirdStep npm.cmd run setup
     Run-BirdStep npm.cmd run verify
     Run-BirdStep node -p "require('./package.json').version"
 }
 ```
 
-Expected:257 client tests pass and version0.4.9. Then click **Compile/编译** in the existing WeChat DevTools project. Setup preserves the existing AppID; real login/device tests require the real project AppID and developer access. Keep existing drafts, journals and media for recovery tests; do not clear app storage first. Reuse the current acceptance pack. The normal path uses public HTTPS; the old WSL/individual-GPU SSH helper is not a required startup step. These PowerShell instructions were reviewed against the repository's commands; they were not executed on the user's Windows machine here.
+Expected: version **0.4.10**, **264 client tests passing**. Then Compile/编译 in the existing DevTools project and upload a new experience build for changed native-flow checks. Setup preserves AppID; preserve drafts, journals and media. Do not clear storage or automatically stash/reset local changes.
 
-## Work in small batches
+## Focused 0.4.10 checks
 
-Stop at a meaningful failure, record what happened and patch/retest that flow. Do not repeat already-confirmed registration as a substitute for testing the remaining identity lifecycle. Additional feedback is added to the queue.
+- Add photos/audio on the import screen: no model request starts there. Continue to material review; all originals and filenames remain.
+- Combine a camera/live result with external files. Preview a different thumbnail, switch modes and change checkmarks: preview and submission remain independent; existing result/notes are retained.
+- Identify selected new files only. One failure must preserve other results; cancel/leave during the first request and confirm no later queued upload starts. Already analysed files require an explicit individual reanalysis.
+- The 0.4.9 border/filename/parameter-return/fixed-header/map-strip checks are accepted for now. Do not ask for the same passed screenshots again.
 
-| Batch | Check | Evidence/dependency |
-| --- | --- | --- |
-| A: identification UI/materials, start now | Equal visual/audio explanation heights; compact picker and conditional fallback; unclipped cards/filenames; photo/audio/both selection; review spacing/natural ratio/transparency/local EXIF. | Local UI, no model needed. Use04/05/06; do not start recognition yet. |
-| B: posting/drafts | Square deck/full-image preview/per-photo parameters; two photos and one saved journal; save, leave, restart, reopen. Then9 visuals/3 journals, repeated saves, missing files and low-space recovery. | Local composer/drafts first. Multi-image server preview/upload/moderation needs the companion gallery deployment. |
-| C: map/forum/profile | Drawer margins, dynamic1–3-row search, first marker taps/zoom, deep species tabs/comparison, photo flips, independent reactions, avatar/crop/cancel/restart and consultation history. | Local/read-only features first; interactions/global sorting depend on actual deployed business capabilities. |
-| D: journal/Qwen, independently | Local selection/crop/proportions/undo/autosave/reopen/PNG export; then1–4 own photos→editable journal→preview/apply/undo; forum writing with fact boundaries. | Local editor is independent of AI. Real Qwen needs business identity/configuration and **does not need to wait for YOLO recovery**. |
-| E: real models/advice/speech | Clear04, multiple/no-bird05/cancel/exit; live/multiple targets/background; real calls plus controls; named destinations/weather/season/habitat/citations/history; corrected mixed-language ASR confirmed once. | Gate each service separately. Test native GPS and campus Wi-Fi, off-campus Wi-Fi and mobile data. |
-| F: device support/polish | Available phones/desktop WeChat/tablets, safe areas/keyboard/rotation/split-screen/resizing, then shared motion/feedback. | Stabilize core behaviour before visual polish. |
+## Own-account Qwen now
 
-## First feedback batch only
+Open [Alibaba Cloud Model Studio](https://bailian.console.aliyun.com/), use **华北2（北京）**, create a key and retain its API Host. Keep the key local and out of chat/screenshots/Git. Use the [exact local setup](WRITING-LOCAL-0.4.10.md).
 
-1. Equal two-line explanation height/padding already passed. Start with the [five0.4.9 checks](IMPORT-AND-SHEETS-0.4.9.md), then continue material regression below.
-2. Import `media/04-Tree-Sparrow-EXIF.jpg`, `05-no-bird-control.png` and `06-校园西侧清晨录音-长文件名显示与回听控制样本.wav`. Confirm complete cards/actions, filenames and both photos selected initially. Switch photo/audio/both; deselecting one photo must change that photo's border only.
-3. Review04: natural aspect ratio, no solid backdrop, comfortable field/button spacing. File metadata should include NikonD5100/ISO800/600mm/f6.3/1/50s, separate from author input. Unknown fields remain unknown; current GPS/time must not fill a historical photo.
+The companion Python helper can make one actual text request, optionally one selected-image request, and serve the normal journal/forum UI only at localhost for DevTools. It uses the production writing schema/provider code, with no automatic paid retries. A missing explicit local helper fails locally; phones ignore the opt-in flag. Real provider success, native acceptance and public deployment remain separate evidence.
 
-Return failed0.4.9 checks first; deck/modes and04 review remain useful where still unverified. Text feedback is enough for other small changes. Fix/pass A before moving to B.
+Qwen handles text/selected-photo understanding and editable layout suggestions. Seedream is an optional image-generation API under an authorized Volcengine Ark account/key; it does not replace the editable journal document. No Doubao migration or paid call was performed in this implementation turn.
 
-Pack audio06/07 are silence controls, useful for filenames/playback/unknown/false-positive checks, not genuine bird-call accuracy. The licensed real bird recordings used in the separate local report were not redistributed in this pack.
+## Map order and Birda photos
 
-## Infrastructure track and gates
+Current public results use collection/import time; displayed dates are observation dates. Snapshot imports share timestamps and may tie-break by ID, so 2006 can appear above2025. The client already asks for recent observation order; the companion backend implements global date sorting before pagination. Deploy that business version; do not falsely sort only one loaded page.
 
-At08:49:05 Beijing the read-only public check still returned vision502/audio404. The infrastructure maintainer must inspect active Caddy/upstream processes/tunnels/models; web-admin credentials do not establish SSH/GPU access. This workflow still owns client fixes, Qwen business code and companion implementation/validation preparation.
+The live Birda GBIF dataset query returned zero StillImage records; sampled media arrays were empty. This is a limitation of the feed we consume, not proof that the Birda app has no photos. iNaturalist and Birda pass through the same media parser. Do not substitute a species guide photo for an observation photo.
 
-| Service | Gate before live acceptance |
-| --- | --- |
-| Vision | Public readyz200 with real models ready, then valid image/live results; no personal laptop/WSL dependency. |
-| Business/gallery/advice | Current service and all moderation assets deployed; gallery9/3 capability, new global sorting and evidence-schema5 advice use the shared identity. |
-| Qwen writing/photo journal | Existing session, Mainland model/key/quota configured; real suggestions remain previewed/editable before application. Evaluate separately from GPU availability. |
-| Bird calls | Real BirdNET/catalog, shared mobile signing, process/proxy/allowlists, public audio readyz200, then actual native uploads. |
-| Human ASR | Maintainer confirms Mainland model access and enables the default-off setting; real WAV, mixed language/corrections/cancellation/confirmed append pass. |
+## Infrastructure handoff
 
-Next development prioritizes defects found in A/B and complete core/account/profile recovery. Forum audio/short video follows with validation, storage, transcoding, playback, moderation, withdrawal/export and recovery;10s video/60s audio remain proposed product limits. Outside-community retrieval and cross-device history follow; footprints remain optional. Deploy the existing FastAPI responsibilities first and assess additional cloud functions only for an actual remaining need.
+The [existing Chinese team Qwen issue](https://github.com/bird-assistant/bird-assistant/issues/25) records the missing writing route/shared configuration. The public source [0.4.10 handoff](https://github.com/NoctisBaguette/bird-assistant/blob/fix/forum-media-drafts-0.4.7/miniprogram/docs/REVIEW-AND-WRITING-0.4.10.md) adds current routing evidence for review; no messages or production operations were performed here.
+
+The current client vision path and multipart image field match the backend. A public readyz502 occurs independently of the photo payload. Compare the teammate's working URL, time and path (public HTTPS versus a local/private tunnel), then inspect active Caddy include, business commit/process, campus18000/GPU8000 readiness and supervised tunnel. An old version label alone cannot resolve that difference. Web moderation access is not a GPU/process-control channel.
+
+## Remaining queue
+
+The original48 IDs andR01–R21 are preserved;R22–R26 track this feedback. Resume local journal title/multiline/reopen/PNG/album/share and system camera/mic release; map GPS/cluster rendering; real community moderation/replies; identity/session/account/profile recovery; separately ready photo/live/audio/advice/ASR services; then devices and polish.
+
+Multipage books/combined export, optional Doubao covers/backgrounds/decorations, all six More modules, full forum AV publication/export, outside-community retrieval and cross-device history remain queued. Current post candidate supports9 visuals including3 journal snapshots;10s video/60s audio publication limits remain proposals. Footprints remain optional. All previous failure/recovery/privacy boundaries persist.
+
+## Validation
+
+Local client264 pass; local backend520 pass/51 optional skips,87.49% coverage; Ruff and121-file formatting pass. New local tests use fake upstreams; they do not establish actual Qwen quality or phone support. Exact-head GitHub CI is recorded in the updated PR when available.

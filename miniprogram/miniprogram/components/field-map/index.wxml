@@ -27,7 +27,7 @@
         <view wx:if="{{recordsError}}" class="list-message"><text class="map-text">{{recordsError}}</text><button class="retry-button" bindtap="retryRecords">重试加载</button></view>
         <view wx:elif="{{!selected.length}}" class="list-message">{{recordsLoading ? '正在加载观察记录…' : '没有符合筛选条件的记录'}}</view>
         <view wx:for="{{selected}}" wx:key="id" class="record-row"><button class="record-main" data-id="{{item.id}}" bindtap="go"><view class="record-heading"><text class="map-text record-name">{{item.speciesName || '待鉴定'}}</text><text class="map-text record-date">{{item.date || '日期未知'}}</text></view><text class="map-text record-meta">{{item.placeName || '地点未注明'}}{{item.source ? ' · '+item.source : ''}}</text></button><button wx:if="{{item.speciesId}}" class="record-guide" data-id="{{item.speciesId}}" bindtap="guide" aria-label="查看{{item.speciesName}}图鉴">图鉴</button></view>
-        <button wx:if="{{cursor}}" class="more-button" disabled="{{recordsLoading}}" bindtap="more">{{recordsLoading ? '加载中…' : '加载更多记录'}}</button><view wx:elif="{{selected.length}}" class="list-end">已显示全部记录 · 按发布 / 导入时间倒序</view><view class="sheet-scroll-tail"/>
+        <button wx:if="{{cursor}}" class="more-button" disabled="{{recordsLoading}}" bindtap="more">{{recordsLoading ? '加载中…' : '加载更多记录'}}</button><view wx:elif="{{selected.length}}" class="list-end">已显示全部记录 · {{recordOrder === 'recent' ? '按观察日期倒序' : '按收录时间倒序，非观察日期'}}</view><view class="sheet-scroll-tail"/>
       </scroll-view>
       <view wx:if="{{!sheetCollapsed}}" class="sheet-fade" style="bottom:0"/>
     </view>

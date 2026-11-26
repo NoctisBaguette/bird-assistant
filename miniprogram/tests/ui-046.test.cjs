@@ -15,17 +15,17 @@ test('one option uses one row, three rows bound long searches and small viewport
   assert.equal(speciesResultsHeight(1,false,500),44);assert.equal(speciesResultsHeight(100,true,500),132);assert.equal(speciesResultsHeight(2,true,500),132);assert.equal(speciesResultsHeight(1,false,30),30);assert.equal(speciesResultsHeight(0,false,500),0);
 });
 test('all imported photos are selected independently of the active audio preview, failure does not lose later results',async()=>{
-  storage();const p=page('pages/identify');p.data.view='import';
+  storage();const p=page('pages/identify');p.data.view='review';
   const a=p.addEvidence('a.jpg','photo','album'),b=p.addEvidence('b.jpg','photo','album'),audio=p.addEvidence('temporary.mp3','audio','album',false,{name:'林间鸟鸣-清晨.mp3',size:102400});
   assert.equal(p.data.currentId,audio.id);assert.equal(a.selected&&b.selected&&audio.selected,true);assert.equal(audio.name,'林间鸟鸣-清晨.mp3');assert.match(audio.sizeLabel,/100 KB/);
   const sent=[];p.analyse=async()=>{sent.push(p.data.currentId);if(p.data.currentId===a.id){p.setData({error:'网络超时'});return false;}b.analysis={state:'candidate'};return true;};
-  await p.sendImported();assert.deepEqual(sent,[a.id,b.id]);assert.match(a.status,/网络超时/);assert.match(b.status,/候选/);assert.match(p.data.batchProgress,/已完成 1 \/ 2/);assert.equal(p.data.view,'import');
+  await p.analyseSelected();assert.deepEqual(sent,[a.id,b.id]);assert.match(a.status,/网络超时/);assert.match(b.status,/候选/);assert.match(p.data.batchProgress,/已完成 1 \/ 2/);assert.equal(p.data.view,'review');
   p.toggleImportEvidence(tap({id:a.id}));assert.equal(a.selected,false);p.activateEvidence(a.id);assert.equal(b.selected,true);
 });
 test('cancelled batch never starts its next photo and preserves completed and unprocessed materials',async()=>{
-  storage();const p=page('pages/identify');p.data.view='import';const a=p.addEvidence('a.jpg','photo','album'),b=p.addEvidence('b.jpg','photo','album');
+  storage();const p=page('pages/identify');p.data.view='review';const a=p.addEvidence('a.jpg','photo','album'),b=p.addEvidence('b.jpg','photo','album');
   let resolve;const sent=[];p.analyse=()=>{sent.push(p.data.currentId);return new Promise(r=>resolve=r);};
-  const work=p.sendImported();await settle();const duplicate=p.sendImported();assert.equal(sent.length,1);p.cancelAnalysis();resolve(true);await Promise.all([work,duplicate]);
+  const work=p.analyseSelected();await settle();const duplicate=p.analyseSelected();assert.equal(sent.length,1);p.cancelAnalysis();resolve(true);await Promise.all([work,duplicate]);
   assert.deepEqual(sent,[a.id]);assert.equal(p.data.assets.find(item=>item.id===b.id).status,'未识别');assert.match(p.data.assets[0].status,/已取消/);assert.equal(p.data.batching,false);
 });
 test('audio original filename survives saving and reopening a local record',async()=>{

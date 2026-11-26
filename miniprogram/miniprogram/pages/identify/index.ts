@@ -76,19 +76,20 @@ Page({
   choose(event: WechatMiniprogram.TouchEvent) {
     if (this.data.busy || this.data.picking) return;
     const source = event.currentTarget.dataset.source === 'camera' ? 'camera' : 'album';
+    const collecting = this.data.view === 'import';
     const token = ++this._pickToken;
     this.setData({ picking: true });
     choosePhoto([source]).then(path => {
       if (token !== this._pickToken) return;
-      if(path){this.addEvidence(path,'photo',source);this.setData({imagePath:path,source,persisted:false,picking:false,photoFallback:false,error:'',view:'review',mediaKind:'photo'});resetPageScroll(this);}else this.setData({picking:false});
+      if(path){this.addEvidence(path,'photo',source);this.setData({imagePath:path,source,persisted:false,picking:false,photoFallback:false,error:'',view:collecting?'import':'review',mediaKind:'photo'});resetPageScroll(this);}else this.setData({picking:false});
     }).catch(error => { if (token === this._pickToken) this.setData({ picking: false, error: errorText(error) }); });
   },
   retainReviewDraft(){const a=this.data.assets.find(item=>item.id===this.data.currentId);if(a){a.birdName=this.data.birdName;a.notes=this.data.notes;a.observedDate=this.data.observedDate;a.observedTime=this.data.observedTime;a.placeName=this.data.placeName;a.latitude=this.data.latitude;a.longitude=this.data.longitude;}},
-  changeName(event: WechatMiniprogram.CustomEvent<{ value: string }>) { if(this.data.busy)return;this.setData({ birdName: event.detail.value });this.retainReviewDraft(); },
-  changeNotes(event: WechatMiniprogram.CustomEvent<{ value: string }>) { if(this.data.busy)return;this.setData({ notes: event.detail.value });this.retainReviewDraft(); },
-  toggleContext(){if(!this.data.busy)this.setData({contextOpen:!this.data.contextOpen,today:beijingDate()});},
+  changeName(event: WechatMiniprogram.CustomEvent<{ value: string }>) { if(this.data.busy||this.data.batching)return;this.setData({ birdName: event.detail.value });this.retainReviewDraft(); },
+  changeNotes(event: WechatMiniprogram.CustomEvent<{ value: string }>) { if(this.data.busy||this.data.batching)return;this.setData({ notes: event.detail.value });this.retainReviewDraft(); },
+  toggleContext(){if(!this.data.busy&&!this.data.batching)this.setData({contextOpen:!this.data.contextOpen,today:beijingDate()});},
   changeContext(event:WechatMiniprogram.CustomEvent<{value:string}>){
-    if(this.data.busy)return;const key=String(event.currentTarget.dataset.key);
+    if(this.data.busy||this.data.batching)return;const key=String(event.currentTarget.dataset.key);
     if(!['observedDate','observedTime','placeName'].includes(key))return;
     const input:ContextInput={observedDate:this.data.observedDate,observedTime:this.data.observedTime,placeName:this.data.placeName};
     input[key as keyof ContextInput]=event.detail.value;
@@ -97,14 +98,14 @@ Page({
     try{observationContext(input,new Date().toISOString());this.setData({...input,error:''});this.retainReviewDraft();}
     catch(error){this.setData({error:error instanceof Error?error.message:'观察信息未更新，请重试。'});}
   },
-  clearObservedDate(){if(this.data.busy)return;this.setData({observedDate:'',observedTime:'',error:''});this.retainReviewDraft();},
-  clearObservedTime(){if(this.data.busy)return;this.setData({observedTime:'',error:''});this.retainReviewDraft();},
+  clearObservedDate(){if(this.data.busy||this.data.batching)return;this.setData({observedDate:'',observedTime:'',error:''});this.retainReviewDraft();},
+  clearObservedTime(){if(this.data.busy||this.data.batching)return;this.setData({observedTime:'',error:''});this.retainReviewDraft();},
   preview() {
     if(this.data.mediaKind==='audio'){if(!this._player)this._player=new LocalAudioPlayback(()=>{if(!this._unloaded)this.setData({error:'音频回放未完成，素材仍保留。'});});this._player.play(this.data.imagePath);return;}
     if (this.data.imagePath&&this.data.mediaKind==='photo') wx.previewImage({ urls: [this.data.imagePath], fail: () => wx.showToast({ title: '预览未完成，当前素材仍保留', icon: 'none' }) });
   },
   save() {
-    if (this.data.busy || this.data.picking || this.data.analyzing || !this.data.imagePath) return;
+    if (this.data.busy || this.data.batching || this.data.picking || this.data.analyzing || !this.data.imagePath) return;
     try{observationContext(this.data,new Date().toISOString());}
     catch(error){this.setData({contextOpen:true,error:error instanceof Error?error.message:'请检查观察信息。'});return;}
     this.retainReviewDraft();
@@ -205,26 +206,29 @@ Page({
     a.selected=!a.selected;this.refreshImportSelection();this.setData({error:''});
   },
   previewEvidence(e:WechatMiniprogram.TouchEvent){if(this.data.batching)return;this.selectEvidence(e);this.review();},
-  async sendImported(){
-    if(this.data.analyzing||this.data.batching||this.data.busy||this.data.picking)return;
+  async analyseSelected(){
+    if(this.data.view!=='review'||this.data.analyzing||this.data.batching||this.data.busy||this.data.picking)return;
     const mode=this.data.importMode,selected=this.data.assets.filter(a=>a.selected&&!a.sample&&(a.kind==='photo'&&mode!=='audio'||a.kind==='audio'&&mode!=='media'));
     if(!selected.length||mode==='both'&&(!selected.some(a=>a.kind==='photo')||!selected.some(a=>a.kind==='audio'))){this.setData({error:mode==='both'?'请至少选择一张照片和一段声音。':'请先选择要识别的素材。'});return;}
-    const token=++this._batchGeneration;this.setData({batching:true,error:'',batchProgress:'准备识别 '+selected.length+' 份素材'});
+    const pending=selected.filter(asset=>!asset.analysis);
+    if(!pending.length){this.setData({error:'所选素材已有识别结果，可直接复核；需要时单独重新分析。'});return;}
+    const token=++this._batchGeneration;this.setData({batching:true,error:'',batchProgress:'准备识别 '+pending.length+' 份新素材'});
     let completed=0,failed=0;
-    try{for(let i=0;i<selected.length;i++){
-      if(token!==this._batchGeneration||this.data.view!=='import')return;
-      const asset=selected[i];this.activateEvidence(asset.id);asset.status='识别中';this.setData({assets:this.data.assets,batchProgress:'正在识别 '+(i+1)+' / '+selected.length});
+    try{for(let i=0;i<pending.length;i++){
+      if(token!==this._batchGeneration||this.data.view!=='review')return;
+      const asset=pending[i];this.activateEvidence(asset.id);asset.status='识别中';this.setData({assets:this.data.assets,batchProgress:'正在识别 '+(i+1)+' / '+pending.length});
       const done=await this.analyse();
-      if(token!==this._batchGeneration||this.data.view!=='import')return;
+      if(token!==this._batchGeneration||this.data.view!=='review')return;
       if(done){completed++;asset.status=asset.analysis?.state==='candidate'?'候选待复核':'已分析 · 查看结果';}else{failed++;asset.status=this.data.error||'未完成，可重试';}
       this.setData({assets:this.data.assets});
     }
-    this.setData({batchProgress:'已完成 '+completed+' / '+selected.length+(failed?' · '+failed+' 份未完成，可重试':''),error:''});
+    this.setData({batchProgress:'已完成 '+completed+' / '+pending.length+(failed?' · '+failed+' 份未完成，可重试':''),error:''});
     }finally{if(token===this._batchGeneration)this.setData({batching:false});}
   },
+  continueReview(){if(!this.data.assets.length||this.data.picking||this.data.busy)return;this.review();if(!this.data.currentId)this.activateEvidence(this.data.assets[0].id);this.refreshImportSelection();},
   addSample(){this.addEvidence('/assets/samples/field-0.png','photo','album',true);},
   review(){this.releaseCapture();this.cancelAnalysis();this.stopVision();this.resetZoomRequests();this.setData({view:'review',paused:true,cameraReady:false,error:''});this.updateZoomView(this.data.zoom);resetPageScroll(this);},
-  selectEvidence(e:WechatMiniprogram.TouchEvent){if(this.data.busy)return;this.cancelAnalysis();this.activateEvidence(String(e.currentTarget.dataset.id));},
+  selectEvidence(e:WechatMiniprogram.TouchEvent){if(this.data.busy||this.data.batching)return;this.cancelAnalysis();this.activateEvidence(String(e.currentTarget.dataset.id));},
   activateEvidence(id:string){this._player?.stop();const a=this.data.assets.find(item=>item.id===id);if(!a)return;this.retainReviewDraft();this.setData({currentName:a.name,analysis:a.analysis||null,isSample:a.sample,latitude:a.latitude||'',longitude:a.longitude||'',currentId:a.id,fileMetadata:a.fileMetadata||null,imagePath:a.path,mediaKind:a.kind,source:a.source,persisted:a.persisted,albumStatus:a.album,birdName:a.birdName||'',notes:a.notes||'',observedDate:a.observedDate||'',observedTime:a.observedTime||'',placeName:a.placeName||'',error:''});},
   removeEvidence(e:WechatMiniprogram.TouchEvent){if(this.data.busy||this.data.batching)return;const id=String(e.currentTarget.dataset.id);if(this.data.currentId===id){this._player?.stop();this.cancelAnalysis();}this.setData({assets:this.data.assets.filter(a=>a.id!==id),...(this.data.currentId===id?{currentId:'',fileMetadata:null,imagePath:'',birdName:'',notes:'',observedDate:'',observedTime:'',placeName:'',contextOpen:false,albumStatus:'',persisted:false,error:''}:{})});},
   cancelAnalysis(){
@@ -295,11 +299,11 @@ Page({
     else wx.showToast({title:'该候选的鸟种资料待补充，识别结果仍保留',icon:'none'});
   },
   confirmCandidate(event:WechatMiniprogram.TouchEvent){
-    if(this.data.busy||this.data.analysis?.example)return;
+    if(this.data.busy||this.data.batching||this.data.analysis?.example)return;
     const selection=event.currentTarget.dataset;this.selectCandidate(Number(selection.subject),Number(selection.rank));
   },
   confirmAudioCandidate(event:WechatMiniprogram.TouchEvent){
-    const result=this.data.analysis;if(this.data.busy||this.data.analyzing||result?.kind!=='audio'||result.example)return;
+    const result=this.data.analysis;if(this.data.busy||this.data.batching||this.data.analyzing||result?.kind!=='audio'||result.example)return;
     const candidate=result.candidates.find(item=>item.rank===Number(event.currentTarget.dataset.rank));
     const asset=this.data.assets.find(item=>item.id===this.data.currentId);
     if(candidate&&asset?.kind==='audio'){this.setData({birdName:candidate.name});this.retainReviewDraft();}
@@ -310,7 +314,7 @@ Page({
     const asset=this.data.assets.find(item=>item.id===this.data.currentId);
     if(asset&&candidate){asset.confirmed={rank:subject!.rank,species:candidate.speciesId,name:candidate.name,analysis:this.data.analysis?.analysisId||null};this.setData({birdName:candidate.name});this.retainReviewDraft();}
   },
-  clearCandidate(){if(!this.data.busy){this.setData({birdName:''});this.retainReviewDraft();}},
+  clearCandidate(){if(!this.data.busy&&!this.data.batching){this.setData({birdName:''});this.retainReviewDraft();}},
   speciesInfo(event:WechatMiniprogram.TouchEvent){const id=event.currentTarget.dataset.id;if(id)hub('species',id);},
   draftObservation():Draft|null{
     const data=this.data,asset=data.assets.find(item=>item.id===data.currentId);

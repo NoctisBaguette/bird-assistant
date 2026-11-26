@@ -1,6 +1,6 @@
 App({
   onLaunch() {
     // Registration and service configuration are explicit. No location, login or cloud initialization here.
-    console.info('[Bird Assistant] native local checkpoint 0.4.9 · review');
+    console.info('[Bird Assistant] native local checkpoint 0.4.10 · review');
   }
 });

@@ -20,8 +20,9 @@ export async function prepareJournalPhotos(page:WechatMiniprogram.Page.TrivialIn
 }
 
 /** Installation is explicit in the gateway bootstrap; never put a DashScope key in the app. */
-export function journalGatewayTransport(options:{endpoint:string;session:()=>Promise<string>;invalidate?:()=>void;prepare:(input:JournalAiInput)=>Promise<Array<{id:string;label:string;dataUrl:string}>>}):JournalAiTransport {
-  if(!/^https:\/\/[^\s@?#]+\//.test(options.endpoint)||/aliyuncs\.com|api\.openai\.com/i.test(options.endpoint))throw new Error('A team HTTPS gateway is required');
+export function journalGatewayTransport(options:{endpoint:string;localDev?:boolean;session:()=>Promise<string>;invalidate?:()=>void;prepare:(input:JournalAiInput)=>Promise<Array<{id:string;label:string;dataUrl:string}>>}):JournalAiTransport {
+  const local=options.localDev===true&&wx.getDeviceInfo?.().platform==='devtools'&&options.endpoint==='http://127.0.0.1:18200/api/v1/journal/suggestions';
+  if((!local&&!/^https:\/\/[^\s@?#]+\//.test(options.endpoint))||/aliyuncs\.com|api\.openai\.com/i.test(options.endpoint))throw new Error('A team HTTPS gateway is required');
   return {generate(input){
     let cancelled=false,task:WechatMiniprogram.RequestTask|undefined;
     const result=(async()=>{

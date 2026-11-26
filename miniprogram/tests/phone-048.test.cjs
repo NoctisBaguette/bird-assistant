@@ -26,8 +26,8 @@ test('new and sample journals clear the previous setup title without rewriting t
   p.newJournal();assert.equal(p.data.title,'');assert.equal(journal.readJournals().find(d=>d.id===id).title,'仅属于第一本');p.data.title='另一个旧标题';p.sample();assert.equal(p.data.title,'');
 });
 test('audio deck highlights match exactly the materials sent in each import mode',async()=>{
-  environment();const p=page('pages/identify');p.data.view='import';const photo=p.addEvidence('a.jpg','photo','album'),audio=p.addEvidence('a.mp3','audio','album');p.addEvidence('a.mp4','video','album');
-  for(const mode of ['media','audio','both']){p.importMode(tap({id:mode}));const expected=p.data.assets.filter(a=>a.included).map(a=>a.id),sent=[];p.analyse=async()=>{sent.push(p.data.currentId);return true;};await p.sendImported();assert.deepEqual(sent,expected);assert.equal(audio.included,mode!=='media');assert.equal(photo.included,mode!=='audio');}
+  environment();const p=page('pages/identify');p.data.view='review';const photo=p.addEvidence('a.jpg','photo','album'),audio=p.addEvidence('a.mp3','audio','album');p.addEvidence('a.mp4','video','album');
+  for(const mode of ['media','audio','both']){p.importMode(tap({id:mode}));const expected=p.data.assets.filter(a=>a.included).map(a=>a.id),sent=[];p.analyse=async()=>{sent.push(p.data.currentId);return true;};await p.analyseSelected();assert.deepEqual(sent,expected);assert.equal(audio.included,mode!=='media');assert.equal(photo.included,mode!=='audio');}
   p.toggleImportEvidence(tap({id:audio.id}));assert.equal(audio.included,false);assert.equal(audio.selected,false);
 });
 test('a late camera start after page hide is stopped and never creates a recording timer or material',()=>{

@@ -1,3 +1,5 @@
+Latest: focused0.4.9 native retests accepted for now.0.4.10 unifies review and adds isolated Qwen testing; native/real-provider acceptance remains. R22–R26 add map order, Birda media, unified review, own Qwen and urgent vision recovery without replacing the48 original IDs orR01–R21. [Current plan](NEXT-STEPS.md).
+
 # Bird Assistant — user backlog and acceptance queue
 
 **LatestR17–R21 and reopenedR13:** [0.4.9 fixes/retest](IMPORT-AND-SHEETS-0.4.9.md). U01 two-line spacing and parameter scrolling passed; tap return regressed. Keep [R01–R16](PHONE-FEEDBACK-0.4.8.md) and all48 earlier IDs. Multipage books, Doubao and six More-module redesigns remain queued.
