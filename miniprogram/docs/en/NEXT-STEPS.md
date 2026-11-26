@@ -1,3 +1,9 @@
+# Current candidate: 0.4.11
+
+[Revision and focused native retest](WRITING-AND-DRAFTS-0.4.11.md). The following 0.4.10 plan is historical. Preserve the accepted 0.4.9 checks and all backlog IDs. Use the private repository’s canonical English docs/NEXT-STEPS.md for the current Windows update commands.
+
+---
+
 # Next steps
 
 Updated 26 November 2026, Beijing time. This is our canonical English working plan; update this page on GitHub in place. Team/public handoffs use Chinese.

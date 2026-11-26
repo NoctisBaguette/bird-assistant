@@ -1,3 +1,7 @@
+# 27 November: 0.4.11 revision
+
+[Writing and draft revision](WRITING-AND-DRAFTS-0.4.11.md) implements explicit targets/name preservation (R27), prompt reset, captions, deck/filter/rename, multiple draft discovery/recovery, photo subsets and local histories. Native acceptance remains pending; E1/V1 and PNG were not conducted. Preserve all original 48 IDs and prior findings below.
+
 Latest: focused0.4.9 native retests accepted for now.0.4.10 unifies review and adds isolated Qwen testing; native/real-provider acceptance remains. R22–R26 add map order, Birda media, unified review, own Qwen and urgent vision recovery without replacing the48 original IDs orR01–R21. [Current plan](NEXT-STEPS.md).
 
 # Bird Assistant — user backlog and acceptance queue

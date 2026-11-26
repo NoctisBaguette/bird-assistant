@@ -6,8 +6,11 @@ import { localRepository, isSampleObservation } from '../../services/repository'
 import { errorText, persistImage } from '../../services/media';
 import { photoCrop } from '../../services/crop';
 import { previewQueue } from '../../services/journal-preview';
-import { JournalAiSuggestion, JournalAiInput, startJournalAi, journalAiAvailable } from '../../services/journal-ai';
+import { JournalAiSuggestion, startJournalAi, journalAiAvailable } from '../../services/journal-ai';
 import { teamWritingTransport } from '../../services/writing-network';
+import {journalWritingBrief,applyJournalWriting,journalHeading,writingDestinationLabel,JournalWritingContext,WritingDestination} from '../../services/journal-writing';
+import {journalLibrary} from '../../services/journal-library';
+import {readWritingHistory,rememberWriting,markWritingApplied,deleteWritingRecord,writingInstructions} from '../../services/writing-history';
 import { ratioLocks, ratioLock, setRatioLock, resizePhoto, resizeOrnament, isOrnament, pixelValues, RatioLock } from '../../services/journal-resize';
 import { papers, paperColors, paperSource } from '../../services/journal-paper';
 import { round2, floor2, numberDraft, parseNumberDraft } from '../../services/numbers';
@@ -23,13 +26,17 @@ function projectElement(e:JournalElement,d:JournalDocument,scale:number) {
   return {...e,...photoCrop(e,scale),label:elementLabel(e,d),left:e.x/d.width*100,top:e.y/d.height*100,width:e.w/d.width*100,height:e.h/d.height*100,fontPx:e.fontSize*scale,rows:text?text.rows.map(r=>({...r,size:r.size*scale,y:r.y*scale})):[],overflow:!!text?.overflow};
 }
 Page({
-  data:{templateWidth:150,saveStatus:'',ratioLocks,ratioMode:'current',pixels:{w:0,h:0,fontSize:0},papers,paperColors,paperSource:'',templateOpen:false,templateOptions:[] as Array<{id:number;name:string;photos:Array<{src:string;style:string;imageStyle:string}>}>,composition:'',aiBusy:false,aiSuggestion:null as JournalAiSuggestion|null,backgroundSelected:false,layersOpen:false,selectedName:'',numberEditing:'',numberDrafts:{} as Record<string,string>,cropOpen:false,cropDraft:null as JournalElement|null,cropPreview:null as (ReturnType<typeof photoCrop>&{width:number;height:number})|null,editorChromeHeight:EDITOR_CHROME_HEIGHT,maxWidth:900,maxHeight:1200,assetImageHeight:114,from:'',to:'',unknown:true,picked:[] as JournalAsset[],period:0,periods:['自选素材','每日','每周','每月','每年'],includeNotes:false,aiPhotos:[] as Array<{id:string;src:string;label:string;selected:boolean}>,exporting:false,editorHeight:650,controlsHeight:200,overview:false,paperScale:1,paperLeft:0,shownHeight:400,view:'home',headerTitle:'羽迹',drafts:[] as Array<JournalDocument&{cover:string}>,assets:[] as JournalAsset[],source:'observations',chosen:0,title:'沿着鸟鸣，慢慢走',ratio:'3:4',style:'nature',styles:[{id:'nature',name:'自然留白'},{id:'magazine',name:'纸上故事'},{id:'minimal',name:'极简图鉴'}],ratios:['3:4','1:1','4:3'],doc:null as JournalDocument|null,renderElements:[] as Array<Record<string,unknown>>,selected:null as JournalElement|null,labels:[] as Array<{id:string;label:string}>,selectedId:'',canUndo:false,canRedo:false,dirty:false,stageWidth:320,stageHeight:390,docHeight:427,focusY:0,headerHeight:88,scale:1,error:'',busy:false,ai:false,inputMode:'text',prompt:'',purpose:0,purposes:['观察感想','鸟类介绍','分享文案','照片手帐'],placement:1,placements:['图片上方','图片下方','独立文字'],speechApplied:'',bundleSummary:'',decorations:[{id:'leaf',name:'叶子'},{id:'flower',name:'小花'},{id:'star',name:'星星'},{id:'feather',name:'羽毛'},{id:'stamp',name:'邮戳'},{id:'tape',name:'纸胶带'},{id:'sprig',name:'枝叶'},{id:'grass',name:'芦苇'},{id:'sun',name:'日光'},{id:'moon',name:'月相'},{id:'waves',name:'水纹'},{id:'compass',name:'方位'}],exportPath:''},
+  data:{libraryText:'',libraryFrom:'',libraryTo:'',libraryOrder:0,libraryOrders:['最近修改','创建时间'],libraryRatio:0,libraryRatios:['全部比例','3:4','1:1','4:3'],libraryRows:[] as ReturnType<typeof journalLibrary>,deckIndex:0,libraryTotal:0,aiDestination:'new' as WritingDestination,aiDestinations:[{id:'new',name:'新增文字框'},{id:'selected',name:'所选文本框'},{id:'overview',name:'页首概述'}],aiSelectedAvailable:false,aiIncludeTitle:false,aiIncludeCaptions:false,aiPhotoCount:0,aiTargetLabel:'',aiCaptionPreviews:[] as Array<{id:string;label:string;text:string}>,aiHistoryOpen:false,aiHistory:[] as ReturnType<typeof readWritingHistory>,aiHistoryNotice:'',templateWidth:150,saveStatus:'',ratioLocks,ratioMode:'current',pixels:{w:0,h:0,fontSize:0},papers,paperColors,paperSource:'',templateOpen:false,templateOptions:[] as Array<{id:number;name:string;photos:Array<{src:string;style:string;imageStyle:string}>}>,composition:'',aiBusy:false,aiSuggestion:null as JournalAiSuggestion|null,backgroundSelected:false,layersOpen:false,selectedName:'',numberEditing:'',numberDrafts:{} as Record<string,string>,cropOpen:false,cropDraft:null as JournalElement|null,cropPreview:null as (ReturnType<typeof photoCrop>&{width:number;height:number})|null,editorChromeHeight:EDITOR_CHROME_HEIGHT,maxWidth:900,maxHeight:1200,assetImageHeight:114,from:'',to:'',unknown:true,picked:[] as JournalAsset[],period:0,periods:['自选素材','每日','每周','每月','每年'],includeNotes:false,aiPhotos:[] as Array<{id:string;src:string;label:string;selected:boolean}>,exporting:false,editorHeight:650,controlsHeight:200,overview:false,paperScale:1,paperLeft:0,shownHeight:400,view:'home',headerTitle:'羽迹',drafts:[] as ReturnType<typeof journalLibrary>,assets:[] as JournalAsset[],source:'observations',chosen:0,title:'沿着鸟鸣，慢慢走',ratio:'3:4',style:'nature',styles:[{id:'nature',name:'自然留白'},{id:'magazine',name:'纸上故事'},{id:'minimal',name:'极简图鉴'}],ratios:['3:4','1:1','4:3'],doc:null as JournalDocument|null,renderElements:[] as Array<Record<string,unknown>>,selected:null as JournalElement|null,labels:[] as Array<{id:string;label:string}>,selectedId:'',canUndo:false,canRedo:false,dirty:false,stageWidth:320,stageHeight:390,docHeight:427,focusY:0,headerHeight:88,scale:1,error:'',busy:false,ai:false,inputMode:'text',prompt:'',purpose:0,purposes:['观察正文','鸟类介绍','分享文案','照片手帐','概述与总结','照片说明'],placement:1,placements:['照片区上方','照片区下方','自由放置'],speechApplied:'',bundleSummary:'',decorations:[{id:'leaf',name:'叶子'},{id:'flower',name:'小花'},{id:'star',name:'星星'},{id:'feather',name:'羽毛'},{id:'stamp',name:'邮戳'},{id:'tape',name:'纸胶带'},{id:'sprig',name:'枝叶'},{id:'grass',name:'芦苇'},{id:'sun',name:'日光'},{id:'moon',name:'月相'},{id:'waves',name:'水纹'},{id:'compass',name:'方位'}],exportPath:''},
   _past:[] as Snapshot[],_future:[] as Snapshot[],_drag:null as {before:Snapshot;x:number;y:number;element:JournalElement;resize:boolean}|null,_editBefore:null as Snapshot|null,
   _adjustment:null as {before:Snapshot;key:string;id:string}|null,
   _previews:null as ReturnType<typeof previewQueue>|null,
   _aiJob:null as ReturnType<typeof startJournalAi>|null,
   _aiGeneration:0,
-  _aiContext:null as {docId:string;before:string;target:string;placement:number}|null,
+  _aiContext:null as JournalWritingContext|null,
+  _aiOriginSelection:'',
+  _documents:[] as JournalDocument[],
+  _failedPhotos:new Map<string,string>(),
+  _failedCovers:new Map<string,string>(),
   queuePreview(){if(!this._previews)this._previews=previewQueue(()=>this.renderPreview());this._previews.request();},
   flushPendingPreview(){this._previews?.flush();},
   renderPreview(){
@@ -89,9 +96,17 @@ Page({
   onLoad(){this.resizeEditor();},
   onResize(){this.resizeEditor();},
   resizeEditor(){const box=layout();this.setData({templateWidth:Math.min(150,Math.floor((box.width-48)/2-22)),headerHeight:box.headerHeight,assetImageHeight:round2((box.width-86)*.375),editorHeight:layout(true).height,stageWidth:box.width-52,scale:(box.width-52)/900});this.refresh();},
-  onShow(){this._active=true;selectTab(this,1);this.loadDrafts();if(!this.data.doc){const id=wx.getStorageSync('bird-assistant.journal.last.v1'),doc=this.data.drafts.find(d=>d.id===id);if(doc)this.setData({doc:copy(doc),saveStatus:'已自动保存'});}if(this.data.doc&&this.data.view==='editor')this.refresh();},
+  onShow(){this._active=true;selectTab(this,1);this.loadDrafts();if(!this.data.doc){const id=wx.getStorageSync('bird-assistant.journal.last.v1'),doc=this._documents.find(d=>d.id===id);if(doc)this.setData({doc:copy(doc),saveStatus:'已自动保存'});}if(this.data.doc&&this.data.view==='editor')this.refresh();},
   onHide(){this._active=false;clearTimeout(this._autosave);this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;this.setData({aiBusy:false});this.finishAdjustment();this.endTextEdit();void this.persistDraft();this.selectComponent?.('#journal-speech')?.stopWork?.();},
-  loadDrafts(){try{this.setData({drafts:readJournals().map(d=>({...d,cover:d.elements.find(e=>e.type==='photo')?.src||'/assets/samples/field-1.png'})),error:''});}catch(e){this.setData({error:errorText(e)});}},
+  loadDrafts(){try{this._documents=readJournals();this.setData({drafts:journalLibrary(this._documents,{text:'',ratio:'',order:'updated',from:'',to:''}),libraryTotal:this._documents.length});this.filterLibrary(false);}catch(e){this.setData({error:errorText(e)});}},
+  filterLibrary(reset=true){const d=this.data,rows=journalLibrary(this._documents,{text:d.libraryText,ratio:d.libraryRatio?d.libraryRatios[d.libraryRatio]:'',order:d.libraryOrder===1?'created':'updated',from:d.libraryFrom,to:d.libraryTo}).map(row=>({...row,cover:this._failedCovers.get(row.id)===row.cover?'':row.cover}));this.setData({libraryRows:rows,deckIndex:reset?0:Math.min(this.data.deckIndex,Math.max(0,rows.length-1))});},
+  librarySearch(e:Input){this.setData({libraryText:e.detail.value});this.filterLibrary();},
+  libraryChoice(e:Input){const key=String(e.currentTarget.dataset.key);if(key==='libraryOrder'||key==='libraryRatio')this.setData({[key]:Number(e.detail.value)});else if(key==='libraryFrom'||key==='libraryTo')this.setData({[key]:e.detail.value});this.filterLibrary();},
+  clearLibraryFilters(){this.setData({libraryText:'',libraryFrom:'',libraryTo:'',libraryOrder:0,libraryRatio:0});this.filterLibrary();},
+  deckChange(e:WechatMiniprogram.CustomEvent<{current:number}>){if(Number.isInteger(e.detail.current)&&e.detail.current!==this.data.deckIndex)this.setData({deckIndex:e.detail.current});},
+  deckCard(e:Touch){const index=Number(e.currentTarget.dataset.index);if(index!==this.data.deckIndex)this.setData({deckIndex:index});else this.openDraft(e);},
+  coverFailed(e:Touch){const id=String(e.currentTarget.dataset.id),row=this.data.libraryRows.find(row=>row.id===id);if(row?.cover&&this._failedCovers.get(id)!==row.cover){this._failedCovers.set(id,row.cover);this.filterLibrary(false);}},
+  renameJournal(e?:Touch){const id=String(e?.currentTarget?.dataset?.id||this.data.doc?.id||''),doc=this.data.doc?.id===id?this.data.doc:this._documents.find(d=>d.id===id);if(!doc||this.data.busy)return;wx.showModal({title:'手帐名称',editable:true,content:doc.title,placeholderText:'给这份手帐起个名字',success:reply=>{if(!reply.confirm)return;const name=reply.content?.trim();if(!name){wx.showToast({title:'名称不能为空',icon:'none'});return;}if(Array.from(name).length>80){wx.showToast({title:'名称最多80字',icon:'none'});return;}try{if(this.data.doc?.id===id&&this.data.view==='editor'){const before=this.before();this.data.doc.title=name;this.commit(before);}else{const items=readJournals(),item=items.find(d=>d.id===id);if(!item)return;item.title=name;item.updatedAt=new Date().toISOString();wx.setStorageSync(JOURNAL_KEY,items);if(this.data.doc?.id===id)this.setData({'doc.title':name});this.loadDrafts();}}catch(error){this.setData({error:errorText(error)});}}});},
   canOpenAnother(then?:()=>void){
     if(this.data.busy||this.data.exporting)return false;
     if(this.data.doc&&this.data.dirty){void this.persistDraft().then(ok=>{if(ok)then?.();});return false;}
@@ -113,8 +128,8 @@ Page({
     const token=++this._assetPickToken,catalog=this._catalog;
     wx.chooseImage({count,sizeType:['original'],sourceType:['album'],success:async r=>{
       const active=()=>token===this._assetPickToken&&catalog===this._catalog&&this.data.view==='picker';
-      const files=await acceptPickedMedia(r.tempFilePaths.map(path=>({path,kind:'photo' as const})),active);if(!active()||!files.length)return;
-      this._catalog.push(...files.map((file,i)=>({id:'album-'+Date.now()+'-'+i,src:file.path,label:'片段 '+(i+1),notes:'',sample:false,selected:true,source:'album'})));this.setData({source:'album',error:''});this.syncAssets();
+      try{const files=await acceptPickedMedia(r.tempFilePaths.map(path=>({path,kind:'photo' as const})),active);if(!active()||!files.length)return;
+      this._catalog.push(...files.map((file,i)=>({id:'album-'+Date.now()+'-'+i,src:file.path,label:'片段 '+(i+1),notes:'',sample:false,selected:true,source:'album'})));this.setData({source:'album',error:''});this.syncAssets();}catch(error){if(active())this.setData({error:'照片导入未完成，已有素材仍保留。'+errorText(error)});}
     },fail:e=>{if(token===this._assetPickToken&&!/cancel/i.test(e.errMsg))this.setData({error:'照片选择未完成，已有素材保留。'});}});
   },
   chooseAsset(e:Touch){const a=this._catalog.find(a=>a.id===e.currentTarget.dataset.id);if(a){if(!a.selected&&this.data.chosen>=6){wx.showToast({title:'每页先选最多 6 张，可先取消一张',icon:'none'});return;}a.selected=!a.selected;}this.syncAssets();},
@@ -127,16 +142,16 @@ Page({
     if(!photos.length||photos.length>4){this.setData({error:'根据照片生成手帐，请先选 1–4 张照片。'});return;}
     if(photos.some(a=>a.sample)){this.setData({error:'请使用自己的照片生成手帐；示例插画仍可本地排版。'});return;}
     this.generate();this.openAi();
-    this.setData({purpose:3,placement:2,prompt:'根据已勾选照片生成一页简短中文观鸟手帐：标题简洁，正文描述照片中可见的颜色、姿态或画面关系，结合我主动提供的备注。选择适合这些照片的构图。没有提供的鸟名、日期、地点、天气和经历均保持未知，不把视觉猜测写成确认事实。'});
+    this.setData({purpose:3,placement:2,aiDestination:'overview',aiIncludeTitle:true,aiIncludeCaptions:true,aiTargetLabel:'更新页首概述及照片说明 · 手帐名称不变',prompt:'根据已勾选照片生成简短、自然的观鸟手帐。写页首概述，并为每张照片写一条简短说明；结合已有备注，不用诗句或比喻，不猜鸟名、日期、地点、天气或经历。选择适合这些照片的构图。'});
     await this.prepareAi();
   },
-  openDraft(e:Touch){if(!this.canOpenAnother(()=>this.openDraft(e)))return;const doc=this.data.drafts.find(d=>d.id===e.currentTarget.dataset.id);if(doc)this.openDocument(copy(doc),false);},
+  openDraft(e:Touch){if(!this.canOpenAnother(()=>this.openDraft(e)))return;const doc=this._documents.find(d=>d.id===e.currentTarget.dataset.id)||readJournals().find(d=>d.id===e.currentTarget.dataset.id);if(doc)this.openDocument(copy(doc),false);},
   assetLoaded(e:WechatMiniprogram.CustomEvent<{width:number;height:number}>){const a=this._catalog.find(a=>a.id===e.currentTarget.dataset.id);if(a&&e.detail.width>0&&e.detail.height>0){a.width=e.detail.width;a.height=e.detail.height;}},
   openDocument(doc:JournalDocument,dirty:boolean){clearTimeout(this._autosave);if(!dirty&&wx.setStorageSync){try{wx.setStorageSync('bird-assistant.journal.last.v1',doc.id);}catch{/* draft data remains independently readable */}}this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;this._aiContext=null;this._past=[];this._future=[];this._editBefore=null;this._adjustment=null;this._scrollTop=0;this.setData({doc,view:'editor',headerTitle:'编辑手帐',selectedId:'',backgroundSelected:false,dirty,ai:false,aiBusy:false,aiSuggestion:null,layersOpen:false,overview:false,cropOpen:false,cropDraft:null,numberEditing:'',numberDrafts:{},exportPath:'',error:'',saveStatus:dirty?'更改待保存':'已自动保存'});resetPageScroll(this);this.refresh();if(dirty)this.scheduleSave();},
   refresh(){this._previews?.cancel();const d=this.data.doc;if(!d)return;fit(d);const selected=d.elements.find(e=>e.id===this.data.selectedId)||null,scale=this.data.scale;
     const renderElements=d.elements.map(original=>{
       const e=this.data.cropDraft?.id===original.id?{...original,...this.data.cropDraft}:original;
-      return projectElement(e,d,scale);
+      return {...projectElement(e,d,scale),unreadable:this._failedPhotos.get(e.id)===e.src};
     });
     const crop=this.data.cropDraft,cropScale=crop?Math.min(Math.max(100,this.data.stageWidth-44)/crop.w,180/crop.h):1;
     const cropPreview=crop?{...photoCrop(crop,cropScale),width:round2(crop.w*cropScale),height:round2(crop.h*cropScale)}:null;
@@ -237,11 +252,12 @@ Page({
     const id=this.data.doc?.id;if(!id)return;const token=++this._assetPickToken;
     wx.chooseImage({count:1,sourceType:['album'],sizeType:['original'],success:async r=>{
       const active=()=>token===this._assetPickToken&&this.data.doc?.id===id&&this.data.view==='editor';
-      const files=await acceptPickedMedia(r.tempFilePaths.map(path=>({path,kind:'photo' as const})),active);if(!active()||!files.length)return;
-      const before=this.before(),d=this.data.doc!,number=Math.max(0,...d.elements.map(e=>e.photoNumber))+1,a=element('photo',{x:100,y:d.height*.3,w:360,h:270,src:files[0].path,photoNumber:number});d.elements.push(a);this.setData({selectedId:a.id});this.commit(before);
+      try{const files=await acceptPickedMedia(r.tempFilePaths.map(path=>({path,kind:'photo' as const})),active);if(!active()||!files.length)return;
+      const before=this.before(),d=this.data.doc!,number=Math.max(0,...d.elements.map(e=>e.photoNumber))+1,a=element('photo',{x:100,y:d.height*.3,w:360,h:270,src:files[0].path,photoNumber:number});d.elements.push(a);this.setData({selectedId:a.id});this.commit(before);}catch(error){if(active())this.setData({error:'照片导入未完成，已有素材仍保留。'+errorText(error)});}
     }});
   },
   imageLoaded(e:WechatMiniprogram.CustomEvent<{width:number;height:number}>){
+    if(!Number.isFinite(e.detail.width)||!Number.isFinite(e.detail.height)||e.detail.width<=0||e.detail.height<=0)return;
     const id=e.currentTarget.dataset.id,a=this.data.doc?.elements.find(a=>a.id===id);let changed=false;
     for(const image of [a,this.data.cropDraft?.id===id?this.data.cropDraft:null])if(image&&(image.iw!==e.detail.width||image.ih!==e.detail.height)){image.iw=e.detail.width;image.ih=e.detail.height;changed=true;}
     if(changed)this.refresh();
@@ -260,40 +276,52 @@ Page({
   layer(e:Touch){const before=this.before(),d=this.data.doc!,i=d.elements.findIndex(e=>e.id===this.data.selectedId),to=clamp(i+Number(e.currentTarget.dataset.delta),0,d.elements.length-1);if(i>=0){const a=d.elements.splice(i,1)[0];d.elements.splice(to,0,a);}this.commit(before);},
   rearrange(){if(!this.data.doc||this.data.busy||this.data.exporting)return;const before=this.before(),d=this.data.doc;d.variant=d.variant%(d.elements.filter(e=>e.type==='photo').length<=2?3:2)+1;reflowJournalPhotos(d);this.setData({selectedId:'',backgroundSelected:false,overview:true,error:''});this.commit(before);},
   async save(){this.finishAdjustment();this.endTextEdit();if(this.data.busy||!this.data.doc)return;this.setData({busy:true});const ok=await this.persistDraft();this.setData({busy:false});if(ok)wx.showToast({title:'手帐已保存到本机',icon:'success'});},
-  openAi(){if(this.data.busy||this.data.exporting)return;this.finishAdjustment();this.endTextEdit();const d=this.data.doc!;this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;this.setData({ai:true,aiBusy:false,aiSuggestion:null,bundleSummary:'',error:'',aiPhotos:d.elements.filter(e=>e.type==='photo').map(e=>({id:e.id,src:e.src,label:elementLabel(e,d),selected:this.data.selected?.type==='photo'?e.id===this.data.selectedId:true}))});},closeAi(){this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;this._aiContext=null;this.setData({aiBusy:false});this.selectComponent?.('#journal-speech')?.stopWork?.();this.setData({ai:false});},
-  prompt(e:Input){this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;this.setData({prompt:e.detail.value,aiBusy:false,aiSuggestion:null});},toggleInput(){this.setData({inputMode:this.data.inputMode==='text'?'voice':'text'});},
-  aiChoice(e:Input){const key=String(e.currentTarget.dataset.key);if(!['purpose','placement'].includes(key))return;this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;this.setData({[key]:Number(e.detail.value),aiBusy:false,aiSuggestion:null});},
-  aiPhoto(e:Touch){this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;this.setData({aiBusy:false,aiSuggestion:null,aiPhotos:this.data.aiPhotos.map(p=>p.id===e.currentTarget.dataset.id?{...p,selected:!p.selected}:p),bundleSummary:''});},
-  async prepareAi(){
-    const d=this.data.doc;if(!d||this.data.aiBusy)return;
-    const generation=++this._aiGeneration;
-    if(d.elements.some(e=>e.type==='photo'&&!e.persisted&&!e.src.startsWith('/assets/'))&&!await this.persistDraft())return;
-    // Saving originals can outlive the panel: cancellation also owns preparation.
-    if(generation!==this._aiGeneration||!this.data.ai||this.data.doc?.id!==d.id)return;
-    const a=this.data.selected,photos=d.elements.filter(e=>e.type==='photo'&&this.data.aiPhotos.some(p=>p.id===e.id&&p.selected));
-    const area=a?.type==='text'?a.w*Math.max(a.h,d.height-a.y):d.width*d.height*.15,maxChars=this.data.purpose===3?60:Math.max(20,Math.min(600,Math.floor(area/(28*28*1.4))));
-    const request:JournalAiInput={version:1,requestId:'journal-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8),prompt:this.data.prompt,purpose:this.data.purposes[this.data.purpose],maxChars,images:photos.map(p=>({id:p.id,label:(d.elements.find(c=>c.photoId===p.id)?.text||elementLabel(p,d)).slice(0,100),path:p.src}))};
-    this.setData({bundleSummary:'请求已整理：'+request.images.length+' 张关联图片，最多约 '+maxChars+' 字。',aiSuggestion:null,error:''});
-    let job:ReturnType<typeof startJournalAi>;
-    try{job=startJournalAi(request,journalAiAvailable()?undefined:teamWritingTransport(this));}catch(error){this.setData({error:errorText(error)});return;}
-    this._aiJob=job;this._aiContext={docId:d.id,before:journalFingerprint(d),target:a?.type==='text'?a.id:'',placement:this.data.placement};this.setData({aiBusy:true});
-    try{const suggestion=await job.result;if(this._aiJob===job&&this.data.ai&&this.data.doc?.id===d.id)this.setData({aiSuggestion:suggestion});}
-    catch(error){if(this._aiJob===job)this.setData({error:errorText(error)});}
-    finally{if(this._aiJob===job){this._aiJob=null;this.setData({aiBusy:false});}}
+  openAi(){
+    if(this.data.busy||this.data.exporting||!this.data.doc)return;this.finishAdjustment();this.endTextEdit();const d=this.data.doc;
+    this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;this._aiContext=null;
+    this._aiOriginSelection=this.data.selected?.type==='text'?this.data.selectedId:'';
+    const aiDestination:WritingDestination=this._aiOriginSelection?'selected':'new';
+    const aiPhotos=d.elements.filter(e=>e.type==='photo').map(e=>({id:e.id,src:e.src,label:elementLabel(e,d),selected:this.data.selected?.type==='photo'?e.id===this.data.selectedId:true}));
+    this.setData({ai:true,aiBusy:false,aiSuggestion:null,prompt:'',inputMode:'text',purpose:0,placement:1,speechApplied:'',bundleSummary:'',error:'',aiDestination,aiSelectedAvailable:!!this._aiOriginSelection,aiIncludeTitle:false,aiIncludeCaptions:false,aiPhotos,aiPhotoCount:aiPhotos.filter(p=>p.selected).length,aiCaptionPreviews:[],aiHistoryNotice:'',aiTargetLabel:writingDestinationLabel({destination:aiDestination,placement:1})});
   },
+  closeAi(){this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;this._aiContext=null;this.selectComponent?.('#journal-speech')?.stopWork?.();this.setData({ai:false,aiBusy:false,aiHistoryOpen:false});},
+  prompt(e:Input){this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;this.setData({prompt:e.detail.value,aiBusy:false,aiSuggestion:null,error:''});},
+  toggleInput(){this.setData({inputMode:this.data.inputMode==='text'?'voice':'text'});},
+  aiChoice(e:Input){const key=String(e.currentTarget.dataset.key);if(key==='placement'){const placement=Number(e.detail.value);this.setData({placement,aiTargetLabel:writingDestinationLabel({destination:this.data.aiDestination,placement})});return;}if(key!=='purpose')return;this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;this.setData({purpose:Number(e.detail.value),aiIncludeCaptions:Number(e.detail.value)===3,aiBusy:false,aiSuggestion:null,error:''});},
+  chooseAiDestination(e:Touch){const destination=String(e.currentTarget.dataset.id) as WritingDestination;if(!['new','selected','overview'].includes(destination)||destination==='selected'&&!this._aiOriginSelection)return;this.setData({aiDestination:destination,aiTargetLabel:writingDestinationLabel({destination,placement:this.data.placement})});},
+  aiTitle(){this.setData({aiIncludeTitle:!this.data.aiIncludeTitle});},
+  aiCaptions(){this.setData({aiIncludeCaptions:!this.data.aiIncludeCaptions});},
+  aiPhoto(e:Touch){this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;const aiPhotos=this.data.aiPhotos.map(p=>p.id===e.currentTarget.dataset.id?{...p,selected:!p.selected}:p),count=aiPhotos.filter(p=>p.selected).length;this.setData({aiBusy:false,aiSuggestion:null,aiPhotos,aiPhotoCount:count,error:count>4?'已选择 '+count+' 张，每次最多关联4张。请取消多余照片。':'',bundleSummary:''});},
+  aiPhotosAll(){this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;const all=this.data.aiPhotos.every(p=>p.selected),aiPhotos=this.data.aiPhotos.map((p,index)=>({...p,selected:!all&&index<4}));this.setData({aiPhotos,aiPhotoCount:aiPhotos.filter(p=>p.selected).length,aiBusy:false,aiSuggestion:null,error:'',bundleSummary:''});},
+  async prepareAi(){
+    const d=this.data.doc;if(!d||this.data.aiBusy)return;const generation=++this._aiGeneration;
+    try{
+      if(!this.data.prompt.trim())throw new Error('请补充写作要求，再生成建议。');
+      const ids=this.data.aiPhotos.filter(p=>p.selected).map(p=>p.id);
+      if(ids.length>4)throw new Error('已选择 '+ids.length+' 张，每次最多关联4张。请取消多余照片。');
+      if(d.elements.some(e=>e.type==='photo'&&!e.persisted&&!e.src.startsWith('/assets/'))&&!await this.persistDraft())return;
+      if(generation!==this._aiGeneration||!this.data.ai||this.data.doc?.id!==d.id)return;
+      const prepared=journalWritingBrief(d,{destination:this.data.aiDestination,selectedId:this._aiOriginSelection,placement:this.data.placement,includeTitle:this.data.aiIncludeTitle,includeCaptions:this.data.aiIncludeCaptions,purpose:this.data.purposes[this.data.purpose],prompt:this.data.prompt,photoIds:ids});
+      this.setData({bundleSummary:ids.length+' 张关联图片 · 最多约 '+prepared.input.maxChars+' 字',aiSuggestion:null,aiCaptionPreviews:[],error:'',aiHistoryNotice:''});
+      const job=startJournalAi(prepared.input,journalAiAvailable()?undefined:teamWritingTransport(this));this._aiJob=job;this._aiContext=prepared.context;this.setData({aiBusy:true});
+      try{const suggestion=await job.result;if(this._aiJob===job&&this.data.ai&&this.data.doc?.id===d.id){this.setData({aiSuggestion:suggestion,aiCaptionPreviews:(suggestion.captions||[]).map(p=>({...p,label:'照片 '+d.elements.find(e=>e.id===p.id)?.photoNumber}))});try{rememberWriting('journal',d.id,prepared.input,suggestion);}catch{this.setData({aiHistoryNotice:'建议已生成，本机写作记录暂未保存。'});}}}
+      catch(error){if(this._aiJob===job)this.setData({error:errorText(error)});}
+      finally{if(this._aiJob===job){this._aiJob=null;this.setData({aiBusy:false});}}
+    }catch(error){if(generation===this._aiGeneration)this.setData({aiBusy:false,error:errorText(error)});}
+  },
+  editAiSuggestion(e:Input){const key=String(e.currentTarget.dataset.key);if(this.data.aiSuggestion&&['title','body'].includes(key))this.setData({aiSuggestion:{...this.data.aiSuggestion,[key]:e.detail.value},error:''});},
+  editAiCaption(e:Input){const id=String(e.currentTarget.dataset.id),suggestion=this.data.aiSuggestion;if(!suggestion)return;this.setData({aiSuggestion:{...suggestion,captions:(suggestion.captions||[]).map(p=>p.id===id?{...p,text:e.detail.value}:p)},aiCaptionPreviews:this.data.aiCaptionPreviews.map(p=>p.id===id?{...p,text:e.detail.value}:p),error:''});},
   applyAi(e:Touch){
     const suggestion=this.data.aiSuggestion,context=this._aiContext,d=this.data.doc;if(!suggestion||!context||!d)return;
-    if(context.docId!==d.id||context.before!==journalFingerprint(d)){this.setData({aiSuggestion:null,error:'手帐已修改，请重新生成建议，当前内容未覆盖。'});return;}
-    const before=this.before();let target=d.elements.find(a=>a.id===context.target);
-    if(!target)target=d.elements.find(a=>a.type==='text'&&!a.photoId&&a.title);
-    if(!target){target=element('text',{x:72,y:d.height*.11,w:756,fontSize:26});d.elements.push(target);}
-    target.title=suggestion.title;target.text=suggestion.body;
-    if(this.data.purpose===3)target.maxLines=5;
-    if(target===d.elements.find(a=>a.type==='text'&&!a.photoId&&a.title))d.title=suggestion.title||d.title;
-    if(e.currentTarget.dataset.design==='yes'){d.style=suggestion.design.style;d.variant=suggestion.design.variant;d.background=d.style==='minimal'?'#ffffff':d.style==='magazine'?'#eee8da':'#f5efdf';reflowJournalPhotos(d);}
-    else if(this.data.purpose===3)reflowJournalPhotos(d);
-    this.setData({selectedId:target.id,overview:true,ai:false,aiSuggestion:null,error:''});this._aiContext=null;this.commit(before);
+    try{const before=this.before(),applied=applyJournalWriting(d,{...context,destination:this.data.aiDestination,target:this.data.aiDestination==='selected'?this._aiOriginSelection:this.data.aiDestination==='overview'?(journalHeading(d)?.id||''):'',placement:this.data.placement,includeTitle:this.data.aiIncludeTitle,includeCaptions:this.data.aiIncludeCaptions},suggestion,e.currentTarget.dataset.design==='yes');this.setData({doc:applied.document,selectedId:applied.targetId,overview:true,ai:false,aiSuggestion:null,error:''});this._aiContext=null;this.commit(before);try{markWritingApplied('journal',d.id,suggestion.requestId);}catch{}}
+    catch(error){this.setData({error:errorText(error)});}
   },
+  openAiHistory(){if(!this.data.doc)return;try{this.setData({aiHistory:readWritingHistory('journal',this.data.doc.id),aiHistoryOpen:true});}catch(error){this.setData({error:errorText(error)});}},
+  closeAiHistory(){this.setData({aiHistoryOpen:false});},
+  restoreAiHistory(e:Touch){const record=this.data.aiHistory.find(row=>row.id===e.currentTarget.dataset.id),d=this.data.doc;if(!record||!d)return;this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;const ids=record.images.filter(p=>d.elements.some(e=>e.id===p.id&&e.type==='photo')).map(p=>p.id),prompt=writingInstructions(record.prompt);try{const prepared=journalWritingBrief(d,{destination:this.data.aiDestination,selectedId:this._aiOriginSelection,placement:this.data.placement,includeTitle:this.data.aiIncludeTitle,includeCaptions:this.data.aiIncludeCaptions,purpose:record.purpose,prompt,photoIds:ids});this._aiContext=prepared.context;this.setData({prompt,purpose:Math.max(0,this.data.purposes.indexOf(record.purpose)),aiPhotos:this.data.aiPhotos.map(p=>({...p,selected:ids.includes(p.id)})),aiPhotoCount:ids.length,aiHistoryOpen:false,aiBusy:false,aiSuggestion:record.suggestion,aiCaptionPreviews:(record.suggestion.captions||[]).filter(p=>ids.includes(p.id)).map(p=>({...p,label:'照片 '+d.elements.find(e=>e.id===p.id)?.photoNumber})),aiHistoryNotice:'已载入历史建议，当前手帐尚未修改。',error:''});}catch(error){this.setData({error:errorText(error)});}},
+  deleteAiHistory(e:Touch){if(!this.data.doc)return;try{deleteWritingRecord('journal',this.data.doc.id,String(e.currentTarget.dataset.id));this.openAiHistory();}catch(error){this.setData({error:errorText(error)});}},
+  imageFailed(e:Touch){const id=String(e.currentTarget.dataset.id),photo=this.data.doc?.elements.find(p=>p.id===id);if(photo&&this._failedPhotos.get(id)!==photo.src){this._failedPhotos.set(id,photo.src);this.refresh();}},
+  retryPhoto(e:Touch){this._failedPhotos.delete(String(e.currentTarget.dataset.id));this.refresh();},
   confirmSpeech(event:WechatMiniprogram.CustomEvent<{text:string;id:string}>){
     if(!this.data.ai||!this._active||event.detail.id===this.data.speechApplied)return;const prompt=[this.data.prompt.trim(),event.detail.text].filter(Boolean).join('\n');
     if(prompt.length>2000){this.setData({error:'文字要求合计最多2000字，请先缩短输入；转写结果仍保留。'});return;}

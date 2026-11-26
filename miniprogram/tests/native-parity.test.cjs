@@ -142,7 +142,7 @@ test('composition changes keep captions with photos and undo restores both; resi
 });
 test('AI writing brief includes only explicitly checked photos and sends no network request',t=>{
   const warnings=[];t.mock.method(console,'warn',(_message,error)=>warnings.push(error));
-  const {p}=page('journal');p.sample();p.generate();p.openAi();for(const image of p.data.aiPhotos.slice(1))p.aiPhoto(tap(image.id));p.prepareAi();assert.match(p.data.bundleSummary,/1 张关联图片/);assert.match(p.data.error,/补充写作要求/);assert.ok(warnings.some(e=>/补充写作要求/.test(e.message)));
+  const {p}=page('journal');p.sample();p.generate();p.openAi();for(const image of p.data.aiPhotos.slice(1))p.aiPhoto(tap(image.id));p.prepareAi();assert.equal(p.data.aiPhotoCount,1);assert.equal(p.data.bundleSummary,'');assert.match(p.data.error,/补充写作要求/);assert.ok(warnings.some(e=>/补充写作要求/.test(e.message)));
 });
 test('a failed autosave retains the current journal instead of replacing it',async t=>{
   const warnings=[];t.mock.method(console,'warn',(_message,error)=>warnings.push(error));
