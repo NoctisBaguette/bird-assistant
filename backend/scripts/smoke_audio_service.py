@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import time
@@ -245,8 +246,15 @@ def summarize(response: httpx.Response) -> dict[str, Any]:
 
 
 async def run(args: argparse.Namespace) -> int:
+    token_env = getattr(args, "token_env", "")
+    token = os.environ.get(token_env, "") if token_env else ""
+    if token_env and not token:
+        raise SystemExit("the requested session-token environment variable is empty")
+    headers = {"Authorization": "Bearer " + token} if token else {}
     manifest_path = Path(args.manifest)
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not manifest.get("samples"):
+        raise SystemExit("the manifest contains no samples")
     output = Path(args.output)
     output.mkdir(parents=True, exist_ok=True)
     fixtures_dir = output / "fixtures"
@@ -257,7 +265,7 @@ async def run(args: argparse.Namespace) -> int:
     requests: list[dict[str, Any]] = []
     if args.base_url:
         lifespan = nullcontext()
-        client_context = httpx.AsyncClient(base_url=args.base_url, timeout=120.0)
+        client_context = httpx.AsyncClient(base_url=args.base_url, timeout=120.0, headers=headers)
         entry_point = args.base_url
     else:
         from bird_audio.app import create_app
@@ -265,7 +273,10 @@ async def run(args: argparse.Namespace) -> int:
         app = create_app()
         lifespan = app.router.lifespan_context(app)
         client_context = httpx.AsyncClient(
-            transport=httpx.ASGITransport(app=app), base_url="http://in-process", timeout=120.0
+            transport=httpx.ASGITransport(app=app),
+            base_url="http://in-process",
+            timeout=120.0,
+            headers=headers,
         )
         entry_point = "in-process ASGI"
 
@@ -319,19 +330,23 @@ async def run(args: argparse.Namespace) -> int:
         "readyz_status": health.status_code,
         "readyz": health.json() if health.status_code == 200 else None,
         "note": (
-            "Multipart uploads of real MP3/AAC/WAV files through the public endpoint. "
+            f"Multipart uploads of real MP3/AAC/WAV/M4A files through {entry_point}. "
             "The clips come from the issue #6 set re-encoded to recorder-like formats; "
             "device-recorded files still need one run from the front end."
         ),
         "summary": {
             "samples": len(samples),
-            "samples_ok": sum(1 for item in samples if item["http_status"] == 200),
+            "samples_ok": sum(
+                1
+                for item in samples
+                if item["http_status"] == 200 and item["response"].get("state") in {"candidate", "unknown"}
+            ),
             "candidate_results": sum(1 for item in samples if item["response"].get("state") == "candidate"),
             "unknown_results": sum(1 for item in samples if item["response"].get("state") == "unknown"),
             "error_cases": len(error_cases),
             "error_cases_passed": sum(1 for item in error_cases if item["passed"]),
             "mean_total_ms": round(
-                sum(item["response"].get("timing", {}).get("total_ms", 0.0) for item in samples)
+                sum((item["response"].get("timing") or {}).get("total_ms", 0.0) for item in samples)
                 / max(len(samples), 1),
                 3,
             ),
@@ -343,8 +358,18 @@ async def run(args: argparse.Namespace) -> int:
     )
     print(json.dumps(evidence["summary"], ensure_ascii=False, indent=2))
     failed = [item["sample_id"] for item in error_cases if not item["passed"]]
+    invalid_samples = [
+        item["sample_id"]
+        for item in samples
+        if item["http_status"] != 200 or item["response"].get("state") not in {"candidate", "unknown"}
+    ]
+    if health.status_code != 200:
+        print(f"readiness did not succeed: HTTP {health.status_code}")
+    if invalid_samples:
+        print(f"samples without a successful analysis: {invalid_samples}")
     if failed:
         print(f"error cases that did not match: {failed}")
+    if health.status_code != 200 or invalid_samples or failed:
         return 1
     return 0
 
@@ -358,6 +383,9 @@ def main() -> int:
     parser.add_argument("--base-url", default=None, help="running service, e.g. http://127.0.0.1:8100")
     parser.add_argument("--manifest", default=str(DEFAULT_MANIFEST))
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT))
+    parser.add_argument(
+        "--token-env", default="", help="read an optional session token from this environment variable"
+    )
     args = parser.parse_args()
     return asyncio.run(run(args))
 
