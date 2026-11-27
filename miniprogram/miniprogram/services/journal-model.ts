@@ -1,9 +1,10 @@
 import { clamp } from './map-model';
 import { round2, floor2 } from './numbers';
 export interface JournalElement { id:string;type:string;x:number;y:number;w:number;h:number;rotation:number;color:string;title:string;text:string;fontSize:number;font:string;src:string;photoNumber:number;photoFit?:'cover'|'stretch';ornamentRatioLocked?:boolean;ornamentOriginalRatio?:number;ratioLock?:'current'|'original'|'free';lockedRatio?:number;photoId?:string;titleSize?:number;maxLines?:number;flowPosition?:'before-photos'|'after-photos';zoom:number;cropX:number;cropY:number;persisted:boolean;iw:number;ih:number; }
-export interface JournalDocument { version:1;id:string;title:string;ratio:string;style:string;width:number;height:number;background:string;variant:number;elements:JournalElement[];createdAt?:string;updatedAt:string;headingId?:string;period?:string;paper?:string; }
+export interface JournalDocument { version:1;id:string;title:string;ratio:string;style:string;width:number;height:number;background:string;variant:number;elements:JournalElement[];createdAt?:string;updatedAt:string;headingId?:string;period?:string;paper?:string;editHistory?:JournalEditHistory; }
 export interface JournalAsset {id:string;src:string;label:string;notes:string;sample:boolean;selected:boolean;persisted?:boolean;source?:string;date?:string;width?:number;height?:number;}
 export interface Snapshot { document:JournalDocument;selected:string; }
+export interface JournalEditHistory {version:1;past:Snapshot[];future:Snapshot[];selected:string;}
 export const copy=<T>(value:T):T=>JSON.parse(JSON.stringify(value)) as T;
 export const uid=()=>Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
 export function element(type:string,values:Partial<JournalElement>={}):JournalElement {return {id:uid(),type,x:80,y:260,w:300,h:200,rotation:0,color:'#285b49',title:'',text:'',fontSize:24,font:'serif',src:'',photoNumber:0,zoom:1,cropX:50,cropY:50,persisted:false,iw:600,ih:450,...values};}
@@ -139,13 +140,12 @@ export function changeJournalRatio(d:JournalDocument,ratio:string) {
   for(const e of d.elements)if(e.type!=='photo'&&!e.photoId){e.y*=sy;if(e.type!=='text')e.h*=sy;}
   d.height=height;d.ratio=ratio;reflowJournalPhotos(d);return true;
 }
-export function snapshot(document:JournalDocument,selected:string):Snapshot {return {document:copy(document),selected};}
+export function journalContent(document:JournalDocument):JournalDocument {const value=copy(document);delete value.editHistory;return value;}
+export function snapshot(document:JournalDocument,selected:string):Snapshot {return {document:journalContent(document),selected};}
 export function recordHistory(past:Snapshot[],future:Snapshot[],before:Snapshot,document:JournalDocument) {if(JSON.stringify(before.document)===JSON.stringify(document))return false;past.push(copy(before));if(past.length>50)past.shift();future.splice(0);return true;}
 export function focusOffset(e:JournalElement|undefined,scale:number,documentHeight:number,viewport:number) {return e?clamp((e.y+e.h/2)*scale-viewport/2,0,Math.max(0,documentHeight*scale-viewport)):0;}
 export const JOURNAL_KEY='bird-assistant.journals.v1';
-export function readJournals():JournalDocument[] {
-  const value:unknown=wx.getStorageSync(JOURNAL_KEY);if(value===''||value==null)return [];
-  const valid=(d:any)=>d&&d.version===1&&typeof d.id==='string'&&typeof d.title==='string'&&typeof d.updatedAt==='string'&&typeof d.background==='string'&&
+export const validJournal=(d:any)=>d&&d.version===1&&typeof d.id==='string'&&typeof d.title==='string'&&typeof d.updatedAt==='string'&&typeof d.background==='string'&&
     (d.createdAt==null||(typeof d.createdAt==='string'&&Number.isFinite(Date.parse(d.createdAt))))&&
     [d.width,d.height].every(n=>typeof n==='number'&&Number.isFinite(n)&&n>0)&&Array.isArray(d.elements)&&
     d.elements.every((e:any)=>e&&typeof e.id==='string'&&typeof e.type==='string'&&typeof e.text==='string'&&typeof e.src==='string'&&(e.lockedRatio==null||(Number.isFinite(e.lockedRatio)&&e.lockedRatio>0))&&
@@ -156,9 +156,11 @@ export function readJournals():JournalDocument[] {
       (e.ratioLock==null||['current','original','free'].includes(e.ratioLock))&&
       [e.x,e.y,e.w,e.h,e.rotation,e.fontSize,e.zoom,e.cropX,e.cropY,e.iw,e.ih].every(n=>typeof n==='number'&&Number.isFinite(n))&&e.w>0&&e.h>0)&&
     new Set(d.elements.map((e:any)=>e.id)).size===d.elements.length;
-  if(!Array.isArray(value)||!value.every(valid)||new Set(value.map(d=>d.id)).size!==value.length)throw new Error('手帐资料无法读取，已有草稿未覆盖。');
+export function readJournals():JournalDocument[] {
+  const value:unknown=wx.getStorageSync(JOURNAL_KEY);if(value===''||value==null)return [];
+  if(!Array.isArray(value)||!value.every(validJournal)||new Set(value.map(d=>d.id)).size!==value.length)throw new Error('手帐资料无法读取，已有草稿未覆盖。');
   return copy(value as JournalDocument[]);
 }
 
 /** Durability timestamps and library cover projections are not user edits. */
-export function journalFingerprint(d:JournalDocument){const value=copy(d) as JournalDocument&{cover?:string};value.updatedAt='';delete value.cover;return JSON.stringify(value);}
+export function journalFingerprint(d:JournalDocument){const value=journalContent(d) as JournalDocument&{cover?:string};value.updatedAt='';delete value.cover;return JSON.stringify(value);}

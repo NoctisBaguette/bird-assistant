@@ -8,3 +8,5 @@
 .history-prompt{font-size:12px;line-height:1.8;color:#71816c;white-space:pre-wrap;margin:8px 0}
 .history-answer{font-size:14px;line-height:1.85;color:#385444;white-space:pre-wrap;margin:10px 0 14px}
 .writing-history-card .row{gap:12px}.writing-history-card button{flex:1;min-width:0;font-size:12px}
+
+.sheet-header-fixed .ai-history-entry{flex:none;width:76px;max-width:76px;min-height:32px;padding:5px 0;font-size:11px;white-space:nowrap}.sheet-header-fixed .row>.section-title{width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

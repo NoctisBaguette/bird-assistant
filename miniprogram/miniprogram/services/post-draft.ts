@@ -1,6 +1,6 @@
 import {PostImage,checkPostImages,cleanPostImage,postImage} from './post-media';
 
-// Keep the old keys readable and mirrored for a safe upgrade/rollback.
+// Keep old keys readable and mirror the latest draft for legacy readers.
 export const POST_DRAFT_KEY='bird-assistant.post-draft.v2';
 export const POST_RECOVERY_KEY='bird-assistant.post-draft-recovery.v2';
 export const POST_DRAFTS_KEY='bird-assistant.post-drafts.v3';
@@ -71,7 +71,13 @@ export function readPostDrafts():PostDraft[] {
       items[index]={...recovery,images,missingMedia:images.filter(image=>!image.path).length};
     }else items.push(recovery);
   }
-  return items.sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
+  const epoch=(value?:string)=>{const time=Date.parse(value||'');return Number.isFinite(time)?time:-Infinity;};
+  return items.sort((a,b)=>{
+    const changed=(draft:PostDraft)=>epoch(draft.updatedAt)!==-Infinity?epoch(draft.updatedAt):epoch(draft.createdAt);
+    const modifiedA=changed(a),modifiedB=changed(b);
+    if(modifiedA!==modifiedB)return modifiedB>modifiedA?1:-1;
+    const createdA=epoch(a.createdAt),createdB=epoch(b.createdAt);return createdA!==createdB?(createdB>createdA?1:-1):(a.id||'').localeCompare(b.id||'');
+  });
 }
 export function readPostDraft(id?:string):PostDraft|null {
   const base=shelf(),items=readPostDrafts();

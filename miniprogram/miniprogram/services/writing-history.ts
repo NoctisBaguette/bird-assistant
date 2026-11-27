@@ -39,3 +39,7 @@ export function markWritingApplied(feature:WritingFeature,scope:string,id:string
 export function deleteWritingRecord(feature:WritingFeature,scope:string,id:string){
   wx.setStorageSync(WRITING_HISTORY_KEY,{version:1,items:all().filter(item=>!(item.feature===feature&&item.scope===scope&&item.id===id))});
 }
+
+export function deleteWritingScope(feature:WritingFeature,scope:string){
+  wx.setStorageSync(WRITING_HISTORY_KEY,{version:1,items:all().filter(item=>!(item.feature===feature&&item.scope===scope))});
+}

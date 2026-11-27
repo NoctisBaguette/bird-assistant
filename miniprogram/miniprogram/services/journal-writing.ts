@@ -1,4 +1,4 @@
-import {JournalDocument,JournalElement,copy,element,fit,journalFingerprint,reflowJournalPhotos,textLayout} from './journal-model';
+import {JournalDocument,JournalElement,journalContent,element,fit,journalFingerprint,reflowJournalPhotos,textLayout} from './journal-model';
 import {JournalAiInput,JournalAiSuggestion} from './journal-ai';
 
 export type WritingDestination='new'|'selected'|'overview';
@@ -41,7 +41,7 @@ export function writingDestinationLabel(context:Pick<JournalWritingContext,'dest
 export function applyJournalWriting(document:JournalDocument,context:JournalWritingContext,suggestion:JournalAiSuggestion,design=false){
   if(context.docId!==document.id||context.before!==journalFingerprint(document))throw new Error('手帐已修改，请重新生成建议，当前内容未覆盖。');
   if(!suggestion.body.trim()||Array.from(suggestion.body).length>600||Array.from(suggestion.title).length>40)throw new Error('请保留有效的建议正文；标题最多40字，正文最多600字。');
-  const d=copy(document);let target:JournalElement|undefined;
+  const d=journalContent(document);let target:JournalElement|undefined;
   if(context.destination==='selected'){
     target=d.elements.find(e=>e.id===context.target&&e.type==='text');
     if(!target)throw new Error('原文本框已变化，当前内容未覆盖。');

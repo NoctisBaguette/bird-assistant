@@ -19,7 +19,7 @@ test('photo-to-journal sends selected copies, previews a bounded suggestion, the
   let sent;ai.installJournalAiTransport({generate:input=>{sent=input;return {result:Promise.resolve({version:1,requestId:input.requestId,title:'枝头的一刻',body:'鸟停在枝头，羽色映着周围的绿。',design:{style:'minimal',variant:2}}),cancel(){}};}});
   t.after(()=>ai.installJournalAiTransport(null));
   const {p}=page();p._catalog=assets(2).map(a=>({...a,src:'wxfile://'+a.id+'.jpg',sample:false,persisted:true}));
-  await p.generateFromPhotos();assert.equal(sent.purpose,'照片手帐');assert.equal(sent.images.length,2);assert.equal(sent.maxChars,120);
+  await p.generateFromPhotos();assert.equal(sent,undefined,'opening the photo writing sheet must not call the provider');assert.equal(p.data.prompt,'');p.prompt({detail:{value:'根据照片写自然简短的观察，分别说明每张照片。'}});await p.prepareAi();assert.equal(sent.purpose,'照片手帐');assert.equal(sent.images.length,2);assert.equal(sent.maxChars,120);
   assert.ok(p.data.aiSuggestion);assert.notEqual(p.data.doc.title,'枝头的一刻');
   const before=structuredClone(p.data.doc);p.applyAi({currentTarget:{dataset:{design:'yes'}}});
   assert.equal(p.data.doc.title,before.title);assert.equal(journalHeading(p.data.doc).title,'枝头的一刻');assert.equal(p.data.doc.style,'minimal');assert.deepEqual(p.data.doc.elements.filter(e=>e.type==='photo').map(e=>e.src),before.elements.filter(e=>e.type==='photo').map(e=>e.src));

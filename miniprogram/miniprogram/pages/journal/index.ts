@@ -10,14 +10,15 @@ import { JournalAiSuggestion, startJournalAi, journalAiAvailable } from '../../s
 import { teamWritingTransport } from '../../services/writing-network';
 import {journalWritingBrief,applyJournalWriting,journalHeading,writingDestinationLabel,JournalWritingContext,WritingDestination} from '../../services/journal-writing';
 import {journalLibrary} from '../../services/journal-library';
-import {readWritingHistory,rememberWriting,markWritingApplied,deleteWritingRecord,writingInstructions} from '../../services/writing-history';
+import {editorHistory,restoreEditorHistory,saveJournalState,deleteJournalState} from '../../services/journal-storage';
+import {readWritingHistory,rememberWriting,markWritingApplied,deleteWritingRecord,deleteWritingScope,writingInstructions} from '../../services/writing-history';
 import { ratioLocks, ratioLock, setRatioLock, resizePhoto, resizeOrnament, isOrnament, pixelValues, RatioLock } from '../../services/journal-resize';
 import { papers, paperColors, paperSource } from '../../services/journal-paper';
 import { round2, floor2, numberDraft, parseNumberDraft } from '../../services/numbers';
 import { clamp } from '../../services/map-model';
 import { getCanvas, exportCanvas } from '../../services/canvas';
 import { resetPageScroll } from '../../services/navigation';
-import { JournalAsset, JournalDocument, JournalElement, Snapshot, JOURNAL_KEY, copy, element, elementLabel, fit, focusOffset, makeJournal, compositionName, changeJournalRatio, reflowJournalPhotos, journalFingerprint, readJournals, recordHistory, snapshot, textLayout } from '../../services/journal-model';
+import { JournalAsset, JournalDocument, JournalElement, Snapshot, journalContent, copy, element, elementLabel, fit, focusOffset, makeJournal, compositionName, changeJournalRatio, reflowJournalPhotos, journalFingerprint, readJournals, recordHistory, snapshot, textLayout } from '../../services/journal-model';
 type Touch=WechatMiniprogram.TouchEvent;
 type Input=WechatMiniprogram.CustomEvent<{value:string}>;
 const samples=Array.from({length:4},(_,i)=>({id:'sample-'+i,src:'/assets/samples/field-'+i+'.png',label:['湖边停留','枝头一瞥','待鉴定','林间相遇'][i],notes:'示例插画',sample:true,selected:true,date:'2026-10-21'}));
@@ -35,8 +36,8 @@ Page({
   _aiContext:null as JournalWritingContext|null,
   _aiOriginSelection:'',
   _documents:[] as JournalDocument[],
-  _failedPhotos:new Map<string,string>(),
-  _failedCovers:new Map<string,string>(),
+  _failedPhotos:null as Map<string,string>|null,
+  _failedCovers:null as Map<string,string>|null,
   queuePreview(){if(!this._previews)this._previews=previewQueue(()=>this.renderPreview());this._previews.request();},
   flushPendingPreview(){this._previews?.flush();},
   renderPreview(){
@@ -49,10 +50,10 @@ Page({
     else {patch.selected=original;patch.pixels=pixelValues(original);patch.dirty=true;patch.exportPath='';}
     this.setData(patch);
   },
-  onUnload(){this._assetPickToken++;this.selectComponent?.('#journal-speech')?.stopWork?.();this._active=false;clearTimeout(this._autosave);this.finishAdjustment();this.endTextEdit();void this.persistDraft();this._previews?.cancel();this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;},
+  onUnload(){this._assetPickToken++;this.selectComponent?.('#journal-speech')?.stopWork?.();this._active=false;clearTimeout(this._autosave);this.finishAdjustment();this.endTextEdit();if(this._saveJob)this.cacheEditorState();void this.persistDraft();this._previews?.cancel();this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;},
   _autosave:0 as unknown as ReturnType<typeof setTimeout>,
   _saveJob:null as Promise<boolean>|null,
-  _revision:0,
+  _revision:0,_savedRevision:-1,_savedDocumentId:'',_deletingJournal:'',
   _active:true,
   _assetPickToken:0,
   holdSheet(){},
@@ -64,19 +65,26 @@ Page({
   async persistDraft():Promise<boolean>{
     clearTimeout(this._autosave);
     if(this._saveJob){const ok=await this._saveJob;return ok&&this.data.dirty?this.persistDraft():ok;}
-    if(!this.data.doc||!this.data.dirty)return true;
-    const document=copy(this.data.doc),revision=this._revision;
+    if(!this.data.doc||!this.data.dirty||this._deletingJournal===this.data.doc.id)return true;
+    const document=journalContent(this.data.doc),revision=this._revision,history=this.captureEditorHistory();
     this.setData({saveStatus:'正在保存'});
     this._saveJob=(async()=>{
       try{
-        for(const photo of document.elements.filter(e=>e.type==='photo')){
-          if(photo.persisted||photo.src.startsWith('/assets/'))continue;
-          const previous=photo.src,durable=await persistImage(previous);
-          photo.src=durable;photo.persisted=true;this.rememberMedia(previous,durable);
+        const documents=[document,...history.past.map(step=>step.document),...history.future.map(step=>step.document)],failed:string[]=[];
+        for(const value of documents)for(const photo of value.elements.filter(e=>e.type==='photo')){
+          if(photo.persisted||photo.src.startsWith('/assets/')||failed.includes(photo.src))continue;
+          const previous=photo.src;
+          try{
+            const durable=await persistImage(previous);
+            for(const doc of documents)for(const image of doc.elements)if(image.type==='photo'&&image.src===previous){image.src=durable;image.persisted=true;}
+            this.rememberMedia(previous,durable);
+          }catch(error){if(document.elements.some(e=>e.type==='photo'&&e.src===previous))throw error;failed.push(previous);}
         }
-        const existing=readJournals();document.updatedAt=new Date().toISOString();
-        wx.setStorageSync(JOURNAL_KEY,[document,...existing.filter(d=>d.id!==document.id)]);
-        wx.setStorageSync('bird-assistant.journal.last.v1',document.id);
+        if(failed.length){history.past=history.past.filter(step=>!step.document.elements.some(e=>e.type==='photo'&&failed.includes(e.src)));history.future=history.future.filter(step=>!step.document.elements.some(e=>e.type==='photo'&&failed.includes(e.src)));}
+        if(this._savedDocumentId===document.id&&this._savedRevision>revision)return true;
+        const saved=saveJournalState(document,history);document.updatedAt=saved.updatedAt;
+        if(this.data.doc?.id===document.id){this._savedDocumentId=document.id;this._savedRevision=revision;}
+        if(failed.length)this.setData({error:'手帐已保存，有旧素材无法保留，对应编辑步骤未缓存。'});
         if(this.data.doc?.id===document.id&&this._revision===revision){
           this.data.doc.updatedAt=document.updatedAt;
           this.setData({dirty:false,saveStatus:'已自动保存',error:this.data.error.startsWith('自动保存未完成')?'':this.data.error});
@@ -88,25 +96,58 @@ Page({
     if(ok&&this.data.dirty&&this._active)this._autosave=setTimeout(()=>{void this.persistDraft();},700);
     return ok;
   },
+  captureEditorHistory(){
+    const pending=this._editBefore,changed=pending&&this.data.doc&&journalFingerprint(pending.document)!==journalFingerprint(this.data.doc);
+    return editorHistory(changed?[...this._past,pending!]:this._past,changed?[]:this._future,this.data.selectedId);
+  },
+  cacheEditorState(){
+    const d=this.data.doc;if(!d||!this.data.dirty||this._deletingJournal===d.id)return false;
+    const history=this.captureEditorHistory(),documents=[d,...history.past.map(step=>step.document),...history.future.map(step=>step.document)];
+    if(documents.some(doc=>doc.elements.some(e=>e.type==='photo'&&!e.persisted&&!e.src.startsWith('/assets/'))))return false;
+    try{const saved=saveJournalState(d,history);this._savedDocumentId=d.id;this._savedRevision=this._revision;this.data.doc!.updatedAt=saved.updatedAt;this.data.dirty=false;this.data.saveStatus='已自动保存';if(this._active)this.setData({dirty:false,saveStatus:'已自动保存'});return true;}
+    catch(error){this.data.saveStatus='保存未完成';this.data.error='自动保存未完成，当前编辑仍保留。'+errorText(error);return false;}
+  },
+  restoreEditorSession(document:JournalDocument){
+    this._past=[];this._future=[];this._savedRevision=-1;this._savedDocumentId=document.id;
+    try{const state=restoreEditorHistory(document);this._past=state.past;this._future=state.future;return {selectedId:document.elements.some(e=>e.id===state.selected)?state.selected:'',error:''};}
+    catch(error){return {selectedId:'',error:errorText(error)};}
+  },
   _scrollTop:0,
   _catalog:[] as JournalAsset[],
   openLayers(){this.finishAdjustment();this.endTextEdit();this.setData({layersOpen:true});},
   closeLayers(){this.setData({layersOpen:false});},
   onEditorScroll(e:WechatMiniprogram.CustomEvent<{scrollTop:number}>){this._scrollTop=round2(e.detail.scrollTop);},
-  onLoad(){this.resizeEditor();},
+  onLoad(){this._failedPhotos=new Map();this._failedCovers=new Map();this.resizeEditor();},
   onResize(){this.resizeEditor();},
   resizeEditor(){const box=layout();this.setData({templateWidth:Math.min(150,Math.floor((box.width-48)/2-22)),headerHeight:box.headerHeight,assetImageHeight:round2((box.width-86)*.375),editorHeight:layout(true).height,stageWidth:box.width-52,scale:(box.width-52)/900});this.refresh();},
-  onShow(){this._active=true;selectTab(this,1);this.loadDrafts();if(!this.data.doc){const id=wx.getStorageSync('bird-assistant.journal.last.v1'),doc=this._documents.find(d=>d.id===id);if(doc)this.setData({doc:copy(doc),saveStatus:'已自动保存'});}if(this.data.doc&&this.data.view==='editor')this.refresh();},
-  onHide(){this._active=false;clearTimeout(this._autosave);this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;this.setData({aiBusy:false});this.finishAdjustment();this.endTextEdit();void this.persistDraft();this.selectComponent?.('#journal-speech')?.stopWork?.();},
+  onShow(){this._active=true;selectTab(this,1);this.loadDrafts();if(!this.data.doc){const id=wx.getStorageSync('bird-assistant.journal.last.v1'),doc=this._documents.find(d=>d.id===id);if(doc){const state=this.restoreEditorSession(doc);this.setData({doc:journalContent(doc),selectedId:state.selectedId,error:state.error,canUndo:!!this._past.length,canRedo:!!this._future.length,saveStatus:'已自动保存'});}}if(this.data.doc&&this.data.view==='editor')this.refresh();},
+  onHide(){this._active=false;clearTimeout(this._autosave);this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;this.setData({aiBusy:false});this.finishAdjustment();this.endTextEdit();if(this._saveJob)this.cacheEditorState();void this.persistDraft();this.selectComponent?.('#journal-speech')?.stopWork?.();},
   loadDrafts(){try{this._documents=readJournals();this.setData({drafts:journalLibrary(this._documents,{text:'',ratio:'',order:'updated',from:'',to:''}),libraryTotal:this._documents.length});this.filterLibrary(false);}catch(e){this.setData({error:errorText(e)});}},
-  filterLibrary(reset=true){const d=this.data,rows=journalLibrary(this._documents,{text:d.libraryText,ratio:d.libraryRatio?d.libraryRatios[d.libraryRatio]:'',order:d.libraryOrder===1?'created':'updated',from:d.libraryFrom,to:d.libraryTo}).map(row=>({...row,cover:this._failedCovers.get(row.id)===row.cover?'':row.cover}));this.setData({libraryRows:rows,deckIndex:reset?0:Math.min(this.data.deckIndex,Math.max(0,rows.length-1))});},
+  filterLibrary(reset=true){const d=this.data,rows=journalLibrary(this._documents,{text:d.libraryText,ratio:d.libraryRatio?d.libraryRatios[d.libraryRatio]:'',order:d.libraryOrder===1?'created':'updated',from:d.libraryFrom,to:d.libraryTo}).map(row=>({...row,cover:this._failedCovers?.get(row.id)===row.cover?'':row.cover}));this.setData({libraryRows:rows,deckIndex:reset?0:Math.min(this.data.deckIndex,Math.max(0,rows.length-1))});},
   librarySearch(e:Input){this.setData({libraryText:e.detail.value});this.filterLibrary();},
   libraryChoice(e:Input){const key=String(e.currentTarget.dataset.key);if(key==='libraryOrder'||key==='libraryRatio')this.setData({[key]:Number(e.detail.value)});else if(key==='libraryFrom'||key==='libraryTo')this.setData({[key]:e.detail.value});this.filterLibrary();},
   clearLibraryFilters(){this.setData({libraryText:'',libraryFrom:'',libraryTo:'',libraryOrder:0,libraryRatio:0});this.filterLibrary();},
   deckChange(e:WechatMiniprogram.CustomEvent<{current:number}>){if(Number.isInteger(e.detail.current)&&e.detail.current!==this.data.deckIndex)this.setData({deckIndex:e.detail.current});},
   deckCard(e:Touch){const index=Number(e.currentTarget.dataset.index);if(index!==this.data.deckIndex)this.setData({deckIndex:index});else this.openDraft(e);},
-  coverFailed(e:Touch){const id=String(e.currentTarget.dataset.id),row=this.data.libraryRows.find(row=>row.id===id);if(row?.cover&&this._failedCovers.get(id)!==row.cover){this._failedCovers.set(id,row.cover);this.filterLibrary(false);}},
-  renameJournal(e?:Touch){const id=String(e?.currentTarget?.dataset?.id||this.data.doc?.id||''),doc=this.data.doc?.id===id?this.data.doc:this._documents.find(d=>d.id===id);if(!doc||this.data.busy)return;wx.showModal({title:'手帐名称',editable:true,content:doc.title,placeholderText:'给这份手帐起个名字',success:reply=>{if(!reply.confirm)return;const name=reply.content?.trim();if(!name){wx.showToast({title:'名称不能为空',icon:'none'});return;}if(Array.from(name).length>80){wx.showToast({title:'名称最多80字',icon:'none'});return;}try{if(this.data.doc?.id===id&&this.data.view==='editor'){const before=this.before();this.data.doc.title=name;this.commit(before);}else{const items=readJournals(),item=items.find(d=>d.id===id);if(!item)return;item.title=name;item.updatedAt=new Date().toISOString();wx.setStorageSync(JOURNAL_KEY,items);if(this.data.doc?.id===id)this.setData({'doc.title':name});this.loadDrafts();}}catch(error){this.setData({error:errorText(error)});}}});},
+  coverFailed(e:Touch){const id=String(e.currentTarget.dataset.id),row=this.data.libraryRows.find(row=>row.id===id);if(row?.cover&&this._failedCovers?.get(id)!==row.cover){(this._failedCovers||(this._failedCovers=new Map())).set(id,row.cover);this.filterLibrary(false);}},
+  renameJournal(e?:Touch){const id=String(e?.currentTarget?.dataset?.id||this.data.doc?.id||''),doc=this.data.doc?.id===id?this.data.doc:this._documents.find(d=>d.id===id);if(!doc||this.data.busy)return;wx.showModal({title:'手帐名称',editable:true,content:doc.title,placeholderText:'给这份手帐起个名字',success:reply=>{if(!reply.confirm)return;const name=reply.content?.trim();if(!name){wx.showToast({title:'名称不能为空',icon:'none'});return;}if(Array.from(name).length>80){wx.showToast({title:'名称最多80字',icon:'none'});return;}try{if(this.data.doc?.id===id&&this.data.view==='editor'){const before=this.before();this.data.doc.title=name;this.commit(before);}else{const items=readJournals(),item=items.find(d=>d.id===id);if(!item)return;const before=snapshot(item,''),history=restoreEditorHistory(item);item.title=name;saveJournalState(item,editorHistory([...history.past,before],[],history.selected));if(this.data.doc?.id===id){const saved=readJournals().find(d=>d.id===id)!;const state=this.restoreEditorSession(saved);this.setData({doc:journalContent(saved),selectedId:state.selectedId,canUndo:!!this._past.length,canRedo:!!this._future.length});}this.loadDrafts();}}catch(error){this.setData({error:errorText(error)});}}});},
+  deleteJournal(e?:Touch){
+    const id=String(e?.currentTarget?.dataset?.id||this.data.doc?.id||''),doc=this.data.doc?.id===id?this.data.doc:this._documents.find(item=>item.id===id);
+    if(!doc||this.data.busy||this.data.exporting)return;
+    wx.showModal({title:'删除这份手帐？',content:'“'+doc.title+'”及其本机编辑、AI建议记录会删除。原照片和已加入帖子的成品图保留。',confirmText:'删除手帐',confirmColor:'#a65e40',success:reply=>{if(reply.confirm)void this.confirmDeleteJournal(id);}});
+  },
+  async confirmDeleteJournal(id:string){
+    if(this.data.busy||this.data.exporting||!id)return;this._deletingJournal=id;this.setData({busy:true});
+    try{
+      const active=this.data.doc?.id===id;if(active){clearTimeout(this._autosave);this.closeAi();this._assetPickToken++;}
+      if(this._saveJob)await this._saveJob;
+      deleteJournalState(id);
+      let warning='';try{deleteWritingScope('journal',id);}catch{warning='手帐已删除，AI建议记录暂未清理。';}
+      if(this.data.doc?.id===id){this._past=[];this._future=[];this._editBefore=null;this._adjustment=null;this._drag=null;this._catalog=[];this._previews?.cancel();this.setData({doc:null,view:'home',headerTitle:'羽迹',dirty:false,selectedId:'',selected:null,renderElements:[],labels:[],canUndo:false,canRedo:false,ai:false,aiSuggestion:null,aiHistory:[],aiPhotos:[],prompt:'',templateOptions:[],layersOpen:false,cropOpen:false,cropDraft:null,templateOpen:false,exportPath:'',saveStatus:'',error:''});}
+      this.loadDrafts();if(warning)this.setData({error:warning});wx.showToast({title:warning?'手帐已删除，记录清理未完成':'手帐已删除',icon:warning?'none':'success'});
+    }catch(error){this.setData({error:'手帐未删除。'+errorText(error)});}
+    finally{this._deletingJournal='';this.setData({busy:false});}
+  },
   canOpenAnother(then?:()=>void){
     if(this.data.busy||this.data.exporting)return false;
     if(this.data.doc&&this.data.dirty){void this.persistDraft().then(ok=>{if(ok)then?.();});return false;}
@@ -142,16 +183,15 @@ Page({
     if(!photos.length||photos.length>4){this.setData({error:'根据照片生成手帐，请先选 1–4 张照片。'});return;}
     if(photos.some(a=>a.sample)){this.setData({error:'请使用自己的照片生成手帐；示例插画仍可本地排版。'});return;}
     this.generate();this.openAi();
-    this.setData({purpose:3,placement:2,aiDestination:'overview',aiIncludeTitle:true,aiIncludeCaptions:true,aiTargetLabel:'更新页首概述及照片说明 · 手帐名称不变',prompt:'根据已勾选照片生成简短、自然的观鸟手帐。写页首概述，并为每张照片写一条简短说明；结合已有备注，不用诗句或比喻，不猜鸟名、日期、地点、天气或经历。选择适合这些照片的构图。'});
-    await this.prepareAi();
+    this.setData({purpose:3,placement:2,aiDestination:'overview',aiIncludeTitle:true,aiIncludeCaptions:true,aiTargetLabel:'更新页首概述及照片说明 · 手帐名称不变',prompt:''});
   },
   openDraft(e:Touch){if(!this.canOpenAnother(()=>this.openDraft(e)))return;const doc=this._documents.find(d=>d.id===e.currentTarget.dataset.id)||readJournals().find(d=>d.id===e.currentTarget.dataset.id);if(doc)this.openDocument(copy(doc),false);},
   assetLoaded(e:WechatMiniprogram.CustomEvent<{width:number;height:number}>){const a=this._catalog.find(a=>a.id===e.currentTarget.dataset.id);if(a&&e.detail.width>0&&e.detail.height>0){a.width=e.detail.width;a.height=e.detail.height;}},
-  openDocument(doc:JournalDocument,dirty:boolean){clearTimeout(this._autosave);if(!dirty&&wx.setStorageSync){try{wx.setStorageSync('bird-assistant.journal.last.v1',doc.id);}catch{/* draft data remains independently readable */}}this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;this._aiContext=null;this._past=[];this._future=[];this._editBefore=null;this._adjustment=null;this._scrollTop=0;this.setData({doc,view:'editor',headerTitle:'编辑手帐',selectedId:'',backgroundSelected:false,dirty,ai:false,aiBusy:false,aiSuggestion:null,layersOpen:false,overview:false,cropOpen:false,cropDraft:null,numberEditing:'',numberDrafts:{},exportPath:'',error:'',saveStatus:dirty?'更改待保存':'已自动保存'});resetPageScroll(this);this.refresh();if(dirty)this.scheduleSave();},
+  openDocument(doc:JournalDocument,dirty:boolean){clearTimeout(this._autosave);if(!dirty&&wx.setStorageSync){try{wx.setStorageSync('bird-assistant.journal.last.v1',doc.id);}catch{/* draft data remains independently readable */}}this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;this._aiContext=null;const state=dirty?{selectedId:'',error:''}:this.restoreEditorSession(doc);if(dirty){this._past=[];this._future=[];this._savedRevision=-1;this._savedDocumentId=doc.id;}this._editBefore=null;this._adjustment=null;this._scrollTop=0;this.setData({doc:journalContent(doc),view:'editor',headerTitle:'编辑手帐',selectedId:state.selectedId,backgroundSelected:false,dirty,ai:false,aiBusy:false,aiSuggestion:null,layersOpen:false,overview:false,cropOpen:false,cropDraft:null,numberEditing:'',numberDrafts:{},exportPath:'',error:state.error,saveStatus:dirty?'更改待保存':'已自动保存'});resetPageScroll(this);this.refresh();if(dirty)this.scheduleSave();},
   refresh(){this._previews?.cancel();const d=this.data.doc;if(!d)return;fit(d);const selected=d.elements.find(e=>e.id===this.data.selectedId)||null,scale=this.data.scale;
     const renderElements=d.elements.map(original=>{
       const e=this.data.cropDraft?.id===original.id?{...original,...this.data.cropDraft}:original;
-      return {...projectElement(e,d,scale),unreadable:this._failedPhotos.get(e.id)===e.src};
+      return {...projectElement(e,d,scale),unreadable:this._failedPhotos?.get(e.id)===e.src};
     });
     const crop=this.data.cropDraft,cropScale=crop?Math.min(Math.max(100,this.data.stageWidth-44)/crop.w,180/crop.h):1;
     const cropPreview=crop?{...photoCrop(crop,cropScale),width:round2(crop.w*cropScale),height:round2(crop.h*cropScale)}:null;
@@ -165,7 +205,7 @@ Page({
   select(e:Touch){this.finishAdjustment();this.endTextEdit();this.setData({selectedId:String(e.currentTarget.dataset.id),backgroundSelected:false,layersOpen:false,numberEditing:'',numberDrafts:{}});this.refresh();},
   beginTextEdit(){if(!this._editBefore)this._editBefore=snapshot(this.data.doc!,this.data.selectedId);},
   endTextEdit(){if(this._editBefore){const before=this._editBefore;this._editBefore=null;this.commit(before);}},
-  text(e:Input){const d=this.data.doc,selected=this.data.selected;if(!d||!selected)return;this.beginTextEdit();const key=String(e.currentTarget.dataset.key);if(key==='title'||key==='text'){const a=d.elements.find(a=>a.id===selected.id)!;a[key]=e.detail.value;a.maxLines=0;if(key==='title'&&a===d.elements.filter(e=>e.type==='text'&&!e.photoId)[1])d.title=e.detail.value.trim()||'未命名手帐';this.setData({doc:d,dirty:true,exportPath:''});this.scheduleSave();this.refresh();}},
+  text(e:Input){const d=this.data.doc,selected=this.data.selected;if(!d||!selected)return;this.beginTextEdit();const key=String(e.currentTarget.dataset.key);if(key==='title'||key==='text'){const a=d.elements.find(a=>a.id===selected.id)!;a[key]=e.detail.value;a.maxLines=0;this.setData({doc:d,dirty:true,exportPath:''});this.scheduleSave();this.refresh();}},
   previewAdjust(e:WechatMiniprogram.CustomEvent<{value:number|string}>){
     if(e.currentTarget.dataset.control==='slider'&&this.data.numberEditing)this.setData({numberEditing:''});
     const d=this.data.doc,id=this.data.selectedId,key=String(e.currentTarget.dataset.key),raw=Number(e.detail.value);
@@ -268,6 +308,11 @@ Page({
     const patch:Record<string,unknown>={};
     this.data.renderElements.forEach((e,i)=>{if(e.src===oldPath){const value={...e,src:newPath,persisted:true};this.data.renderElements[i]=value;patch['renderElements['+i+']']=value;}});
     if(this.data.cropDraft?.src===oldPath){this.data.cropDraft.src=newPath;patch.cropDraft=this.data.cropDraft;}
+    for(const a of this._catalog)if(a.src===oldPath){a.src=newPath;a.persisted=true;}
+    const aiPhotos=this.data.aiPhotos.map(photo=>photo.src===oldPath?{...photo,src:newPath}:photo);this.data.aiPhotos=aiPhotos;patch.aiPhotos=aiPhotos;
+    const assets=this.data.assets.map(a=>a.src===oldPath?{...a,src:newPath,persisted:true}:a);this.data.assets=assets;patch.assets=assets;
+    const picked=this.data.picked.map(a=>a.src===oldPath?{...a,src:newPath,persisted:true}:a);this.data.picked=picked;patch.picked=picked;
+    const templateOptions=this.data.templateOptions.map(option=>({...option,photos:option.photos.map(photo=>photo.src===oldPath?{...photo,src:newPath}:photo)}));this.data.templateOptions=templateOptions;patch.templateOptions=templateOptions;
     if(this._active&&Object.keys(patch).length)this.setData(patch);
     if(this._aiContext){const d=JSON.parse(this._aiContext.before);replace(d);this._aiContext.before=journalFingerprint(d);}
     for(const history of [...this._past,...this._future])replace(history.document);if(this._editBefore)replace(this._editBefore.document);
@@ -320,8 +365,8 @@ Page({
   closeAiHistory(){this.setData({aiHistoryOpen:false});},
   restoreAiHistory(e:Touch){const record=this.data.aiHistory.find(row=>row.id===e.currentTarget.dataset.id),d=this.data.doc;if(!record||!d)return;this._aiGeneration++;this._aiJob?.cancel();this._aiJob=null;const ids=record.images.filter(p=>d.elements.some(e=>e.id===p.id&&e.type==='photo')).map(p=>p.id),prompt=writingInstructions(record.prompt);try{const prepared=journalWritingBrief(d,{destination:this.data.aiDestination,selectedId:this._aiOriginSelection,placement:this.data.placement,includeTitle:this.data.aiIncludeTitle,includeCaptions:this.data.aiIncludeCaptions,purpose:record.purpose,prompt,photoIds:ids});this._aiContext=prepared.context;this.setData({prompt,purpose:Math.max(0,this.data.purposes.indexOf(record.purpose)),aiPhotos:this.data.aiPhotos.map(p=>({...p,selected:ids.includes(p.id)})),aiPhotoCount:ids.length,aiHistoryOpen:false,aiBusy:false,aiSuggestion:record.suggestion,aiCaptionPreviews:(record.suggestion.captions||[]).filter(p=>ids.includes(p.id)).map(p=>({...p,label:'照片 '+d.elements.find(e=>e.id===p.id)?.photoNumber})),aiHistoryNotice:'已载入历史建议，当前手帐尚未修改。',error:''});}catch(error){this.setData({error:errorText(error)});}},
   deleteAiHistory(e:Touch){if(!this.data.doc)return;try{deleteWritingRecord('journal',this.data.doc.id,String(e.currentTarget.dataset.id));this.openAiHistory();}catch(error){this.setData({error:errorText(error)});}},
-  imageFailed(e:Touch){const id=String(e.currentTarget.dataset.id),photo=this.data.doc?.elements.find(p=>p.id===id);if(photo&&this._failedPhotos.get(id)!==photo.src){this._failedPhotos.set(id,photo.src);this.refresh();}},
-  retryPhoto(e:Touch){this._failedPhotos.delete(String(e.currentTarget.dataset.id));this.refresh();},
+  imageFailed(e:Touch){const id=String(e.currentTarget.dataset.id),photo=this.data.doc?.elements.find(p=>p.id===id);if(photo&&this._failedPhotos?.get(id)!==photo.src){(this._failedPhotos||(this._failedPhotos=new Map())).set(id,photo.src);this.refresh();}},
+  retryPhoto(e:Touch){this._failedPhotos?.delete(String(e.currentTarget.dataset.id));this.refresh();},
   confirmSpeech(event:WechatMiniprogram.CustomEvent<{text:string;id:string}>){
     if(!this.data.ai||!this._active||event.detail.id===this.data.speechApplied)return;const prompt=[this.data.prompt.trim(),event.detail.text].filter(Boolean).join('\n');
     if(prompt.length>2000){this.setData({error:'文字要求合计最多2000字，请先缩短输入；转写结果仍保留。'});return;}

@@ -1,3 +1,9 @@
+# Current candidate: 0.4.12
+
+[Editing cache and explicit generation](EDITING-CACHE-0.4.12.md) adds draft timestamps/order, persistent Undo/Redo, journal deletion, blank/idle AI entry and photo-label/native-path fixes. Client296 passes; native retest remains pending. The private repository’s canonical English docs/NEXT-STEPS.md holds current update commands. Earlier sections below are historical.
+
+---
+
 # 27 November: 0.4.11 revision
 
 [Writing and draft revision](WRITING-AND-DRAFTS-0.4.11.md) implements explicit targets/name preservation (R27), prompt reset, captions, deck/filter/rename, multiple draft discovery/recovery, photo subsets and local histories. Native acceptance remains pending; E1/V1 and PNG were not conducted. Preserve all original 48 IDs and prior findings below.
