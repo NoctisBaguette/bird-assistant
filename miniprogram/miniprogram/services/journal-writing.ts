@@ -14,14 +14,15 @@ export function journalHeading(d:JournalDocument){
   return d.elements.find(e=>e.id===d.headingId&&e.type==='text')||d.elements.find(e=>e.type==='text'&&!e.photoId&&!e.flowPosition&&!!e.title);
 }
 export function journalWritingBrief(d:JournalDocument,o:JournalWritingOptions):{input:JournalAiInput;context:JournalWritingContext} {
-  if(!o.prompt.trim())throw new Error('请补充写作要求，再生成建议。');
   if(o.photoIds.length>4)throw new Error('已选择 '+o.photoIds.length+' 张照片，每次最多关联 4 张。请取消多余照片后再生成。');
   const selected=d.elements.find(e=>e.id===o.selectedId&&e.type==='text');
   if(o.destination==='selected'&&!selected)throw new Error('请先选择要改写的文本框，或改为新增文字框。');
   const target=o.destination==='selected'?selected:o.destination==='overview'?journalHeading(d):undefined;
   const photos=o.photoIds.map(id=>d.elements.find(e=>e.id===id&&e.type==='photo'));
   if(photos.some(p=>!p)||new Set(o.photoIds).size!==o.photoIds.length)throw new Error('照片选择已变化，请重新选择。');
-  const prompt=JSON.stringify({instructions:o.prompt.trim(),contentPurpose:o.purpose,
+  const instructions=o.prompt.trim()||(photos.length?'根据所选照片写一小段自然、简短的观鸟记录，只描述可见细节。不猜鸟名、时间、地点、天气、心情或经历，不用诗句或比喻。':o.destination==='selected'&&(selected?.title.trim()||selected?.text.trim())?'把所选文字整理得自然、简洁，保留原意、事实与不确定性。':'');
+  if(!instructions)throw new Error('请补充写作要求、关联照片，或选择已有文字，再生成建议。');
+  const prompt=JSON.stringify({instructions,contentPurpose:o.purpose,
     destination:o.destination==='selected'?'改写所选文本框':o.destination==='overview'?'更新页首概述':'新增独立文字框',
     existingText:target?{title:target.title,body:target.text}:null,
     selectedNotes:photos.map(p=>({id:p!.id,text:d.elements.filter(e=>e.photoId===p!.id).map(e=>e.text).join('\n')})),

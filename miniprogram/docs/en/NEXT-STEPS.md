@@ -1,3 +1,9 @@
+# Current candidate: 0.4.13
+
+[Experience handoff and preserved R40–R45 follow-up requirements](EXPERIENCE-0.4.13.md). User acceptance now covers draft dates, persistent Undo/Redo, abandoning an old Redo branch, deletion and photo labels. Photo-only explicit generation, adaptive shared sheets and composed thumbnails are implemented;307 client checks pass. Native Compile/phone/provider acceptance remain separate. Existing helper stays running. The private repository retains the canonical English update plan. All original48 IDs and R01–R39 remain below.
+
+---
+
 # Current candidate: 0.4.12
 
 [Editing cache and explicit generation](EDITING-CACHE-0.4.12.md) adds draft timestamps/order, persistent Undo/Redo, journal deletion, blank/idle AI entry and photo-label/native-path fixes. Client296 passes; native retest remains pending. The private repository’s canonical English docs/NEXT-STEPS.md holds current update commands. Earlier sections below are historical.

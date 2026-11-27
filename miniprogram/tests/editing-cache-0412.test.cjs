@@ -77,11 +77,24 @@ test('a moved temporary photo updates every journal image consumer, and an Undo-
 });
 
 test('both journal AI entry points stay blank and idle until explicit generation, and AI records restore only a preview',async()=>{
-  environment();let calls=0;ai.installJournalAiTransport({generate:request=>{calls++;return {result:Promise.resolve({version:1,requestId:request.requestId,title:'Preview',body:'Only visible details.',design:{style:'nature',variant:1}}),cancel(){}};}});const {p}=page();p._catalog=assets().map(a=>({...a,sample:false,persisted:true}));await p.generateFromPhotos();assert.equal(p.data.ai,true);assert.equal(p.data.prompt,'');assert.equal(p.data.aiBusy,false);assert.equal(calls,0);await p.prepareAi();assert.equal(calls,0);assert.match(p.data.error,/写作要求/);p.prompt(input('','Write the visible details'));await p.prepareAi();assert.equal(calls,1);const unchanged=m.journalFingerprint(p.data.doc);p.openAiHistory();assert.equal(p.data.aiHistory.length,1);p.restoreAiHistory(tap(p.data.aiHistory[0].id));assert.equal(calls,1);assert.equal(m.journalFingerprint(p.data.doc),unchanged);p.closeAi();p.openAi();assert.equal(p.data.prompt,'');assert.equal(calls,1);
+  environment();let calls=0;ai.installJournalAiTransport({generate:request=>{calls++;return {result:Promise.resolve({version:1,requestId:request.requestId,title:'Preview',body:'Only visible details.',design:{style:'nature',variant:1}}),cancel(){}};}});const {p}=page();p._catalog=assets().map(a=>({...a,sample:false,persisted:true}));await p.generateFromPhotos();assert.equal(p.data.ai,true);assert.equal(p.data.prompt,'');assert.equal(p.data.aiBusy,false);assert.equal(calls,0);await p.prepareAi();assert.equal(calls,1);assert.equal(p.data.prompt,'');assert.equal(p.data.error,'');const unchanged=m.journalFingerprint(p.data.doc);p.openAiHistory();assert.equal(p.data.aiHistory.length,1);p.restoreAiHistory(tap(p.data.aiHistory[0].id));assert.equal(calls,1);assert.equal(m.journalFingerprint(p.data.doc),unchanged);p.closeAi();p.openAi();assert.equal(p.data.prompt,'');assert.equal(calls,1);
 });
 
 test('native-cloned page fields initialize their own Maps/Sets onLoad and failures do not leak across pages',()=>{
   environment();const first=page();assert.equal(first.definition._failedPhotos,null);assert.equal(first.definition._failedCovers,null);open(first.p);const photo=first.p.data.doc.elements.find(e=>e.type==='photo');first.p.imageFailed(tap(photo.id));assert.equal(first.p._failedPhotos.get(photo.id),photo.src);const second=page();assert.equal(second.p._failedPhotos.size,0);const community=page('community');assert.equal(community.definition._failedThumbnails,null);assert.ok(community.p._failedThumbnails instanceof Set);
+});
+
+test('the journal deck projects only nearby composed pages and remembers failed thumbnail paths without changing saved media',()=>{
+  environment();const {p}=page();const documents=Array.from({length:12},(_,i)=>document('Journal '+i));p._documents=documents;p.filterLibrary();
+  assert.equal(Object.keys(p.data.deckPreviews).length,2);assert.ok(p.data.deckPreviews[p.data.libraryRows[0].id].elements.some(e=>e.type==='text'));
+  p.deckChange({detail:{current:5}});assert.equal(Object.keys(p.data.deckPreviews).length,3);
+  const id=p.data.libraryRows[5].id,photo=p.data.deckPreviews[id].elements.find(e=>e.type==='photo'),source=photo.src;
+  p.deckImageFailed({currentTarget:{dataset:{doc:id,id:photo.id}}});assert.equal(p.data.deckPreviews[id].elements.find(e=>e.id===photo.id).src,'');p.projectDeck();assert.equal(p.data.deckPreviews[id].elements.find(e=>e.id===photo.id).src,'');
+  assert.equal(documents.find(d=>d.id===id).elements.find(e=>e.id===photo.id).src,source);
+});
+
+test('the direct editor AI records entry opens this journal history without generating or changing its content',()=>{
+  environment();const {p}=page();open(p);const before=m.journalFingerprint(p.data.doc);p.openAiRecords();assert.equal(p.data.ai,true);assert.equal(p.data.aiHistoryOpen,true);assert.equal(p.data.aiHistory.length,0);assert.equal(p.data.aiBusy,false);assert.equal(m.journalFingerprint(p.data.doc),before);
 });
 
 test('delete requires confirmation, removes only the chosen journal/history and cannot be resurrected by an in-flight save',async()=>{
