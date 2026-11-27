@@ -251,6 +251,51 @@ async def test_authentication_is_enforced() -> None:
         assert wrong.json()["error"]["code"] == "AUTH_INVALID"
 
 
+async def test_shared_mobile_session_can_only_analyse_audio_and_read_its_public_model_route(
+    audio_settings, monkeypatch
+) -> None:
+    from types import SimpleNamespace
+
+    from bird_common import mobile_auth
+
+    shared = "ba" * 32
+    issuer = mobile_auth.MobileAuth(
+        SimpleNamespace(allow_anonymous=False, mobile_signing_key=shared, api_key_set={"business-only"}),
+        ("/api/v1/community",),
+    )
+    token = issuer.issue("wx:test-id:alice")
+    settings = audio_settings.model_copy(
+        update={"allow_anonymous": False, "api_keys": "audio-only", "mobile_signing_key": shared}
+    )
+    app = make_client(settings)
+    headers = {"Authorization": "Bearer " + token}
+    async with (
+        app.router.lifespan_context(app),
+        httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client,
+    ):
+        assert (await client.get("/api/v1/audio/readyz")).status_code == 200
+        assert (await client.get("/api/v1/audio/models")).status_code == 401
+        assert (await client.get("/api/v1/audio/models", headers=headers)).status_code == 200
+        result = await client.post(
+            "/api/v1/audio/analyses",
+            headers=headers,
+            files=audio_file(),
+            data={"client_reference": "recording-a"},
+        )
+        assert result.status_code == 200 and result.json()["client_reference"] == "recording-a"
+        assert (await client.get("/metrics", headers=headers)).status_code == 403
+        assert (await client.get("/api/v1/models", headers=headers)).status_code == 403
+        assert (
+            await client.get("/api/v1/audio/models", headers={"X-API-Key": "business-only"})
+        ).status_code == 401
+        tampered = token[:-1] + ("0" if token[-1] != "0" else "1")
+        assert (
+            await client.get("/api/v1/audio/models", headers={"Authorization": "Bearer " + tampered})
+        ).status_code == 401
+        monkeypatch.setattr(mobile_auth.time, "time", lambda: int(token.split(".")[2]) + 1)
+        assert (await client.get("/api/v1/audio/models", headers=headers)).status_code == 401
+
+
 async def test_request_id_is_echoed(audio_api) -> None:
     _, client = audio_api
     response = await client.get("/healthz", headers={"X-Request-ID": "wx-request-42"})

@@ -11,7 +11,11 @@ api.auroraliu.cn:8080, api.auroraliu.cn {
 	request_body @media {
 		max_size 25MiB
 	}
-	@other not path /api/v1/community/media
+	@audioUpload path /api/v1/audio/analyses
+	request_body @audioUpload {
+		max_size 11MiB
+	}
+	@other not path /api/v1/community/media /api/v1/audio/analyses
 	request_body @other {
 		max_size 7MB
 	}
@@ -22,6 +26,10 @@ api.auroraliu.cn:8080, api.auroraliu.cn {
 	@business path /api/v1/journal/* /api/v1/vision/auth/wechat /api/v1/observations /api/v1/observations/* /api/v1/community/* /api/v1/species /api/v1/species/* /api/v1/map/* /api/v2/observations /api/v2/observations/*
 	handle @business {
 		reverse_proxy 127.0.0.1:8200
+	}
+	@audio path /api/v1/audio/analyses /api/v1/audio/models /api/v1/audio/readyz
+	handle @audio {
+		reverse_proxy 127.0.0.1:8201
 	}
 	@ready path /readyz /api/v1/vision/readyz
 	handle @ready {

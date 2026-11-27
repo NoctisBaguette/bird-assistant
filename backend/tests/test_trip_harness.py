@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from io import BytesIO
 from urllib.error import HTTPError
 
@@ -51,6 +51,52 @@ def final(**changes):
         "stages": [{"offsetMinutes": 10, "action": "在步道上安静观察"}],
     }
     return {"content": json.dumps({**plan, **changes}), "usage": {"total_tokens": 42}}
+
+
+def test_trip_request_collects_public_community_experience_and_returns_its_original_post(
+    advisor, monkeypatch
+):
+    from bird_business.community_store import encode
+
+    client, (owner, _), body = advisor
+    database = client.app.state.community
+    created = datetime.now(BEIJING).astimezone(UTC).isoformat()
+    observed = (datetime.now(BEIJING).date() - timedelta(days=2)).isoformat()
+    with database.transaction() as db:
+        species = db.execute("SELECT id FROM taxa WHERE sensitive=0 LIMIT 1").fetchone()[0]
+        for key, channel in [("map-proof", "map"), ("forum-experience", "post")]:
+            db.execute(
+                "INSERT INTO publications VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+                (
+                    key,
+                    "writer",
+                    key,
+                    channel,
+                    "shared-sighting",
+                    "approved",
+                    encode({"placeName": "北京", "body": "公共岸线安静观察的经验。", "title": "冬日观察"}),
+                    species,
+                    39.9,
+                    116.4,
+                    observed,
+                    created,
+                ),
+            )
+
+    def chat(_settings, payload, _timeout):
+        initial = json.loads(payload["messages"][-1]["content"])
+        discussion = initial["evidence"]["community"]["items"][0]
+        assert discussion["record"] == "forum-experience" and discussion["observed"] == observed
+        assert discussion["point"] == {"latitude": 39.9, "longitude": 116.4}
+        return final(destinations=["A1"], sources=["A1", "D1", "W0"])
+
+    monkeypatch.setattr(trip_harness, "cloud_chat", chat)
+    response = client.post(ROUTE, headers=owner, json=body)
+    assert response.status_code == 200
+    assert response.json()["communityCards"][0]["record"] == "forum-experience"
+    assert (
+        next(row for row in response.json()["sources"] if row["id"] == "D1")["record"] == "forum-experience"
+    )
 
 
 def test_structured_brief_is_validated_and_keeps_evidence_cards(advisor, monkeypatch):

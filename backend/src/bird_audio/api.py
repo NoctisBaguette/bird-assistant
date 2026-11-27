@@ -129,6 +129,7 @@ def _runtime_status(request: Request) -> ModelStatusResponse:
     )
 
 
+@router.get("/api/v1/audio/readyz", response_model=ReadyResponse, tags=["operations"])
 @router.get("/readyz", response_model=ReadyResponse, tags=["operations"])
 async def readiness(request: Request) -> Response:
     settings: AudioSettings = request.app.state.settings
@@ -173,6 +174,7 @@ def policy_payload(settings: AudioSettings, *, required_windows: int | None = No
     }
 
 
+@router.get("/api/v1/audio/models", response_model=ModelListResponse, tags=["models"])
 @router.get("/api/v1/models", response_model=ModelListResponse, tags=["models"])
 async def list_models(
     request: Request, _: Annotated[Principal, Depends(require_principal)]

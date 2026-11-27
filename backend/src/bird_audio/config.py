@@ -66,6 +66,7 @@ class AudioSettings(BaseSettings):
     include_diagnostics: bool = True
 
     api_keys: str = ""
+    mobile_signing_key: str = Field(default="", pattern=r"^(?:|[a-f0-9]{64})$")
     allow_anonymous: bool = True
     cors_origins: str = ""
 

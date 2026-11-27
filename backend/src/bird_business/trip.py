@@ -13,6 +13,7 @@ from bird_business.community import DB, Member, limited, taxon
 from bird_business.community_geo import distance_km as distance
 from bird_business.community_store import now
 from bird_business.trip_advice import BEIJING
+from bird_business.trip_discussions import nearby_discussions
 from bird_business.trip_evidence import TripEvidence
 from bird_business.trip_harness import dump, run_harness
 from bird_business.trip_parks import park_points
@@ -159,7 +160,7 @@ def reserve(db, owner, body, current, settings):
     return turn, history, None
 
 
-def collect(database, body, history, current, start):
+def collect(database, body, history, current, start, owner=""):
     point = {"latitude": round(body.latitude, 1), "longitude": round(body.longitude, 1)}
     with database.transaction() as db:
         focus = requested_taxon(db, body, history)
@@ -181,7 +182,9 @@ def collect(database, body, history, current, start):
         )
     )
     parks = parks[:4]
-    evidence = TripEvidence(database, point, start, body.hours, selection, parks)
+    with database.transaction() as db:
+        discussions = nearby_discussions(db, selection, current, owner)
+    evidence = TripEvidence(database, point, start, body.hours, selection, parks, discussions)
     for name in dict.fromkeys(
         [
             focus.get("name") or focus.get("english") or "",
@@ -222,7 +225,7 @@ def trip_plan(body: Trip, request: Request, database: DB, owner: Member):
             metrics.trip_runs.labels("cached").inc()
             return cached
         deadline = monotonic() + 48
-        context, evidence = collect(database, body, history, current, start)
+        context, evidence = collect(database, body, history, current, start, owner)
         answer, trace = run_harness(settings, context, history, evidence, deadline)
         response = {
             **evidence.render(answer),

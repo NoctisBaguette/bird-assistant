@@ -45,6 +45,8 @@ class BusinessSettings(BaseSettings):
     qwen_model: str = Field(default="qwen3-vl-plus", pattern=r"^[a-zA-Z0-9_.-]{1,80}$")
     qwen_text_model: str = Field(default="qwen-plus", pattern=r"^[a-zA-Z0-9_.-]{1,80}$")
     qwen_daily_requests: int = Field(default=20, ge=1, le=100)
+    asr_enabled: bool = False
+    asr_model: str = Field(default="qwen3-asr-flash", pattern=r"^qwen3-asr-flash(?:-\d{4}-\d{2}-\d{2})?$")
     allow_anonymous: bool = True
     cors_origins: str = ""
 
@@ -58,6 +60,17 @@ class BusinessSettings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_runtime_contract(self) -> BusinessSettings:
+        # Planning and writing share the existing Mainland Qwen account. Keep
+        # explicit per-feature overrides, but a legacy trip-only deployment
+        # must not silently leave the journal without a credential/workspace.
+        if not self.qwen_api_key.get_secret_value():
+            self.qwen_api_key = self.trip_api_key
+        if not self.trip_api_key.get_secret_value():
+            self.trip_api_key = self.qwen_api_key
+        if self.trip_workspace and "qwen_base_url" not in self.model_fields_set:
+            self.qwen_base_url = (
+                f"https://{self.trip_workspace}.cn-beijing.maas.aliyuncs.com/compatible-mode/v1"
+            )
         if self.default_page_size > self.max_page_size:
             raise ValueError("default_page_size cannot exceed max_page_size")
         if self.environment == "production":

@@ -43,6 +43,12 @@ VARIANTS = [
         "WeChat aac low rate",
     ),
     ("wav_48k_mono", ["-ar", "48000", "-ac", "1", "-c:a", "pcm_s16le"], "wav", "WeChat wav"),
+    (
+        "m4a_44k_mono",
+        ["-ar", "44100", "-ac", "1", "-c:a", "aac", "-b:a", "96k", "-f", "ipod"],
+        "m4a",
+        "AAC in an M4A container",
+    ),
 ]
 SHORT_VARIANT_SECONDS = 2.0
 
