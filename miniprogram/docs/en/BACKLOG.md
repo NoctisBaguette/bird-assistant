@@ -1,3 +1,56 @@
+# Current candidate — 0.4.20 dates and original-data backup
+
+28 November2026, Beijing time. The user chose **keep server work paused; add backup/restore now**. This patch extends0.4.19 on the same candidate branch.0.4.18 remains the user-reported uploaded experience version, frozen in `release/experience-0.4.18`; team PR#30 is unchanged. No server deployment, CloudBase activation or new experience upload happened.
+
+New-journal/home/filter date buttons now share a horizontal layout; solid green map bookmarks have a white border. Saved places and journal records have verified alternating user-file snapshots, independent of disposable preview/reference caches. **My → 本机备份与恢复** exports all saved places plus selected journals with original photos, including retained Undo/Redo-only photos. Restore verifies/stages everything, preserves current records and creates conflict copies.
+
+**A full WeChat data clear can still remove all local files. Download/save the generated backup outside WeChat first.** Generating it in the mini-program or returning from file sharing alone is insufficient. Previously erased content without a prior copy cannot be reconstructed. [Backup steps and boundaries](CACHE-SAFETY-0.4.20.md).
+
+**458 client tests pass;24 WXML/26 WXSS compile.240 focused source layout cases across30 sizes pass.** Native file permissions/share/picker, real-device restore and full DevTools Compile remain pending. This is a candidate for review, not an upload instruction.
+
+
+## Follow-up IDs
+
+| ID | Work | State |
+| --- | --- | --- |
+| R105 | Shared horizontal journal date controls | Source/30-size geometry passed; native acceptance pending |
+| R106 | Solid green bookmark with white outline | SVG/PNG updated; native map acceptance pending |
+| R107 | Protected originals separated from disposable caches | Behavioral tests passed; native filesystem acceptance pending |
+| R108 | Portable original-photo backup and merge restore |12 recovery/failure tests passed; native file handoff pending |
+
+---
+
+# Current candidate — 0.4.19 community and personal notes
+
+28 November 2026, Beijing time. **0.4.18 remains the user-reported uploaded experience version.** Its runtime and accepted comments are frozen in `release/experience-0.4.18`; [team PR #30](https://github.com/bird-assistant/bird-assistant/pull/30) is ready for review, with passing checks, and still needs the repository's required teammate approval before merge.
+
+The new candidate uses the existing private candidate branch `fix/recognition-acceptance-0.4.7`; the full source is separate on `feat/community-workbench-0.4.19`. [What to review](COMMUNITY-WORKBENCH-0.4.19.md) · [social/media decisions](SOCIAL-CLIENT-0.4.19.md) · [offline interaction design](../design/social-controls-0419.html).
+
+New work: title-preserving cloud-scroll/bird scene and outward-only armed wave; real local field memos with autosave/search/pin/recoverable trash; per-account DM/reply drafts and safe late acknowledgements; friend-handle entry, local conversation controls and group member drawer; explicit public-post forwarding into an existing friend/group; folded reply groups; full served catalogue pagination, personal guide shelf, external gallery/date views; bounded public-photo cache and clearer growth display.
+
+**446 client tests pass, zero failed/skipped;23 WXML/25 WXSS compile.** Native touch/FPS/permissions and two-account service checks remain to be accepted. The source-layout evidence is in the revision document. The standalone advanced-group/image-reply prototype is clearly demo-only and makes no network requests.
+
+## Revision0.4.19 follow-up IDs
+
+| ID | Work | State |
+| --- | --- | --- |
+| R91 | Freeze uploaded0.4.18 and prepare team handoff | Frozen; PR30 ready; required teammate review pending |
+| R92 | Cloud scene below the journal title | Client implemented; native motion acceptance pending |
+| R93 | Outward armed wave without constant green ring | Client implemented; native motion acceptance pending |
+| R94 | Local personal field memos | Client tested; device acceptance pending |
+| R95 | Account-scoped DM drafts and conversation controls | Client tested; service integration pending |
+| R96 | Friend handle entry and group member drawer | Existing contract wired; two-account acceptance pending |
+| R97 | Explicit public-post forwarding to friend/group | Client tested; service integration pending |
+| R98 | Folded reply chains and durable reply drafts | Client tested; threaded service acceptance pending |
+| R99 | Library hierarchy, full served pagination and local shelf | Client tested; native/service acceptance pending |
+| R100 | External gallery/date view and page-scoped filters | Client tested; native/service acceptance pending |
+| R101 | Bounded anonymous guide-photo cache | Client tested; device filesystem acceptance pending |
+| R102 | Truthful profile growth presentation | Existing contract wired; service acceptance pending |
+| R103 | Advanced group roles, image replies and media lifecycle | Offline prototype/design; backend contracts deferred |
+| R104 | Server restoration and CloudBase activation | Explicitly deferred this pass; earlier inactive preparation retained |
+
+---
+
 #0.4.18 experience checkpoint — frozen for team review
 
 The user reports uploading the current experience version. [Handoff and accepted feedback](EXPERIENCE-0.4.18-HANDOFF.md). Further work uses a separate branch; older not-uploaded statements below are pre-upload history.
