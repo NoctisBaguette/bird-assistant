@@ -46,7 +46,8 @@ def available_posts(db, owner, layout):
 def read_showcase(db, owner):
     row = db.execute(
         "SELECT layout,expires,version FROM profile_showcases LEFT JOIN profile_covers USING(member) "
-        "WHERE member=?", (owner,),
+        "WHERE member=?",
+        (owner,),
     ).fetchone()
     layout = Showcase.model_validate_json(row[0]) if row else Showcase()
     if row:
@@ -62,7 +63,8 @@ def read_showcase(db, owner):
         "items": [posts[key] for key in layout.works],
         "coverImage": (
             f"{ROOT}/members/{owner}/cover/{layout.coverPhoto}"
-            if layout.coverPhoto else posts.get(layout.cover, {}).get("image", "")
+            if layout.coverPhoto
+            else posts.get(layout.cover, {}).get("image", "")
         ),
     }
 

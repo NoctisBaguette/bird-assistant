@@ -5,6 +5,8 @@ import {ConversationKind,conversationPrefs,saveConversationPrefs,localInbox,loca
 import {beijingDateTime} from '../../services/observation-context';
 import {businessOrigin,connectBusiness} from '../../services/vision-network';
 import {loadPresentation} from '../../services/profile-showcase';
+import {layout} from '../../services/layout';
+import {conversationViewport,nearConversationEnd} from '../../services/conversation-layout';
 
 type Tap = WechatMiniprogram.TouchEvent;
 type Input = WechatMiniprogram.CustomEvent<{value:string}>;
@@ -29,7 +31,7 @@ function merged(history:ChatLine[], incoming:ChatLine[]) {
 
 Page({
   sheetDragStart(event:Tap){beginSheetDrag(this,event);},sheetDragMove(event:Tap){moveSheetDrag(this,event);},sheetDragEnd(){endSheetDrag(this);},sheetDragCancel(){resetSheetDrag(this);},
-  data:{memberTab:'posts',relationshipMenu:false,settingsOpen:false,sheetDragStyle:'',sheetHeights:{} as Record<string,number>,localError:'',showHidden:false,aliasDraft:'',memberQuery:'',visibleMembers:[] as Card[],prefs:{alias:'',pinned:false,quiet:false},forwardShare:null as PublicShare|null,forwardTarget:null as {id:string;name:string;kind:ConversationKind}|null,forwardReceipt:'',friendTab:'accepted',pageTitle:'社区账号',screen:'account',id:'',self:'',active:false,ready:false,working:false,editing:false,error:'',
+  data:{chatTop:88,chatHeight:0,keyboardOpen:false,messageAnchor:'',newMessages:0,memberTab:'posts',relationshipMenu:false,settingsOpen:false,sheetDragStyle:'',sheetHeights:{} as Record<string,number>,localError:'',showHidden:false,aliasDraft:'',memberQuery:'',visibleMembers:[] as Card[],prefs:{alias:'',pinned:false,quiet:false},forwardShare:null as PublicShare|null,forwardTarget:null as {id:string;name:string;kind:ConversationKind}|null,forwardReceipt:'',friendTab:'accepted',pageTitle:'社区账号',screen:'account',id:'',self:'',active:false,ready:false,working:false,editing:false,error:'',
     registered:false,form:{...defaults},account:null as (Card & typeof defaults)|null,
     avatars:['owl','finch','leaf','mountain','water','letter'],visibilities:['private','friends','public'],
     visibilityNames:['仅自己','好友','公开'], term:'', searched:false, matches:[] as Card[],friends:[] as Friend[],
@@ -38,27 +40,58 @@ Page({
     member:null as any, lines:[] as ChatLine[], earlier:false, text:'',groupName:'', invitees:[] as Friend[]},
   _rawInbox:null as any[]|null,_rawActivity:null as any[]|null,_sessionSeen:0,_draftOwner:'',_draftRevision:0,_draftTimer:0,
   _timer:0,_generation:0,_operation:0,_pending:false,_visible:false,_reference:'',_groupReference:'',_seen:'',
+  _keyboardListener:null as ((event:{height:number})=>void)|null,_keyboardHeight:0,_baselineHeight:0,_messageHeight:0,_followMessages:true,
   onLoad(options:Record<string,string|undefined>){
     this._sessionSeen=sessionRevision();this._rawInbox=[];this._rawActivity=[];installAdaptiveSheets(this,()=>this.data.settingsOpen);
     this._openEdit=options.screen==='account' && options.edit==='1';
     const screen=options.screen && screens[options.screen]?options.screen:'account';
     this.setData({screen,id:options.id || '',pageTitle:screens[screen],friendTab:['accepted','incoming','outgoing'].includes(options.tab||'')?options.tab!:'accepted'});
+    if(screen==='chat'||screen==='group'){
+      this._keyboardListener=event=>{if(!this._visible)return;this._keyboardHeight=Math.max(0,event.height||0);this.resizeChat();if(this._followMessages)this.latestMessages();};
+      wx.onKeyboardHeightChange?.(this._keyboardListener);
+    }
     wx.setNavigationBarTitle({title:screens[screen]});
   },
   _openEdit:false,
   onShow(){
     clearInterval(this._timer);this._visible=true;
+    this._keyboardHeight=0;this.resizeChat();
     if(sessionState()==='active')void this.start();
     else this.clearPrivate();
     if(['inbox','chat','group','groups','friends'].includes(this.data.screen)){
-      this._timer=setInterval(()=>{if(this.data.registered && !this.data.working)void this.refresh();},10000);
+      this._timer=setInterval(()=>{if(this.data.registered && !this.data.working)void this.refresh();},['chat','group'].includes(this.data.screen)?5000:10000);
     }
   },
-  onHide(){this.saveDraft();this.stop();},onUnload(){this.saveDraft();this.stop();stopAdaptiveSheets(this);},
+  onReady(){this.resizeChat();},onResize(){this.resizeChat();},
+  onHide(){this.saveDraft();this.stop();},onUnload(){this.saveDraft();this.stop();if(this._keyboardListener)wx.offKeyboardHeightChange?.(this._keyboardListener);this._keyboardListener=null;stopAdaptiveSheets(this);},
+  resizeChat(){
+    if(!['chat','group'].includes(this.data.screen)||typeof wx.getWindowInfo!=='function')return;
+    const info=wx.getWindowInfo(),frame=layout(true);
+    if(!this._keyboardHeight||!this._baselineHeight)this._baselineHeight=info.windowHeight;
+    const viewport=conversationViewport(info.windowHeight,this._baselineHeight,frame.headerHeight,this._keyboardHeight);
+    this.setData({chatTop:frame.headerHeight,chatHeight:viewport.height,keyboardOpen:viewport.keyboardOpen},()=>this.measureMessages());
+  },
+  measureMessages(){
+    if(!wx.createSelectorQuery)return;
+    wx.createSelectorQuery().select('.chat-messages').boundingClientRect((rect:any)=>{if(rect?.height)this._messageHeight=rect.height;}).exec();
+  },
+  messageScrolled(event:WechatMiniprogram.CustomEvent<{scrollTop:number;scrollHeight:number}>){
+    this._followMessages=nearConversationEnd(event.detail.scrollTop,event.detail.scrollHeight,this._messageHeight||Math.max(0,this.data.chatHeight-140));
+    if(this._followMessages&&this.data.newMessages)this.setData({newMessages:0});
+  },
+  latestMessages(){this._followMessages=true;this.setData({messageAnchor:this.data.messageAnchor==='message-end-a'?'message-end-b':'message-end-a',newMessages:0});},
+  messageActions(event:Tap){
+    const line=this.data.lines.find(item=>item.id===event.currentTarget.dataset.id);if(!line)return;
+    wx.showActionSheet({itemList:line.sender===this.data.self?['复制']:['复制','举报'],success:result=>{
+      if(result.tapIndex===0)wx.setClipboardData({data:readPublicShare(line.body)?.title||line.body});
+      else void this.mutate({currentTarget:{dataset:{op:'report',id:line.id}}} as unknown as Tap);
+    }});
+  },
   stop(){clearTimeout(this._draftTimer);resetSheetDrag(this);this.setData({settingsOpen:false});this._visible=false;this._generation++;this._operation++;this._pending=false;clearInterval(this._timer);this.setData({working:false});},
   onPullDownRefresh(){if(this.data.settingsOpen){wx.stopPullDownRefresh();return;}void this.start().finally(()=>wx.stopPullDownRefresh());},
   clearPrivate(){clearTimeout(this._draftTimer);this._draftOwner='';this._rawInbox=[];this._rawActivity=[];this._generation++;this._operation++;this._pending=false;this._reference='';this._groupReference='';this._seen='';
-    this.setData({active:false,ready:true,working:false,registered:false,self:'',account:null,editing:false,form:{...defaults},
+    this._followMessages=true;this._messageHeight=0;
+    this.setData({messageAnchor:'',newMessages:0,keyboardOpen:false,active:false,ready:true,working:false,registered:false,self:'',account:null,editing:false,form:{...defaults},
       friends:[],incoming:[],outgoing:[],accepted:[],matches:[],blocked:[],inbox:[],activity:[],identifications:[],groups:[],invites:[],
       settingsOpen:false,prefs:{alias:'',pinned:false,quiet:false},aliasDraft:'',memberQuery:'',showHidden:false,localError:'',forwardShare:null,forwardTarget:null,forwardReceipt:'',visibleMembers:[],member:null,memberTab:'posts',relationshipMenu:false,group:null,invitees:[],lines:[],earlier:false,text:'',groupName:'',term:'',searched:false,error:''});},
   async start(){
@@ -97,7 +130,8 @@ Page({
   copyHandle(){const handle=this.data.account?.handle;if(handle)wx.setClipboardData({data:handle,fail:()=>this.setData({localError:'鸟友号未能复制，请重试。'})});},
   friendRequests(){wx.navigateTo({url:'/field/social/index?screen=friends&tab=incoming'});},
   selectMemberTab(event:Tap){
-    this.setData({memberTab:event.currentTarget.dataset.tab==='bookmarks' && this.data.member?.showBookmarks ? 'bookmarks' : 'posts'});
+    const tab=event.currentTarget.dataset.tab;
+    this.setData({memberTab:tab==='map'?'map':tab==='bookmarks'&&this.data.member?.showBookmarks?'bookmarks':'posts'});
   },
   toggleRelationshipMenu(){this.setData({relationshipMenu:!this.data.relationshipMenu});},
   back(){wx.navigateBack({fail:()=>wx.switchTab({url:'/pages/community/index'})});},
@@ -129,9 +163,11 @@ Page({
           if(!valid())return;
           const withPhoto=(item:{image?:string})=>({...item,thumb:imageUrl(item.image)});
           member.posts=(member.posts || []).map(withPhoto);
+          member.mapAvailable=Array.isArray(member.mapRecords);
+          member.mapRecords=(member.mapRecords || []).map(withPhoto);
           member.bookmarks=member.showBookmarks ? (member.bookmarks || []).map(withPhoto) : [];
         }
-        this.setData({member,memberTab:member.showBookmarks ? this.data.memberTab : 'posts'});
+        this.setData({member,memberTab:this.data.memberTab==='bookmarks'&&!member.showBookmarks?'posts':this.data.memberTab});
         if(screen==='chat'){wx.setNavigationBarTitle({title:member.profile.nickname});this.setData({pageTitle:member.profile.nickname});}
       }
       if(screen==='inbox'||screen==='groups'||screen==='forward'){
@@ -151,7 +187,12 @@ Page({
         const path=(screen==='chat'?'/messages/':'/groups/')+peer;
         const result=await call(path+cursor);if(!valid())return;
         const incoming:ChatLine[]=result.items;
-        this.setData({lines:merged(history,incoming),earlier:older||!history.length?incoming.length===60:this.data.earlier});
+        const lines=merged(history,incoming),known=new Set(history.map(line=>line.id));
+        const added=incoming.filter(line=>!known.has(line.id)&&line.sender!==this.data.self).length;
+        const follow=!older&&(!history.length||this._followMessages);
+        const changed=incoming.some(line=>!known.has(line.id));
+        const anchor=older&&history.length?'message-'+history[0].id:follow&&changed?(this.data.messageAnchor==='message-end-a'?'message-end-b':'message-end-a'):this.data.messageAnchor;
+        this.setData({lines,messageAnchor:anchor,newMessages:follow?0:this.data.newMessages+(older?0:added),earlier:older||!history.length?incoming.length===60:this.data.earlier},()=>this.measureMessages());
         if(screen==='group'){
           const members=new Set(result.members.map((member:Card)=>member.id));
           this.setData({group:result,invitees:this.data.accepted.filter(friend=>!members.has(friend.id))});this.projectMembers();
@@ -159,7 +200,7 @@ Page({
         }
         const received=incoming.filter(line=>line.sender!==this.data.self);
         const last=received[received.length-1];
-        if(!older && last && this._seen!==last.id){await call(path+'/read/'+encoded(last.id),'PUT');if(valid())this._seen=last.id;}
+        if(!older && this._followMessages && last && this._seen!==last.id){await call(path+'/read/'+encoded(last.id),'PUT');if(valid())this._seen=last.id;}
       }
     }catch(error){if(valid()){this.setData({error:explain(error)});}}
     finally{if(valid())this._pending=false;}
@@ -231,5 +272,5 @@ Page({
     await this.run(async current=>{if(!this._reference)this._reference=key();const reference=this._reference;
       const path=this.data.screen==='group'?'/groups/'+encoded(this.data.id)+'/messages':'/messages/'+encoded(this.data.id);
       await call(path,'POST',{body,reference});if(!current())return;
-      if(this._reference===reference)this._reference='';if(this.data.text===draft)this.setData({text:''});this.saveDraft();await this.refresh();});}
+      if(this._reference===reference)this._reference='';if(this.data.text===draft)this.setData({text:''});this._followMessages=true;this.saveDraft();await this.refresh();});}
 });

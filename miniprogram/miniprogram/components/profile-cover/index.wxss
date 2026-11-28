@@ -1,13 +1,13 @@
 :host{display:block}
-.identity-card{overflow:hidden;border-radius:22px;background:#fffef9;border:1px solid #dae4d9;box-shadow:0 5px 14px rgba(43,63,46,.06)}
+.identity-card{overflow:hidden;border-radius:22px;background:#ffffff;border:0;box-shadow:0 5px 14px rgba(43,63,46,.06)}
 .landscape{position:relative;height:clamp(130px,35vw,186px);overflow:hidden;background:#455f4a}
 .cover-photo,.cover-shade{position:absolute;left:0;top:0;width:100%;height:100%}
 .cover-shade{background:linear-gradient(180deg,rgba(13,39,29,.16),transparent 44%,rgba(10,30,20,.2))}
 .cover-control,.edit-control{box-sizing:border-box;margin:0;width:auto;min-height:36px;line-height:1.2;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;border-radius:24px;padding:0 14px}
 .cover-control::after,.edit-control::after{border:0}.cover-control{position:absolute;right:12px;top:12px;background:rgba(23,44,35,.78);color:white}
 .identity-body{padding:0 18px 17px}.identity-top{position:relative;display:flex;align-items:flex-end;justify-content:space-between;margin-top:-34px;margin-bottom:8px}
-.portrait{display:flex;border-radius:50%;padding:4px;background:#fffef9;box-shadow:0 2px 5px rgba(33,53,39,.14)}
-.edit-control{color:#285b49;background:#edf3ea;margin-bottom:1px}.identity-name{font-size:25px;font-weight:650;color:#213e31;line-height:1.25;overflow-wrap:anywhere}
+.portrait{display:flex;border-radius:50%;padding:4px;background:#ffffff;box-shadow:0 2px 5px rgba(33,53,39,.14)}
+.edit-control{color:#23664f;background:#edf3ea;margin-bottom:1px}.identity-name{font-size:24px;font-weight:600;color:#213e31;line-height:1.25;overflow-wrap:anywhere}
 .identity-sub{color:#546d60;font-size:12px;margin-top:4px;overflow-wrap:anywhere}.identity-bio{color:#344b40;font-size:14px;line-height:1.6;margin-top:10px;white-space:pre-wrap;overflow-wrap:anywhere}
 .pressed{opacity:.82;transform:scale(.97)}
 .identity-card{--accent:#315d41;--tint:#e6efe3}.theme-lake{--accent:#245971;--tint:#e1eef4}.theme-sunset{--accent:#874b37;--tint:#f7e9df}

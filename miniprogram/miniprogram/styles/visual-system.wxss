@@ -1,0 +1,21 @@
+/* Light mode: white content, jade actions, neutral readable supporting text. */
+.title,.subhead .title,.notes-title,.chat-name,.explore-hero>view,.trip-hero-title,.hero-title{font-family:inherit;font-weight:600;letter-spacing:0}
+.eyebrow,.library-eyebrow,.explore-kicker{display:none}
+.subtitle,.muted,.tiny,.record-note,.note{color:#596c62}
+.tiny{font-size:12px;line-height:1.65}.muted{font-size:13px}.label{font-size:14px;margin:20px 0 8px}
+.section-title{font-size:18px;line-height:1.4}.strong{font-weight:600}
+.record-count,.profile-stats,.stats,.number-input,.calendar-month,.calendar-day,.library-dates,.editor-count{font-variant-numeric:tabular-nums}
+.note{background:#eaf2ee;border:0;font-size:13px;padding:12px 14px;line-height:1.65}.note.error,.error{background:#fcf0eb;color:#914833}
+.empty{border:0;background:transparent;color:#596c62;font-size:14px;line-height:1.7}
+button.quiet{background:#edf2ef;color:#345849;border-color:transparent}
+.segments{background:#e8eeea;border:0;padding:4px;gap:4px}.segments button{color:#52665b}.segments .on{color:#204f3c;background:#fff;box-shadow:0 2px 6px #203c3010}
+.select-field{border-color:transparent;background:#edf2ef;min-height:46px}
+.number-field{background:#edf2ef;border-color:transparent}
+.menu-row{border-color:#e5ebe7;font-size:15px;line-height:1.45}.menu-row .end{color:#596c62;font-size:13px}
+.text-button{font-size:13px;line-height:1.5}.small-button{font-size:13px;line-height:1.4}
+.sheet-frame .sheet-header-fixed{background:#fff}.sheet-header-fixed .icon-button{width:40px;height:40px;border-radius:50%;background:#edf2ef;padding:10px}
+.sheet-frame{border-radius:24px 24px 0 0;background:#fff}.sheet-header-fixed .section-title{font-size:19px;line-height:1.4}
+.sheet-header-fixed .handle,.dialog-grip{background:#c3d1c9}
+.ai-button{background:#e8f1ed;border-color:transparent;color:#23664f;box-shadow:none}
+.button-hover{opacity:.82}.resume-name{font-weight:600;font-style:italic}
+@media(max-width:340px){.page{padding-left:14px;padding-right:14px}.title{font-size:24px}.section-title{font-size:17px}}

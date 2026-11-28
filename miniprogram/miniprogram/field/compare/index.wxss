@@ -20,15 +20,15 @@
 
 .one-column{justify-content:center}
 
-.column{flex:none;min-width:0;padding:12px;border:1px solid #dce5d7;border-radius:16px;background:#fffef9;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden}
+.column{flex:none;min-width:0;padding:12px;border:1px solid #e3eae6;border-radius:16px;background:#ffffff;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden}
 
 .column-actions{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:12px}
 
 .choose-bird,.bird-detail,.remove-bird{width:100%;min-height:40px;min-width:0;margin:0;display:flex;align-items:center;justify-content:center;padding:8px;font-size:12px;line-height:1.5;box-sizing:border-box}
 
-.bird-detail{background:#edf3e7;border:1px solid #d7e2d2;color:#285b49}
+.bird-detail{background:#eaf2ee;border:1px solid #d7e2d2;color:#23664f}
 
-.choose-bird{background:#285b49;color:white}
+.choose-bird{background:#23664f;color:white}
 
 .remove-bird{background:transparent;color:#85917d;border:0}
 

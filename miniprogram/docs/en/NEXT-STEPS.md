@@ -1,3 +1,44 @@
+# Current candidate: 0.4.23 — green/white visual rework
+
+29 November 2026 (Beijing). Continue on `feat/visual-system-0.4.23`. Team main `ed907d93e5096ab8774d0f3289ef10ecf4d24818` already merged PR #31 at 21:43 on 28 November and includes the teammate's profile, custom-cover and admin additions. This candidate is based on that main; the older delivery sections below are history. Keep the frozen 0.4.20 experience baseline intact.
+
+[Changes, source projections and device checklist](VISUAL-SYSTEM-0.4.23.md).
+
+- Implemented B as the white/green default, system sans-serif type and shared spacing. Optional E dark mode remains deferred. Existing map and journal animations stay.
+- Reworked bounded chat/keyboard/composer, scroll-preserving polling, post action alignment, notes and identification review/publication. Chat is still polling; push, rich-media messages and full group administration are not claimed.
+- Added a privacy-safe author map tab and backend query. The source change requires maintainer deployment; accepting friendship does not publish private observations. Check two accounts with the same AppID/service and map bounds.
+- Vision readiness and community capabilities respond; journal writing capabilities return404. Actual authenticated inference, Dongniao fallback and Qwen writing remain to be verified. No deployment, paid call or CloudBase activation was performed.
+- Client501 tests, 28 WXML/31 WXSS; backend28 community tests;684 source-layout projections. These do not replace native WeChat/phone acceptance.
+
+Update the existing Windows checkout without deleting configuration or data:
+
+```powershell
+cd C:\Workspace\bird-assistant
+git status --short
+git fetch origin
+git switch feat/visual-system-0.4.23
+git pull --ff-only
+npm ci --ignore-scripts
+npm run setup
+npm run verify
+```
+
+For the team source checkout, run npm commands inside `miniprogram` and open that directory in WeChat DevTools. Keep AppID/private config and current local data; do not use `git clean` or clear WeChat storage. Full Compile, iPhone/Huawei keyboard checks, the identification-to-publication flow and two-account map privacy are the remaining release gates. R124–R130 track this revision; all earlier backlog items remain below.
+
+---
+
+
+## R124–R130 — 0.4.23 review queue
+
+| ID | Status | Work and remaining acceptance |
+| --- | --- | --- |
+| R124 | Implemented; device review | Green/white B visual system, system typography, spacing and contrast; E dark theme deferred |
+| R125 | Implemented; phone review | Bounded conversation history/composer, keyboard geometry, scroll-preserving polling and long-press actions; push/rich-media remain future work |
+| R126 | Implemented; native review | Identification review/import/publication hierarchy and privacy disclosure; validate authenticated end-to-end flow |
+| R127 | Implemented; native review | Post reaction alignment, share gaps, reply fields and notes hierarchy |
+| R128 | Source complete; deployment pending | Privacy-safe named public map records on member profiles; two-account approval/anonymity/withdrawal/block cases |
+| R129 | Partly observed | Community capabilities and vision readiness200; journal capabilities404; real Dongniao/Qwen execution unverified |
+| R130 | Source checks complete; devices pending | 684 geometry projections; native narrow-phone/tablet, keyboard and large-font acceptance remains |
 # Current review candidate: 0.4.22 — capture windows and phone layouts
 
 28 November 2026. Continue on **`feat/capture-and-layout-0.4.22`** in both owned repositories. It includes all 0.4.21 work. The frozen **`release/experience-0.4.20`** and team PR #30 are preserved; this is a review candidate, not a console upload. Follow this section; the earlier sections below are retained for traceability.

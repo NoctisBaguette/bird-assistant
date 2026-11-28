@@ -366,7 +366,9 @@ def test_album_cover_is_saved_atomically_and_respects_profile_access(field):
         image = BytesIO()
         Image.new("RGB", (40, 30), color).save(image, "PNG")
         return client.post(
-            endpoint + "/cover", headers=author, files={"file": ("bird.png", image.getvalue())},
+            endpoint + "/cover",
+            headers=author,
+            files={"file": ("bird.png", image.getvalue())},
             data={"layout": json.dumps(layout or {"tags": ["湿地观鸟"]})},
         )
 
@@ -1003,3 +1005,60 @@ def test_map_clusters_distinguish_the_owners_private_records_without_exposing_th
     ]
     assert other["total"] == 1
     assert all(group["visibility"] == "public" for group in other["clusters"])
+
+
+def test_profile_map_records_never_turn_friendship_into_private_location_access(field):
+    client, (author, reader, _), staff, _store = field
+    for who, handle in [(author, "map_author"), (reader, "map_reader")]:
+        assert client.put(
+            ROOT + "/account", headers=who, json={"nickname": handle, "handle": handle}
+        ).is_success
+    author_id = client.get(ROOT + "/account", headers=author).json()["id"]
+    reader_id = client.get(ROOT + "/account", headers=reader).json()["id"]
+    species = client.get("/api/v1/species", params={"limit": 1}).json()["items"][0]["id"]
+
+    def publish(reference, anonymous=False, approved=True):
+        observation = client.post(
+            OBS,
+            headers=author,
+            json={
+                "reference": reference,
+                "species": species,
+                "date": "2026-11-28",
+                "point": {"latitude": 39.91471, "longitude": 116.39937, "system": "GCJ-02"},
+                "place": "private nesting site",
+            },
+        )
+        assert observation.status_code == 201
+        original = observation.json()["id"]
+        preview = client.post(
+            ROOT + "/previews",
+            headers=author,
+            json={"sighting": original, "channels": ["map"], "anonymous": anonymous},
+        )
+        assert preview.is_success
+        publication = client.post(
+            ROOT + "/publications", headers=author, json={"preview": preview.json()["id"]}
+        ).json()["items"][0]["id"]
+        if approved:
+            assert client.post(
+                ROOT + "/moderation/" + publication, headers=staff, json={"status": "approved"}
+            ).is_success
+        return original, publication
+
+    original, published = publish("named")
+    publish("anonymous", anonymous=True)
+    publish("pending", approved=False)
+    path = ROOT + "/members/" + author_id
+    public_rows = client.get(path, headers=reader).json()["mapRecords"]
+    assert [row["id"] for row in public_rows] == [published]
+    assert public_rows[0]["visibility"] == "public"
+    assert "39.91471" not in str(public_rows) and "private nesting site" not in str(public_rows)
+    assert client.put(ROOT + "/friends/" + reader_id + "/request", headers=author).is_success
+    assert client.put(ROOT + "/friends/" + author_id + "/accept", headers=reader).is_success
+    assert [row["id"] for row in client.get(path, headers=reader).json()["mapRecords"]] == [published]
+    assert client.get(MAP + "/" + original, headers=reader).status_code == 404
+    assert client.delete(ROOT + "/publications/" + published, headers=author).is_success
+    assert not client.get(path, headers=reader).json()["mapRecords"]
+    assert client.put(ROOT + "/blocks/" + author_id, headers=reader).is_success
+    assert client.get(path, headers=reader).status_code == 404

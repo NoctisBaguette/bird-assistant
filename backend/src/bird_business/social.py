@@ -79,7 +79,10 @@ def update_showcase(body: Showcase, database: DB, owner: Member):
 
 @router.post("/account/showcase/cover", status_code=201)
 def upload_cover(
-    file: UploadFile, layout: Annotated[str, Form(max_length=8192)], database: DB, owner: Member,
+    file: UploadFile,
+    layout: Annotated[str, Form(max_length=8192)],
+    database: DB,
+    owner: Member,
 ):
     try:
         settings = Showcase.model_validate_json(layout)
@@ -92,7 +95,8 @@ def upload_cover(
     with database.transaction() as db:
         db.execute(
             "INSERT INTO profile_covers VALUES(?,?,?) ON CONFLICT(member) DO UPDATE SET "
-            "version=excluded.version,jpeg=excluded.jpeg", (owner, version, jpeg),
+            "version=excluded.version,jpeg=excluded.jpeg",
+            (owner, version, jpeg),
         )
         return save_showcase(db, owner, settings.model_copy(update={"cover": None, "coverPhoto": version}))
 
@@ -118,6 +122,11 @@ def profile(peer: str, database: DB, owner: Member):
             "AND json_extract(display,'$.memberId')=? ORDER BY created DESC LIMIT 50",
             (peer, peer),
         )
+        map_records = db.execute(
+            "SELECT * FROM publications WHERE owner=? AND channel='map' AND status='approved' "
+            "AND json_extract(display,'$.memberId')=? ORDER BY created DESC LIMIT 50",
+            (peer, peer),
+        )
         saved = (
             db.execute(
                 "SELECT p.* FROM reactions r JOIN publications p ON p.id=r.post "
@@ -136,6 +145,7 @@ def profile(peer: str, database: DB, owner: Member):
             "canMessage": owner != peer
             and (not settings or settings["dm"] == "everyone" or status == "friends"),
             "posts": [public(row) for row in posts],
+            "mapRecords": [public(row) for row in map_records],
             "bookmarks": [public(row) for row in saved],
             "showBookmarks": can_view,
         }
