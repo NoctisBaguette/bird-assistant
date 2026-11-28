@@ -14,3 +14,11 @@ article p {margin:8px 0;white-space:pre-wrap} .meta {color:#53675c;font-size:14p
 .actions {margin-top:14px}.empty {color:#53675c} footer {justify-content:center;margin:20px 0 44px} main {padding-bottom:40px!important}
 @media(max-width:600px){.wrap{padding-inline:14px}article{padding:15px}nav{gap:6px}nav button{padding:6px 9px}.top{height:54px}}
 .observation-layout {display:flex;gap:24px;align-items:flex-start}.observation-layout>.photo {flex:1;min-width:0}.observation-layout>div {flex:1.4;min-width:0}.review-channel {padding:12px 0}.review-channel+.review-channel {border-top:1px solid #c7d3c7}@media(max-width:650px){.observation-layout{display:block}}
+#sections {padding-bottom:16px;border-bottom:1px solid #c8d5ca;margin-bottom:18px}
+#search {display:flex;align-items:center;gap:10px;margin:18px 0;max-width:640px}
+#search label,#search button {flex:none;width:auto;margin:0} #search input {min-width:0}
+.metrics,.inventory {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px}
+.metric {display:grid;text-align:left;background:#e5efe5;padding:16px 20px}.metric strong {font-size:30px}
+.inventory-row {display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:white;border-radius:8px}
+.inventory-row small {display:block;color:#59695f}.inventory-row strong,.metric strong {font-variant-numeric:tabular-nums}
+#queue-title:empty {display:none}

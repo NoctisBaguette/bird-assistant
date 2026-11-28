@@ -65,6 +65,9 @@ CREATE TABLE IF NOT EXISTS friendships(first TEXT, second TEXT, requester TEXT N
  created TEXT NOT NULL, PRIMARY KEY(first,second));
 CREATE INDEX IF NOT EXISTS friends_second ON friendships(second,state);
 CREATE TABLE IF NOT EXISTS chat_reads(owner TEXT, peer TEXT, stamp TEXT NOT NULL, PRIMARY KEY(owner,peer));
+CREATE TABLE IF NOT EXISTS profile_showcases(member TEXT PRIMARY KEY, layout TEXT NOT NULL,
+ expires TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS profile_covers(member TEXT PRIMARY KEY,version TEXT NOT NULL,jpeg BLOB NOT NULL);
 CREATE TABLE IF NOT EXISTS bird_groups(id TEXT PRIMARY KEY, owner TEXT NOT NULL, name TEXT NOT NULL,
  created TEXT NOT NULL, ref TEXT NOT NULL, UNIQUE(owner,ref));
 CREATE TABLE IF NOT EXISTS group_members(room TEXT, member TEXT, state TEXT NOT NULL,

@@ -2,11 +2,11 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>羽迹 · 社区管理</title>
-  <link rel="stylesheet" href="/admin/assets/console.css"><script defer src="/admin/assets/console.js"></script>
+  <title>羽迹 · 业务服务台</title>
+  <link rel="stylesheet" href="/admin/assets/console.css"><script defer src="/admin/assets/data.js"></script><script defer src="/admin/assets/console.js"></script>
 </head>
 <body>
-  <header><div class="wrap top"><strong>羽迹</strong><span>社区管理</span><button id="logout" hidden>退出登录</button></div></header>
+  <header><div class="wrap top"><strong>羽迹</strong><span>业务服务台</span><button id="logout" hidden>退出登录</button></div></header>
   <main class="wrap">
     <p id="notice" role="status" hidden></p>
     <section id="login" hidden>
@@ -16,11 +16,13 @@
         <button class="primary" type="submit">登录管理平台</button></form>
     </section>
     <section id="dashboard" hidden>
-      <div class="heading"><h1>社区审核</h1><button id="reload">刷新</button></div>
+      <div class="heading"><h1 id="section-title">数据总览</h1><button id="reload">刷新</button></div>
+      <nav id="sections" aria-label="服务台栏目"><button data-view="overview">数据总览</button><button data-view="users">用户目录</button><button data-view="groups">群聊</button><button data-view="publications">发布记录</button><button data-view="review">社区审核</button></nav>
+      <form id="search" hidden><label for="keyword" class="search-label">搜索</label><input type="search" id="keyword" maxlength="80"><button type="submit">查询</button></form>
       <nav id="tabs" aria-label="审核队列"></nav>
       <h2 id="queue-title"></h2><div id="list" aria-live="polite"></div>
       <footer hidden id="pages"><button id="prev">上一页</button><span id="page"></span><button id="next">下一页</button></footer>
     </section>
-    <noscript>请启用 JavaScript 以使用审核工作台。</noscript>
+    <noscript>请启用 JavaScript 以使用业务服务台。</noscript>
   </main>
 </body></html>

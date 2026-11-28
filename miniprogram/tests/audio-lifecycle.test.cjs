@@ -13,6 +13,6 @@ test('identification stops pending microphone work on unload and ignores its lat
   const callbacks={},calls=[];global.wx={canIUse:()=>false,getRecorderManager:()=>({onStart:fn=>callbacks.start=fn,onStop:fn=>callbacks.stop=fn,onError:fn=>callbacks.error=fn,start:options=>calls.push(options),stop:()=>calls.push('stop')})};
   const {p,patches}=page('identify');p.recordAudio();assert.equal(calls[0].format,'mp3');assert.equal(calls[0].sampleRate,48000);p.onUnload();const before=patches.length;callbacks.start();callbacks.stop({tempFilePath:'late.mp3',duration:2000});assert.equal(p.data.assets.length,0);assert.equal(patches.length,before);assert.equal(calls.at(-1),'stop');
 });
-test('profile audio stops on back and page hiding without late error mutations',()=>{
-  const created=players();global.wx.canIUse=()=>false;global.wx.nextTick=fn=>fn();global.wx.pageScrollTo=()=>{};const {p}=page('profile');p.data.detail={id:'record',imagePath:'kept.mp3'};p.playAudio();p.back();assert.equal(created[0].destroys,1);created[0].error();assert.equal(p.data.error,'');p.playAudio();p.onHide();assert.equal(created[1].destroys,1);
+test('the visual profile needs no audio player',()=>{
+  const created=players();global.wx.canIUse=()=>false;const {p}=page('profile');p.onHide();assert.equal(p.playAudio,undefined);assert.equal(created.length,0);
 });

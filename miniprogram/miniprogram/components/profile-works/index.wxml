@@ -1,0 +1,4 @@
+<view wx:if="{{items.length}}" class="works works-{{theme}}"><button wx:for="{{items}}" wx:key="id" class="work {{index === 0 ? 'lead' : ''}}" data-id="{{item.id}}" bindtap="open" hover-class="press">
+  <image wx:if="{{item.image}}" class="photo" src="{{item.image}}" mode="aspectFill" lazy-load/><view class="wash"/>
+  <view class="caption"><text class="kind">{{index === 0 ? '代表作' : '精选'}}</text><text class="name">{{item.title || item.speciesName || '观鸟手记'}}</text><text wx:if="{{item.date}}" class="date">{{item.date}}</text></view>
+</button></view>

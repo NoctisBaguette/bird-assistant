@@ -252,8 +252,7 @@ def capture_number(capture, key):
         return None
 
 
-@router.post(ROOT + "/media", status_code=201)
-def upload(file: UploadFile, database: DB, owner: Member):
+def decode_photo(file: UploadFile):
     if file.size and file.size > 24 * 1024 * 1024:
         raise ServiceError("IMAGE_TOO_LARGE", "image too large", 413)
     try:
@@ -297,7 +296,12 @@ def upload(file: UploadFile, database: DB, owner: Member):
             image.save(output, "JPEG", quality=85, exif=b"")
     except (OSError, ValueError, SyntaxError, UnidentifiedImageError, Image.DecompressionBombError):
         raise ServiceError("INVALID_IMAGE", "cannot decode image", 422) from None
-    data = output.getvalue()
+    return output.getvalue(), camera
+
+
+@router.post(ROOT + "/media", status_code=201)
+def upload(file: UploadFile, database: DB, owner: Member):
+    data, camera = decode_photo(file)
     photo = identifier(owner, data)
     with database.transaction() as db:
         if not db.execute("SELECT 1 FROM photos WHERE id=?", (photo,)).fetchone():

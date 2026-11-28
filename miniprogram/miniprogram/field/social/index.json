@@ -4,6 +4,8 @@
   "enablePullDownRefresh": true,
   "usingComponents": {
     "app-header": "/components/app-header/index",
+    "profile-cover": "/components/profile-cover/index",
+    "profile-works": "/components/profile-works/index",
     "profile-avatar": "/components/profile-avatar/index"
   }
 }

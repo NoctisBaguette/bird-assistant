@@ -13,6 +13,7 @@
         "hub/index",
         "picker/index",
         "social/index",
+        "studio/index",
         "compare/index",
         "trip/index"
       ]

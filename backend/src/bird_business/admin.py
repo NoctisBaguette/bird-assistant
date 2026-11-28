@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, SecretStr
 
+from bird_business.admin_data import router as data_router
 from bird_business.admin_session import (
     COOKIE,
     LIFETIME,
@@ -19,6 +20,7 @@ from bird_business.community_models import Decision
 from bird_business.community_store import one
 
 router = APIRouter(prefix="/admin", include_in_schema=False)
+router.include_router(data_router)
 ASSETS = Path(__file__).with_name("admin_web")
 STAFF = "web:admin"
 PAGE_SIZE = 12
@@ -48,7 +50,7 @@ def console():
 
 
 @router.get("/assets/{name}")
-def asset(name: Literal["console.js", "console.css"]):
+def asset(name: Literal["console.js", "console.css", "data.js"]):
     return FileResponse(ASSETS / name, headers=HEADERS)
 
 

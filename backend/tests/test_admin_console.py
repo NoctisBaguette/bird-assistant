@@ -43,6 +43,15 @@ def test_login_controls_and_logout(console):
     assert client.get("/admin/").status_code == 200
     assert client.get("/admin/assets/console.js").is_success
     assert client.get("/admin/queue", headers=member).status_code == 401
+    for path in (
+        "overview",
+        "users",
+        "groups",
+        "groups/example/members",
+        "groups/example/messages",
+        "publications",
+    ):
+        assert client.get("/admin/data/" + path, headers=member).status_code == 401
     assert client.get("/admin/photos/post_test", headers={"X-API-Key": "staff-key"}).status_code == 401
     headers = sign_in(client)
     assert client.get("/admin/session").json()["csrf"] == headers["X-Review-CSRF"]
@@ -53,6 +62,7 @@ def test_login_controls_and_logout(console):
     )
     assert client.post("/admin/logout", headers=headers).is_success
     assert client.get("/admin/queue").status_code == 401
+    assert client.get("/admin/data/users").status_code == 401
     for _ in range(8):
         assert (
             client.post(
@@ -116,6 +126,53 @@ def test_observation_review_keeps_channel_feedback_private(console):
     assert client.get(reference, headers=outsider).json() == {"id": None, "channels": []}
     assert client.get("/api/v1/species/" + species + "/places").json()["recordCount"] == 0
     assert "reason" not in client.get(ROOT + "/publications/" + channels["post"]).json()
+
+
+def test_directory_scopes_data_and_paginates(console):
+    client, _ = console
+    with client.app.state.community.transaction() as db:
+        db.executemany(
+            "INSERT INTO members VALUES(?,?)", [(f"bird-{index}", f"subject-{index}") for index in range(21)]
+        )
+        db.execute("INSERT INTO profiles VALUES('bird-0','finch','山雀','owl','简介',0,'friends','private')")
+        for room in ("north", "south"):
+            db.execute("INSERT INTO bird_groups VALUES(?, 'bird-0', ?, '2026-11-01', ?)", (room, room, room))
+            db.execute(
+                "INSERT INTO group_members VALUES(?, 'bird-0', 'joined','bird-0','2026-11-01','')", (room,)
+            )
+            db.execute(
+                "INSERT INTO group_messages VALUES(?, ?, 'bird-0', ?, '2026-11-01', ?)",
+                (room, room, room + "-body", room),
+            )
+        db.execute("INSERT INTO messages VALUES('private','bird-0','bird-1','private-body','','ref')")
+        db.execute(
+            "INSERT INTO publications(id,owner,channel,status,display,species,day,created) "
+            "VALUES('pub','bird-0','post','approved','{\"title\":\"鸟讯\"}','','','2026-11-01')"
+        )
+    sign_in(client)
+    root = "/admin/data/"
+    overview = client.get(root + "overview")
+    assert overview.headers["cache-control"] == "no-store"
+    totals = {entry["name"]: entry["count"] for entry in overview.json()["tables"]}
+    assert totals["messages"] == 1 and totals["group_messages"] == 2 and totals["members"] == 21
+    assert "private-body" not in overview.text
+    assert client.get(root + "messages").status_code == 404
+    assert client.get(root + "tables/messages").status_code == 404
+    for entry in overview.json()["tables"]:
+        if entry["browse"]:
+            listed = client.get(root + "tables/" + entry["name"])
+            assert listed.is_success and listed.json()["total"] == entry["count"]
+    assert len(client.get(root + "users?page=2").json()["items"]) == 1
+    users = client.get(root + "users?q=FINCH")
+    assert users.json()["items"][0]["nickname"] == "山雀" and "subject" not in users.text
+    assert client.get(root + "users", params={"q": "%'"}).json()["total"] == 0
+    groups = client.get(root + "groups?q=north").json()["items"]
+    assert len(groups) == 1 and groups[0]["members"] == groups[0]["messages"] == 1
+    assert client.get(root + "groups/north/members").json()["items"][0]["handle"] == "finch"
+    messages = client.get(root + "groups/north/messages")
+    assert messages.json()["items"][0]["body"] == "north-body" and "south-body" not in messages.text
+    assert client.get(root + "groups/unknown/messages").status_code == 404
+    assert client.get(root + "publications", params={"q": "鸟讯"}).json()["items"][0]["status"] == "approved"
 
 
 def test_review_publication_reply_photo_and_report(console):

@@ -1,5 +1,6 @@
-import {api, community, hub, key, sessionState, sessionRevision, setSession} from '../../services/community';
+import {api, community, hub, imageUrl, key, sessionState, sessionRevision, setSession} from '../../services/community';
 import {beijingDateTime} from '../../services/observation-context';
+import {loadPresentation} from '../../services/profile-showcase';
 import {connectBusiness} from '../../services/vision-network';
 
 type Tap = WechatMiniprogram.TouchEvent;
@@ -24,7 +25,7 @@ function merged(history:ChatLine[], incoming:ChatLine[]) {
 }
 
 Page({
-  data:{friendTab:'accepted',pageTitle:'社区账号',screen:'account',id:'',self:'',active:false,ready:false,working:false,editing:false,error:'',
+  data:{memberTab:'posts',relationshipMenu:false,friendTab:'accepted',pageTitle:'社区账号',screen:'account',id:'',self:'',active:false,ready:false,working:false,editing:false,error:'',
     registered:false,form:{...defaults},account:null as (Card & typeof defaults)|null,
     avatars:['owl','finch','leaf','mountain','water','letter'],visibilities:['private','friends','public'],
     visibilityNames:['仅自己','好友','公开'], term:'', searched:false, matches:[] as Card[],friends:[] as Friend[],
@@ -33,10 +34,12 @@ Page({
     member:null as any, lines:[] as ChatLine[], earlier:false, text:'',groupName:'', invitees:[] as Friend[]},
   _timer:0,_generation:0,_operation:0,_pending:false,_visible:false,_reference:'',_groupReference:'',_seen:'',
   onLoad(options:Record<string,string|undefined>){
+    this._openEdit=options.screen==='account' && options.edit==='1';
     const screen=options.screen && screens[options.screen]?options.screen:'account';
     this.setData({screen,id:options.id || '',pageTitle:screens[screen],friendTab:['accepted','incoming','outgoing'].includes(options.tab||'')?options.tab!:'accepted'});
     wx.setNavigationBarTitle({title:screens[screen]});
   },
+  _openEdit:false,
   onShow(){
     this._visible=true;
     if(sessionState()==='active')void this.start();
@@ -51,7 +54,7 @@ Page({
   clearPrivate(){this._generation++;this._operation++;this._pending=false;this._reference='';this._groupReference='';this._seen='';
     this.setData({active:false,ready:true,working:false,registered:false,self:'',account:null,editing:false,form:{...defaults},
       friends:[],incoming:[],outgoing:[],accepted:[],matches:[],blocked:[],inbox:[],activity:[],identifications:[],groups:[],invites:[],
-      member:null,group:null,invitees:[],lines:[],earlier:false,text:'',groupName:'',term:'',searched:false,error:''});},
+      member:null,memberTab:'posts',relationshipMenu:false,group:null,invitees:[],lines:[],earlier:false,text:'',groupName:'',term:'',searched:false,error:''});},
   async start(){
     if(sessionState()!=='active'){this.clearPrivate();return;}
     const generation=++this._generation;
@@ -60,6 +63,7 @@ Page({
       const account=await call('/account');
       if(generation!==this._generation)return;
       this.setData({self:account.id,account:account.profile,registered:!!account.profile,ready:true});
+      if(this._openEdit && account.profile){this._openEdit=false;this.edit();}
       if(account.profile)await this.refresh();
     }catch(error){if(generation===this._generation)this.setData({error:explain(error),ready:true});}
   },
@@ -83,6 +87,10 @@ Page({
   },
   friendTab(event:Tap){const tab=String(event.currentTarget.dataset.tab);if(['accepted','incoming','outgoing'].includes(tab))this.setData({friendTab:tab});},
   friendRequests(){hub('friends');},
+  selectMemberTab(event:Tap){
+    this.setData({memberTab:event.currentTarget.dataset.tab==='bookmarks' && this.data.member?.showBookmarks ? 'bookmarks' : 'posts'});
+  },
+  toggleRelationshipMenu(){this.setData({relationshipMenu:!this.data.relationshipMenu});},
   back(){wx.navigateBack({fail:()=>wx.switchTab({url:'/pages/community/index'})});},
   go(event:Tap){hub(String(event.currentTarget.dataset.screen),String(event.currentTarget.dataset.id||''));},
   input(event:Input){const field=String(event.currentTarget.dataset.field);this.setData({[field]:event.detail.value});
@@ -106,7 +114,15 @@ Page({
           outgoing:friends.filter(item=>item.relationship==='outgoing'),accepted:friends.filter(item=>item.relationship==='friends')});
       }
       if(screen==='member'||screen==='chat'){
-        const member=await call('/members/'+peer);if(!valid())return;this.setData({member});
+        const member=await call('/members/'+peer);if(!valid())return;
+        if(screen==='member') {
+          member.showcase=await loadPresentation(this.data.id,member.showcase);
+          if(!valid())return;
+          const withPhoto=(item:{image?:string})=>({...item,thumb:imageUrl(item.image)});
+          member.posts=(member.posts || []).map(withPhoto);
+          member.bookmarks=member.showBookmarks ? (member.bookmarks || []).map(withPhoto) : [];
+        }
+        this.setData({member,memberTab:member.showBookmarks ? this.data.memberTab : 'posts'});
         if(screen==='chat'){wx.setNavigationBarTitle({title:member.profile.nickname});this.setData({pageTitle:member.profile.nickname});}
       }
       if(screen==='inbox'||screen==='groups'){

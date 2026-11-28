@@ -22,6 +22,17 @@ function client({upload, read, size = 6, request}) {
 
 const blocked = options => options.fail({errMsg: 'uploadFile:fail url not in domain list'});
 
+test('album cover fallback sends photo and layout together and preserves Chinese tags',async () => {
+  const layout={tags:['湿地观鸟'],status:'正在观鸟',focus:72};
+  client({upload:blocked,read:options=>options.success({data:new ArrayBuffer(6)}),request:options=>{
+    assert.ok(options.url.endsWith('/account/showcase/cover'));
+    const body=Buffer.from(options.data).toString('ascii');
+    assert.deepEqual(JSON.parse(body.match(/name="layout"\r\n\r\n([^\r]+)/)[1]),layout);
+    options.success({statusCode:201,data:JSON.stringify({layout:{coverPhoto:'new'}}),header:{}});
+  }});
+  await require('../.test-build/services/community.js').saveAlbumCover('album.jpg',layout);
+});
+
 test('blocked native upload retries the original multipart bytes and refreshes an expired token once', async () => {
   const bytes = Uint8Array.from([255,216,0,128,0,255]);
   let reads = 0, uploads = 0, requests = 0;

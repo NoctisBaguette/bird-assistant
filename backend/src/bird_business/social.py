@@ -1,12 +1,13 @@
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Query
-from pydantic import Field
+from fastapi import APIRouter, Form, Query, Response, UploadFile
+from pydantic import Field, ValidationError
 
 from bird_business.bird_polls import poll_summary
-from bird_business.community import DB, ROOT, Member, conflict, limited, public
+from bird_business.community import DB, ROOT, Member, conflict, decode_photo, limited, public
 from bird_business.community_models import Input
-from bird_business.community_store import blocked, member_card, missing, now, one, relationship
+from bird_business.community_store import blocked, identifier, member_card, missing, now, one, relationship
+from bird_business.showcase import Showcase, read_showcase, save_showcase
 from bird_common.errors import ServiceError
 
 router = APIRouter(prefix=ROOT, tags=["birders"])
@@ -69,6 +70,41 @@ def search(database: DB, owner: Member, q: Annotated[str, Query(min_length=1, ma
         return {"items": [member_card(db, row[0]) for row in rows]}
 
 
+@router.put("/account/showcase")
+def update_showcase(body: Showcase, database: DB, owner: Member):
+    with database.transaction() as db:
+        registered(db, owner)
+        return save_showcase(db, owner, body)
+
+
+@router.post("/account/showcase/cover", status_code=201)
+def upload_cover(
+    file: UploadFile, layout: Annotated[str, Form(max_length=8192)], database: DB, owner: Member,
+):
+    try:
+        settings = Showcase.model_validate_json(layout)
+    except ValidationError:
+        raise ServiceError("INVALID_SHOWCASE", "主页设置无效", 422) from None
+    with database.transaction() as db:
+        registered(db, owner)
+    jpeg, _ = decode_photo(file)
+    version = identifier(owner, jpeg)
+    with database.transaction() as db:
+        db.execute(
+            "INSERT INTO profile_covers VALUES(?,?,?) ON CONFLICT(member) DO UPDATE SET "
+            "version=excluded.version,jpeg=excluded.jpeg", (owner, version, jpeg),
+        )
+        return save_showcase(db, owner, settings.model_copy(update={"cover": None, "coverPhoto": version}))
+
+
+@router.get("/members/{peer}/cover/{version}")
+def cover_photo(peer: str, version: str, database: DB, owner: Member):
+    with database.transaction() as db:
+        reachable(db, owner, peer)
+        row = one(db, "SELECT jpeg FROM profile_covers WHERE member=? AND version=?", peer, version)
+        return Response(row[0], media_type="image/jpeg", headers={"Cache-Control": "private, no-store"})
+
+
 @router.get("/members/{peer}")
 def profile(peer: str, database: DB, owner: Member):
     with database.transaction() as db:
@@ -94,6 +130,7 @@ def profile(peer: str, database: DB, owner: Member):
         )
         return {
             "profile": member_card(db, peer),
+            "showcase": read_showcase(db, peer),
             "relationship": status,
             "registered": bool(settings),
             "canMessage": owner != peer

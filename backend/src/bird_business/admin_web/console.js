@@ -3,7 +3,7 @@
 const labels = {observation:"待审观察", reply:"回复", reports:"举报", history:"审核记录"};
 const results = {approved:"已通过", rejected:"已驳回", report_kept:"保留被举报内容", report_removed:"已移除被举报内容"};
 const get = id => document.getElementById(id);
-const state = {csrf:"", tab:"observation", page:1, version:0, saving:false};
+const state = {csrf:"", view:"overview", table:"", tab:"observation", page:1, version:0, saving:false, query:"", room:"", groupPage:1, detail:"members"};
 
 function element(tag, text, className) {
   const node = document.createElement(tag);
@@ -31,6 +31,9 @@ function signedIn(csrf) {
   get("login").hidden = Boolean(csrf);
   if (!csrf) {
     state.version++;
+    Object.assign(state,{view:"overview",table:"",tab:"observation",page:1,query:"",room:"",groupPage:1,detail:"members"});
+    get("keyword").value = "";
+    get("queue-title").textContent = "";
     get("list").replaceChildren();
     get("tabs").replaceChildren();
   }
@@ -145,7 +148,12 @@ function card(item,tab) {
 async function refresh() {
   const version = ++state.version;
   const tab = state.tab;
+  prepareView();
   try {
+    if (state.view !== "review") {
+      await refreshDirectory(version);
+      return;
+    }
     const result = await api(`queue?tab=${tab}&page=${state.page}`);
     if (version !== state.version) return;
     state.page = result.page;
@@ -158,11 +166,11 @@ async function refresh() {
     get("queue-title").textContent = ["post","map","reply"].includes(tab) ? "待审核的"+labels[tab] : labels[tab];
     get("list").replaceChildren(...result.items.map(item=>card(item,tab)));
     if (!result.items.length) get("list").append(element("div","当前没有记录。","empty"));
-    get("pages").hidden = result.pages < 2;
-    get("page").textContent = `${result.page} / ${result.pages}`;
-    get("prev").disabled = result.page === 1;
-    get("next").disabled = result.page === result.pages;
-  } catch(error) { if (version === state.version || !state.csrf) notice(error.message); }
+    showPages(result);
+  } catch(error) {
+    if (version === state.version) get("list").replaceChildren();
+    if (version === state.version || !state.csrf) notice(error.message);
+  }
 }
 
 get("credentials").addEventListener("submit",async event=>{
@@ -174,7 +182,7 @@ get("credentials").addEventListener("submit",async event=>{
     const result = await api("login",{username:form.elements.username.value,password:form.elements.password.value});
     form.elements.password.value = "";
     signedIn(result.csrf);
-    selectTab("observation",1);
+    await refresh();
   } catch(error) { notice(error.message); }
   finally { submit.disabled = false; }
 });

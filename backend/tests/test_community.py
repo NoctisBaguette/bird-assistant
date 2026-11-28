@@ -1,3 +1,4 @@
+import json
 from io import BytesIO
 
 import pytest
@@ -316,6 +317,79 @@ def test_field_guide_matches_photo_traits_and_caches_misses(field, monkeypatch):
     for _ in range(2):
         assert client.get("/api/v1/species/" + unseeded + "/reference").json() == {"photo": None}
     assert len(calls) == 1
+
+
+def test_showcase_rechecks_signed_approved_works_on_save_and_read(field):
+    client, (author, viewer, _), _, store = field
+    owner = client.put(
+        ROOT + "/account", headers=author, json={"handle": "finch", "nickname": "林雀"}
+    ).json()["id"]
+    with store.transaction() as db:
+        for post, member, status in [
+            ("good", owner, "approved"),
+            ("anon", None, "approved"),
+            ("hidden", owner, "pending"),
+        ]:
+            db.execute(
+                "INSERT INTO publications(id,owner,channel,status,display,species,day,created) "
+                "VALUES(?,?,'post',?,?,'','','2026-11-28')",
+                (post, owner, status, json.dumps({"memberId": member, "title": "观察", "media": "photo"})),
+            )
+    path = ROOT + "/account/showcase"
+    for record in ("anon", "hidden", "missing"):
+        assert client.put(path, headers=author, json={"works": [record]}).status_code == 409
+    layout = {"cover": "good", "works": ["good"], "theme": "lake", "tags": ["鸟类摄影"], "status": "整理手帐"}
+    assert client.put(path, headers=author, json=layout).is_success
+    with store.transaction() as db:
+        expires = db.execute("SELECT expires FROM profile_showcases WHERE member=?", (owner,)).fetchone()[0]
+    assert client.put(path, headers=author, json={**layout, "theme": "sunset"}).is_success
+    with store.transaction() as db:
+        row = db.execute("SELECT expires FROM profile_showcases WHERE member=?", (owner,)).fetchone()
+        assert row[0] == expires
+    profile = ROOT + "/members/" + owner
+    assert client.get(profile, headers=viewer).json()["showcase"]["items"][0]["id"] == "good"
+    with store.transaction() as db:
+        db.execute("UPDATE publications SET status='withdrawn' WHERE id='good'")
+        db.execute("UPDATE profile_showcases SET expires='2000-01-01'")
+    card = client.get(profile, headers=viewer).json()["showcase"]
+    assert card["items"] == [] and card["coverImage"] == ""
+    assert card["layout"]["cover"] is None and card["layout"]["status"] == ""
+
+
+def test_album_cover_is_saved_atomically_and_respects_profile_access(field):
+    client, (author, visitor, _), _, store = field
+    account = client.put(ROOT + "/account", headers=author, json={"handle": "album", "nickname": "林雀"})
+    owner = account.json()["id"]
+    endpoint = ROOT + "/account/showcase"
+
+    def upload(color, layout=None):
+        image = BytesIO()
+        Image.new("RGB", (40, 30), color).save(image, "PNG")
+        return client.post(
+            endpoint + "/cover", headers=author, files={"file": ("bird.png", image.getvalue())},
+            data={"layout": json.dumps(layout or {"tags": ["湿地观鸟"]})},
+        )
+
+    added = upload("red")
+    assert added.status_code == 201
+    first = added.json()["coverImage"]
+    assert client.get(ROOT + "/members/" + owner, headers=visitor).json()["showcase"]["coverImage"] == first
+    photo = client.get(first, headers=visitor)
+    assert photo.headers["content-type"] == "image/jpeg"
+    assert Image.open(BytesIO(photo.content)).size == (40, 30)
+    assert client.get(first).status_code == 401
+    assert client.put(ROOT + "/blocks/" + owner, headers=visitor).is_success
+    assert client.get(first, headers=visitor).status_code == 404
+    assert upload("blue", {"works": ["missing"]}).status_code == 409
+    assert client.get(first, headers=author).content == photo.content
+    assert client.put(endpoint, headers=author, json={**added.json()["layout"], "focus": 70}).is_success
+    second = upload("blue").json()["coverImage"]
+    assert first != second and client.get(first, headers=author).status_code == 404
+    assert client.put(endpoint, headers=author, json={"landscape": "waterside"}).is_success
+    assert client.get(second, headers=author).status_code == 404
+    with store.transaction() as db:
+        assert not db.execute("SELECT 1 FROM profile_covers").fetchone()
+        assert not db.execute("SELECT 1 FROM publications").fetchone()
 
 
 def test_registered_friends_inbox_and_privacy(field):

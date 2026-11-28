@@ -87,8 +87,8 @@ async function readOriginal(path: string): Promise<ArrayBuffer> {
   }));
 }
 
-function requestPhoto(connection: VisionConnection, original: ArrayBuffer): Promise<UploadReply> {
-  return new Promise((resolve, reject) => sendImage(connection, mediaPath, 'file', original, {}, resolve, error => {
+function requestPhoto(connection: VisionConnection, endpoint:string, original: ArrayBuffer, fields:Record<string,string>): Promise<UploadReply> {
+  return new Promise((resolve, reject) => sendImage(connection, endpoint, 'file', original, fields, resolve, error => {
     const detail = error.errMsg || '';
     if (/domain list|合法域名/i.test(detail)) reject(new Error('微信拦截了照片请求，请检查业务地址的 request 合法域名。'));
     else if (/timeout|timed out/i.test(detail)) reject(new Error('照片上传超时，请切换网络后重试。'));
@@ -97,17 +97,17 @@ function requestPhoto(connection: VisionConnection, original: ArrayBuffer): Prom
   }));
 }
 
-export async function uploadPhoto(path: string): Promise<{id: string; camera: Record<string, string>}> {
+async function uploadCommunityImage(path: string, endpoint:string, fields:Record<string,string>) {
   ensureSession();
   let original: ArrayBuffer | undefined;
   for (const refresh of [false, true]) {
     const connection = await connectBusiness(refresh);
     let reply: UploadReply;
-    if (original) reply = await requestPhoto(connection, original);
+    if (original) reply = await requestPhoto(connection, endpoint, original, fields);
     else {
       try {
         reply = await new Promise<UploadReply>((resolve, reject) => wx.uploadFile({
-          url: connection.origin + mediaPath, name: 'file', filePath: path,
+          url: connection.origin + endpoint, name: 'file', filePath: path, formData:fields,
           header: connection.header, timeout: 60000, success: resolve, fail: reject
         }));
       } catch (error) {
@@ -115,15 +115,37 @@ export async function uploadPhoto(path: string): Promise<{id: string; camera: Re
         if (/cancel/i.test(detail)) throw new Error('照片上传已取消。');
         if (/auth deny|permission denied|privacy/i.test(detail)) throw new Error('微信未授权上传，请检查小程序的隐私授权后重试。');
         original = await readOriginal(path);
-        reply = await requestPhoto(connection, original);
+        reply = await requestPhoto(connection, endpoint, original, fields);
       }
     }
     if (reply.statusCode === 401 && !refresh) continue;
     let data;
     try { data = JSON.parse(reply.data); } catch { data = null; }
     if (reply.statusCode !== 201) throw failure(reply.statusCode, data);
-    if (typeof data?.id !== 'string' || !data.id) throw new Error('照片服务返回了无效的上传凭据，请重试。');
     return data;
+  }
+  throw new Error('请重新登录');
+}
+export async function uploadPhoto(path: string): Promise<{id: string; camera: Record<string, string>}> {
+  const result=await uploadCommunityImage(path,mediaPath,{});
+  if(typeof result?.id!=='string' || !result.id)throw new Error('照片服务返回了无效的上传凭据，请重试。');
+  return result;
+}
+export async function saveAlbumCover(path:string,layout:object){
+  const serialized=JSON.stringify(layout).replace(/[^\x00-\x7f]/g,letter=>'\\u'+letter.charCodeAt(0).toString(16).padStart(4,'0'));
+  const result=await uploadCommunityImage(path,community+'/account/showcase/cover',{layout:serialized});
+  if(!result?.layout?.coverPhoto)throw new Error('封面保存结果异常，请重试。');
+}
+export async function downloadMemberCover(member:string,version:string){
+  ensureSession();
+  const endpoint=community+'/members/'+encodeURIComponent(member)+'/cover/'+encodeURIComponent(version);
+  for(const refresh of [false,true]){
+    const connection=await connectBusiness(refresh);
+    const result=await new Promise<WechatMiniprogram.DownloadFileSuccessCallbackResult>((resolve,reject)=>wx.downloadFile({
+      url:connection.origin+endpoint,header:connection.header,timeout:15000,success:resolve,
+      fail:()=>reject(new Error('封面下载失败，请检查网络后重试。'))}));
+    if(result.statusCode===200)return result.tempFilePath;
+    if(result.statusCode!==401 || refresh)throw failure(result.statusCode,null);
   }
   throw new Error('请重新登录');
 }
