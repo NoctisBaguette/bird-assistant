@@ -1,27 +1,49 @@
+# Correction: Windows checkout and unfinished B alignment
+
+The existing standalone app checkout is `C:\Workspace\bird-assistant\bird-assistant-miniprogram`. The previous top command used its parent by mistake. The checked PowerShell block below restores the earlier working form. [Direct comparison with B](VISUAL-ALIGNMENT-B.md): the first 0.4.23 pass is not an accepted B redesign; R124 remains open. For a full team monorepo checkout, the app package is its `miniprogram` subdirectory, a separate layout.
+
 # Current candidate: 0.4.23 — green/white visual rework
 
 29 November 2026 (Beijing). Continue on `feat/visual-system-0.4.23`. Team main `ed907d93e5096ab8774d0f3289ef10ecf4d24818` already merged PR #31 at 21:43 on 28 November and includes the teammate's profile, custom-cover and admin additions. This candidate is based on that main; the older delivery sections below are history. Keep the frozen 0.4.20 experience baseline intact.
 
 [Changes, source projections and device checklist](VISUAL-SYSTEM-0.4.23.md).
 
-- Implemented B as the white/green default, system sans-serif type and shared spacing. Optional E dark mode remains deferred. Existing map and journal animations stay.
+- Applied an initial green/white colour and typography clean-up. The main-page composition does not yet match B; visual alignment remains open. Optional E dark mode remains deferred. Existing map and journal animations stay.
 - Reworked bounded chat/keyboard/composer, scroll-preserving polling, post action alignment, notes and identification review/publication. Chat is still polling; push, rich-media messages and full group administration are not claimed.
 - Added a privacy-safe author map tab and backend query. The source change requires maintainer deployment; accepting friendship does not publish private observations. Check two accounts with the same AppID/service and map bounds.
-- Vision readiness and community capabilities respond; journal writing capabilities return404. Actual authenticated inference, Dongniao fallback and Qwen writing remain to be verified. No deployment, paid call or CloudBase activation was performed.
-- Client501 tests, 28 WXML/31 WXSS; backend28 community tests;684 source-layout projections. These do not replace native WeChat/phone acceptance.
+- Vision readiness and community capabilities respond; journal writing capabilities return HTTP 404. Actual authenticated inference, Dongniao fallback and Qwen writing remain to be verified. No deployment, paid call or CloudBase activation was performed.
+- Client: 501 tests and 28 WXML / 31 WXSS compilations; backend: 28 focused community tests; 684 source layout cases. These do not replace native WeChat/phone acceptance.
 
 Update the existing Windows checkout without deleting configuration or data:
 
-```powershell
-cd C:\Workspace\bird-assistant
-git status --short
-git fetch origin
-git switch feat/visual-system-0.4.23
-git pull --ff-only
-npm ci --ignore-scripts
-npm run setup
-npm run verify
-```
+~~~powershell
+& {
+    $ErrorActionPreference = 'Stop'
+    Set-Location 'C:\Workspace\bird-assistant\bird-assistant-miniprogram'
+    function Invoke-CheckedGit {
+        & git @args
+        if ($LASTEXITCODE -ne 0) { throw 'Git stopped; inspect the error before continuing.' }
+    }
+    $birdChanges = & git status --porcelain
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot inspect the working tree.' }
+    if ($birdChanges) { throw 'Preserve local changes before upgrading; nothing was reset.' }
+    Invoke-CheckedGit fetch origin feat/visual-system-0.4.23
+    & git show-ref --verify --quiet refs/heads/feat/visual-system-0.4.23
+    if ($LASTEXITCODE -eq 0) {
+        Invoke-CheckedGit switch feat/visual-system-0.4.23
+    } else {
+        Invoke-CheckedGit switch --track -c feat/visual-system-0.4.23 origin/feat/visual-system-0.4.23
+    }
+    Invoke-CheckedGit merge --ff-only origin/feat/visual-system-0.4.23
+    & npm.cmd ci
+    if ($LASTEXITCODE -ne 0) { throw 'Dependency installation stopped.' }
+    & npm.cmd run setup
+    if ($LASTEXITCODE -ne 0) { throw 'Setup stopped.' }
+    & npm.cmd run verify
+    if ($LASTEXITCODE -ne 0) { throw 'Verification stopped.' }
+    & node -p "require('./package.json').version"
+}
+~~~
 
 For the team source checkout, run npm commands inside `miniprogram` and open that directory in WeChat DevTools. Keep AppID/private config and current local data; do not use `git clean` or clear WeChat storage. Full Compile, iPhone/Huawei keyboard checks, the identification-to-publication flow and two-account map privacy are the remaining release gates. R124–R130 track this revision; all earlier backlog items remain below.
 
@@ -32,7 +54,7 @@ For the team source checkout, run npm commands inside `miniprogram` and open tha
 
 | ID | Status | Work and remaining acceptance |
 | --- | --- | --- |
-| R124 | Implemented; device review | Green/white B visual system, system typography, spacing and contrast; E dark theme deferred |
+| R124 | Open; visual alignment incomplete | Green/white B visual system, system typography, spacing and contrast; E dark theme deferred |
 | R125 | Implemented; phone review | Bounded conversation history/composer, keyboard geometry, scroll-preserving polling and long-press actions; push/rich-media remain future work |
 | R126 | Implemented; native review | Identification review/import/publication hierarchy and privacy disclosure; validate authenticated end-to-end flow |
 | R127 | Implemented; native review | Post reaction alignment, share gaps, reply fields and notes hierarchy |

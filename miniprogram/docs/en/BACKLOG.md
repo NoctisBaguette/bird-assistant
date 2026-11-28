@@ -1,3 +1,7 @@
+# Visual correction: R124 remains open
+
+The first 0.4.23 pass does not yet match B. [Reference and concrete remaining layout work](VISUAL-ALIGNMENT-B.md).
+
 # Current candidate: 0.4.23 — green/white visual rework
 
 29 November 2026 (Beijing). Continue on `feat/visual-system-0.4.23`. Team main `ed907d93e5096ab8774d0f3289ef10ecf4d24818` already merged PR #31 at 21:43 on 28 November and includes the teammate's profile, custom-cover and admin additions. This candidate is based on that main; the older delivery sections below are history. Keep the frozen 0.4.20 experience baseline intact.
@@ -7,8 +11,8 @@
 - Implemented B as the white/green default, system sans-serif type and shared spacing. Optional E dark mode remains deferred. Existing map and journal animations stay.
 - Reworked bounded chat/keyboard/composer, scroll-preserving polling, post action alignment, notes and identification review/publication. Chat is still polling; push, rich-media messages and full group administration are not claimed.
 - Added a privacy-safe author map tab and backend query. The source change requires maintainer deployment; accepting friendship does not publish private observations. Check two accounts with the same AppID/service and map bounds.
-- Vision readiness and community capabilities respond; journal writing capabilities return404. Actual authenticated inference, Dongniao fallback and Qwen writing remain to be verified. No deployment, paid call or CloudBase activation was performed.
-- Client501 tests, 28 WXML/31 WXSS; backend28 community tests;684 source-layout projections. These do not replace native WeChat/phone acceptance.
+- Vision readiness and community capabilities respond; journal writing capabilities return HTTP 404. Actual authenticated inference, Dongniao fallback and Qwen writing remain to be verified. No deployment, paid call or CloudBase activation was performed.
+- Client: 501 tests and 28 WXML / 31 WXSS compilations; backend: 28 focused community tests; 684 source layout cases. These do not replace native WeChat/phone acceptance.
 
 Update the existing Windows checkout without deleting configuration or data:
 
@@ -32,7 +36,7 @@ For the team source checkout, run npm commands inside `miniprogram` and open tha
 
 | ID | Status | Work and remaining acceptance |
 | --- | --- | --- |
-| R124 | Implemented; device review | Green/white B visual system, system typography, spacing and contrast; E dark theme deferred |
+| R124 | Open; visual alignment incomplete | Green/white B visual system, system typography, spacing and contrast; E dark theme deferred |
 | R125 | Implemented; phone review | Bounded conversation history/composer, keyboard geometry, scroll-preserving polling and long-press actions; push/rich-media remain future work |
 | R126 | Implemented; native review | Identification review/import/publication hierarchy and privacy disclosure; validate authenticated end-to-end flow |
 | R127 | Implemented; native review | Post reaction alignment, share gaps, reply fields and notes hierarchy |

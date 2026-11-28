@@ -1,5 +1,7 @@
 # 0.4.23 — green and white visual system
 
+**Status correction:** This is an initial engineering and colour/type pass. B visual alignment is incomplete; [compare the reference and current composition](VISUAL-ALIGNMENT-B.md). Automated checks do not establish design fidelity.
+
 29 November 2026 (Beijing). Review candidate on `feat/visual-system-0.4.23`, based on team main `ed907d93e5096ab8774d0f3289ef10ecf4d24818`. That merge includes PR #31 and preserves the teammate's profile, custom album cover and admin work. The uploaded 0.4.20 experience build is a separate, older version.
 
 ## Direction and shared rules
